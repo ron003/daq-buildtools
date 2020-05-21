@@ -7,7 +7,7 @@ control their builds.
 Excerpted from a May 19th, 2020 email from Giovanna, prior to
 development:
 
-[daq-buildtools] will contain:
+"[daq-buildtools] will contain:
 
 - One or more CMake modules defining common functions and macros that
   other packages will use in their CMakeLists.txt file
@@ -19,5 +19,5 @@ development:
 
 - Containing a template for CMakeLists.txt
 
-- Utilities such as “create_new_package.sh <name>”
+- Utilities such as “create_new_package.sh <name>” "
 
