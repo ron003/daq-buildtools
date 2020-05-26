@@ -20,7 +20,7 @@ startdir=$PWD
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
 
-if $clean_dir_check && [[ -n $( ls -a1 | grep -E -v "^quick-mrb-start.*" | grep -E -v "^\.\.?$" ) ]]; then
+if $clean_dir_check && [[ -n $( ls -a1 | grep -E -v "^quick-start.*" | grep -E -v "^\.\.?$" ) ]]; then
 
     cat<<EOF >&2                                                                                     
                                                                                                      
@@ -40,7 +40,9 @@ rm -f quick-start.sh
 repoloc=https://raw.githubusercontent.com/jcfreeman2/daq-buildtools/develop/bin/quick-start.sh
 curl -O $repoloc
 
+set +e   # It's not a bug per-se if diff finds a difference and returns nonzero
 potential_edits=$( diff $startdir/quick-start.sh $qs_tmpdir/quick-start.sh )
+set -e
 
 if [[ -n $potential_edits ]]; then
 
