@@ -37,7 +37,7 @@ mkdir -p $qs_tmpdir
 returndir=$PWD
 cd $qs_tmpdir
 rm -f quick-start.sh
-repoloc=https://github.com/jcfreeman2/daq-buildtools/blob/develop/bin/quick-start.sh
+repoloc=https://raw.githubusercontent.com/jcfreeman2/daq-buildtools/develop/bin/quick-start.sh
 curl -O $repoloc
 
 potential_edits=$( diff $startdir/quick-start.sh $qs_tmpdir/quick-start.sh )
