@@ -47,7 +47,6 @@ if $edits_check ; then
     qs_tmpdir=/tmp/${USER}_for_quick-start
     mkdir -p $qs_tmpdir
 
-    returndir=$PWD
     cd $qs_tmpdir
     rm -f quick-start.sh
     repoloc=https://raw.githubusercontent.com/jcfreeman2/daq-buildtools/develop/bin/quick-start.sh
@@ -71,6 +70,7 @@ EOF
 
     fi
 
+    cd $basedir
 fi # if $edits_check
 
 cat<<EOF > $build_script
