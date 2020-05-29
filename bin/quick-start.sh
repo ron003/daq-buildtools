@@ -3,11 +3,12 @@
 clean_dir_check=true
 edits_check=true
 
-build_script=build.sh
+build_script=source_me_to_build
 
 products_dirs="/cvmfs/dune.opensciencegrid.org/products/dune:/cvmfs/dune.opensciencegrid.org/dunedaq/products" 
 
-starttime=$( date )
+starttime_d=$( date )
+starttime_s=$( date +%s )
 
 for pd in $( echo $products_dirs | tr ":" " " ) ; do
     if [[ ! -e $pd ]]; then
@@ -22,6 +23,8 @@ TRACE_version=v3_15_09
 
 basedir=$PWD
 builddir=$basedir/build
+
+packages="app-framework-base:develop app-framework:develop ers:dune/ers-00-26-00"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -133,35 +136,70 @@ fi
 
 cd \$builddir
 
+starttime_cfggen_d=\$( date )
+starttime_cfggen_s=\$( date +%s )
 cmake ..
+retval="\$?"
+endtime_cfggen_d=\$( date )
+endtime_cfggen_s=\$( date +%s )
 
-if [[ "\$?" != "0" ]]; then
+if [[ "\$retval" == "0" ]]; then
 
-echo "There was a problem running \"cmake ..\" from \$builddir (i.e., during" >&2
-echo "CMake ${CMAKE_VERSION}'s config+generate phases). Scroll up for" >&2
+cfggentime=\$(( endtime_cfggen_s - starttime_cfggen_s ))
+echo "CMake \${CMAKE_VERSION}'s config+generate stages took \$cfggentime seconds"
+echo "Start time: \$starttime_cfggen_d"
+echo "End time:   \$endtime_cfggen_d"
+
+else
+
+echo "There was a problem running \"cmake ..\" from \$builddir (i.e., the" >&2
+echo "CMake \${CMAKE_VERSION}'s config+generate stages). Scroll up for" >&2
 echo "details. Returning..."
 
    return 20
 fi
 
+starttime_build_d=\$( date )
+starttime_build_s=\$( date +%s )
 cmake --build . 
+retval="\$?"
+endtime_build_d=\$( date )
+endtime_build_s=\$( date +%s )
 
-if [[ "\$?" != "0" ]]; then
+if [[ "\$retval" == "0" ]]; then
+
+buildtime=\$((endtime_build_s - starttime_build_s))
+
+echo "CMake \${CMAKE_VERSION}'s build stage took \$buildtime seconds"
+echo "Start time: \$starttime_build_d"
+echo "End time:   \$endtime_build_d"
+
+
+else
 
 echo "There was a problem running "cmake --build ." from $builddir (i.e.," >&2
-echo "during CMake ${CMAKE_VERSION}'s build phase). Scroll up for" >&2
+echo "CMake \${CMAKE_VERSION}'s build stage). Scroll up for" >&2
 echo "details. Returning..."
 
     return 30
 fi
 
-echo "CMake's config+generate+build phases all completed successfully"
+echo
+echo "config+generate stage took \$cfggentime seconds"
+echo "Start time: \$starttime_cfggen_d"
+echo "End time:   \$endtime_cfggen_d"
+echo
+echo "build stage took \$buildtime seconds"
+echo "Start time: \$starttime_build_d"
+echo "End time:   \$endtime_build_d"
+echo
+echo "CMake's config+generate+build stages all completed successfully"
+echo
 
 EOF
 
 
 cat >CMakeLists.txt<<EOF
-
 
 cmake_minimum_required(VERSION 3.12)
 
@@ -175,6 +213,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(TRACE REQUIRED)
 find_package(Boost REQUIRED COMPONENTS unit_test_framework program_options)
 
+if (CMAKE_COMPILER_VERSION VERSION_LESS 9.3.0)
+   add_compile_options( -Wno-virtual-move-assign ) # False positive: v8.2.0 complains even if there's no data in base class
+endif()
+
+add_subdirectory(ers)
 add_subdirectory(app-framework-base)
 add_subdirectory(app-framework)
 
@@ -183,17 +226,36 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Set to ON to produce a compile_
 EOF
 
 
-packages="app-framework-base app-framework"
+for package in $packages; do
+    packagename=$( echo $package | sed -r 's/:.*//g' )
+    packagebranch=$( echo $package | sed -r 's/.*://g' )
+    echo "Cloning $packagename repo, will use $packagebranch branch..."
+    git clone https://github.com/DUNE-DAQ/${packagename}.git
+    cd ${packagename}
+    git checkout $packagebranch
 
-for package in $packages ; do
-    echo "Cloning $package repo..."
-    git clone https://github.com/DUNE-DAQ/${package}.git
+    if [[ "$?" != "0" ]]; then
+	echo >&2
+	echo "WARNING: unable to check out $packagebranch branch of ${packagename}. Among other consequences, your build may fail..." >&2
+	echo >&2
+    fi
+    cd ..
 done
 
 mkdir -p $builddir
 
-echo "Start time: $starttime"
-echo "End time: "$(date)
+endtime_d=$( date )
+endtime_s=$( date +%s )
+
+echo
+echo "Total time to run "$( basename $0)": "$(( endtime_s - starttime_s ))" seconds"
+echo "Start time: $starttime_d"
+echo "End time:   $endtime_d"
+echo
+echo "To build, run \". source_me_to_build\""
+echo "To perform a clean build, run \"rm -rf $builddir/*\" before running the build command"
+echo
 echo "Script completed successfully"
+echo
 exit 0
 
