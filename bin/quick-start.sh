@@ -12,7 +12,7 @@ starttime_s=$( date +%s )
 
 for pd in $( echo $products_dirs | tr ":" " " ) ; do
     if [[ ! -e $pd ]]; then
-	echo "Unable to find needed products area \"$pd\"" >&2
+	echo "Unable to find needed products area \"$pd\"; exiting..." >&2
 	exit 1
     fi
 done
@@ -23,6 +23,7 @@ TRACE_version=v3_15_09
 
 basedir=$PWD
 builddir=$basedir/build
+logdir=$basedir/log
 
 packages="app-framework-base:develop app-framework:develop ers:dune/ers-00-26-00"
 
@@ -65,7 +66,7 @@ of the script at the head of the develop branch in the daq-buildtool's
 central repository. This may mean that this script makes obsolete
 assumptions, etc., which could compromise your working
 environment. Please delete this script and install your daq-buildtools
-area according to the instructions at [LOCATION TBD]
+area according to the instructions at https://github.com/DUNE-DAQ/app-framework-base/wiki/Compiling-and-running
 
 EOF
 
@@ -78,18 +79,12 @@ fi # if $edits_check
 
 cat<<EOF > $build_script
 
+origdir=\$PWD
 basedir=$basedir
-
-if [[ "\$PWD" != "\$basedir" ]]; then
-  echo "This script needs to be sourced out of \${basedir}; returning..."
-  return 20
-fi
 
 if [[ -z \$DUNE_DAQ_BUILD_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced in this shell; setting up the build environment"
-
-export DUNE_DAQ_BUILD_SCRIPT_SOURCED=1
 
 EOF
 
@@ -118,13 +113,15 @@ setup_returns=\$setup_returns"\$? "
 setup TRACE $TRACE_version
 setup_returns=\$setup_returns"\$? "
 
-echo "setup_returns=\$setup_returns"
+if [[ "\$setup_returns" =~ [1-9] ]]; then
+  echo "At least one of the packages this script attempted to set up didn't set up correctly; returning..." >&2
+  cd \$origdir
+  return 1
+fi
 
 builddir=$builddir
-appframework_unittestdir=$basedir/app-framework/unittest
-appframework_integrationtestdir=$basedir/app-framework/test
-appframework_headerdir=$basedir/app-framework/include/app-framework/DAQModules
-appframework_srcdir=$basedir/app-framework/src/DAQModules
+
+export DUNE_DAQ_BUILD_SCRIPT_SOURCED=1
 
 fi    # if DUNE_DAQ_BUILD_SCRIPT_SOURCED wasn't defined
 
@@ -138,7 +135,7 @@ cd \$builddir
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake ..
+cmake .. 
 retval="\$?"
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -156,13 +153,15 @@ echo "There was a problem running \"cmake ..\" from \$builddir (i.e., the" >&2
 echo "CMake \${CMAKE_VERSION}'s config+generate stages). Scroll up for" >&2
 echo "details. Returning..."
 
+   cd \$origdir
    return 20
 fi
 
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
-cmake --build . 
-retval="\$?"
+build_log=$logdir/build_attempt_\$( echo \$starttime_build_d | tr "[: ]" "_" ).log
+cmake --build . |& tee \$build_log
+retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
 endtime_build_s=\$( date +%s )
 
@@ -179,8 +178,9 @@ else
 
 echo "There was a problem running "cmake --build ." from $builddir (i.e.," >&2
 echo "CMake \${CMAKE_VERSION}'s build stage). Scroll up for" >&2
-echo "details. Returning..."
+echo "details or look at \${build_log}. Returning..."
 
+    cd \$origdir
     return 30
 fi
 
@@ -193,8 +193,12 @@ echo "build stage took \$buildtime seconds"
 echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
+echo "Output of build is saved in \${build_log}."
+echo
 echo "CMake's config+generate+build stages all completed successfully"
 echo
+
+cd \$origdir
 
 EOF
 
@@ -243,6 +247,7 @@ for package in $packages; do
 done
 
 mkdir -p $builddir
+mkdir -p $logdir
 
 endtime_d=$( date )
 endtime_s=$( date +%s )
@@ -252,7 +257,7 @@ echo "Total time to run "$( basename $0)": "$(( endtime_s - starttime_s ))" seco
 echo "Start time: $starttime_d"
 echo "End time:   $endtime_d"
 echo
-echo "To build, run \". source_me_to_build\""
+echo "To build, run \". $basedir/source_me_to_build\""
 echo "To perform a clean build, run \"rm -rf $builddir/*\" before running the build command"
 echo
 echo "Script completed successfully"
