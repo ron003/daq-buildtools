@@ -18,14 +18,19 @@ for pd in $( echo $products_dirs | tr ":" " " ) ; do
 done
 
 cmake_version=v3_17_2
-boost_version=v1_73_0
+boost_version=v1_70_0
+cetlib_version=v3_10_00
 TRACE_version=v3_15_09
+
+gcc_version=v8_2_0
+gcc_version_qualifier=e19  # Make sure this matches with the version
+
 
 basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="app-framework-base:develop app-framework:develop ers:dune/ers-00-26-00"
+packages="app-framework:develop ers:dune/ers-00-26-00"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -66,7 +71,7 @@ of the script at the head of the develop branch in the daq-buildtool's
 central repository. This may mean that this script makes obsolete
 assumptions, etc., which could compromise your working
 environment. Please delete this script and install your daq-buildtools
-area according to the instructions at https://github.com/DUNE-DAQ/app-framework-base/wiki/Compiling-and-running
+area according to the instructions at https://github.com/DUNE-DAQ/app-framework/wiki/Compiling-and-running
 
 EOF
 
@@ -84,7 +89,7 @@ basedir=$basedir
 
 if [[ -z \$DUNE_DAQ_BUILD_SCRIPT_SOURCED ]]; then
 
-echo "This script hasn't yet been sourced in this shell; setting up the build environment"
+echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
 EOF
 
@@ -108,7 +113,11 @@ cat<<EOF >> $build_script
 setup_returns=""
 setup cmake $cmake_version 
 setup_returns=\$setup_returns"\$? "
-setup boost $boost_version -q e19:debug
+setup gcc $gcc_version
+setup_returns=\$setup_returns"\$? "
+setup boost $boost_version -q ${gcc_version_qualifier}:debug
+setup_returns=\$setup_returns"\$? "
+setup cetlib $cetlib_version -q ${gcc_version_qualifier}:debug
 setup_returns=\$setup_returns"\$? "
 setup TRACE $TRACE_version
 setup_returns=\$setup_returns"\$? "
@@ -133,9 +142,11 @@ fi
 
 cd \$builddir
 
+build_log=/home/jcfree/deleteme2/log/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
+
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake .. 
+cmake .. |& tee \$build_log
 retval="\$?"
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -151,16 +162,28 @@ else
 
 echo "There was a problem running \"cmake ..\" from \$builddir (i.e., the" >&2
 echo "CMake \${CMAKE_VERSION}'s config+generate stages). Scroll up for" >&2
-echo "details. Returning..."
+echo "details or look at \${build_log}. Returning..."
 
    cd \$origdir
    return 20
 fi
 
+nprocs=\$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
+nprocs_argument=""
+ 
+if [[ -n \$nprocs && \$nprocs =~ ^[0-9]+$ ]]; then
+    echo "This script believes you have \$nprocs processors available on this system, and will use as many of them as it can"
+    nprocs_argument=" -j \$nprocs"
+else
+    echo "Unable to determine the number of processors available, will not pass the "-j <nprocs>" argument on to the build stage" >&2
+fi
+
+
+
+
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
-build_log=$logdir/build_attempt_\$( echo \$starttime_build_d | tr "[: ]" "_" ).log
-cmake --build . |& tee \$build_log
+cmake --build . -- \$nprocs_argument |& tee -a \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
 endtime_build_s=\$( date +%s )
@@ -215,14 +238,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 find_package(TRACE REQUIRED)
-find_package(Boost REQUIRED COMPONENTS unit_test_framework program_options)
+
+# May eventually want to uncomment the Boost find_package, but for the
+# time being it's handled in the package's CMakeLists.txt files
+
+#find_package(Boost REQUIRED COMPONENTS unit_test_framework program_options)
 
 if (CMAKE_COMPILER_VERSION VERSION_LESS 9.3.0)
    add_compile_options( -Wno-virtual-move-assign ) # False positive: v8.2.0 complains even if there's no data in base class
 endif()
 
 add_subdirectory(ers)
-add_subdirectory(app-framework-base)
 add_subdirectory(app-framework)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Set to ON to produce a compile_commands.json file which clang-tidy can use" FORCE)
