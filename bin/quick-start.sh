@@ -58,7 +58,7 @@ if $edits_check ; then
 
     cd $qs_tmpdir
     rm -f quick-start.sh
-    repoloc=https://raw.githubusercontent.com/jcfreeman2/daq-buildtools/develop/bin/quick-start.sh
+    repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/bin/quick-start.sh
     curl -O $repoloc
 
     potential_edits=$( diff $basedir/quick-start.sh $qs_tmpdir/quick-start.sh )
@@ -142,7 +142,7 @@ fi
 
 cd \$builddir
 
-build_log=/home/jcfree/deleteme2/log/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
+build_log=\$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
