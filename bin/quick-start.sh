@@ -142,7 +142,7 @@ fi
 
 cd \$builddir
 
-build_log=\$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
+build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
