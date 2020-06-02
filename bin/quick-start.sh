@@ -5,7 +5,7 @@ edits_check=true
 
 build_script=source_me_to_build
 
-products_dirs="/cvmfs/dune.opensciencegrid.org/products/dune:/cvmfs/dune.opensciencegrid.org/dunedaq/products" 
+products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/products" 
 
 starttime_d=$( date )
 starttime_s=$( date +%s )
