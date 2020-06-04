@@ -236,22 +236,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 find_package(TRACE REQUIRED)
-
-# May eventually want to uncomment the Boost find_package, but for the
-# time being it's handled in the package's CMakeLists.txt files
-
-#find_package(Boost REQUIRED COMPONENTS unit_test_framework program_options)
-
-if (CMAKE_COMPILER_VERSION VERSION_LESS 9.3.0)
-   add_compile_options( -Wno-virtual-move-assign ) # False positive: v8.2.0 complains even if there's no data in base class
-endif()
 
 add_subdirectory(ers)
 add_subdirectory(app-framework)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Set to ON to produce a compile_commands.json file which clang-tidy can use" FORCE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 EOF
 
