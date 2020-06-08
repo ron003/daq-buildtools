@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-clean_dir_check=true
+empty_dir_check=true
 edits_check=true
 
 build_script=source_me_to_build
@@ -40,7 +40,7 @@ if [[ -z $USER || -z $HOSTNAME ]]; then
     exit 10
 fi
 
-if $clean_dir_check && [[ -n $( ls -a1 | grep -E -v "^quick-start.*" | grep -E -v "^\.\.?$" ) ]]; then
+if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^quick-start.*" | grep -E -v "^\.\.?$" ) ]]; then
 
     cat<<EOF >&2                                                                               
 
@@ -49,6 +49,19 @@ should only be run in a clean directory. Exiting...
 
 EOF
     exit 20
+
+elif ! $empty_dir_check ; then
+
+    cat<<EOF >&2
+
+WARNING: The check for whether any files besides this script exist in
+its directory has been switched off. This may mean assumptions the
+script makes are violated, resulting in undesired behavior.
+
+EOF
+
+    sleep 5
+
 fi
 
 if $edits_check ; then
@@ -80,9 +93,28 @@ EOF
     fi
 
     cd $basedir
+
+else 
+
+cat<<EOF >&2
+
+WARNING: The feature whereby this script checks itself to see if it's
+different than its version at the head of the central repo's develop
+branch has been switched off. User assumes the risk that the script
+may make out-of-date assumptions.
+
+EOF
+
+sleep 5
+
 fi # if $edits_check
 
 cat<<EOF > $build_script
+
+clean_build=false
+if [[ -n \$1 && "\$1" == "--clean" ]]; then
+  clean_build=true
+fi
 
 origdir=\$PWD
 basedir=$basedir
@@ -141,6 +173,25 @@ fi
 
 
 cd \$builddir
+
+if \$clean_build; then 
+  
+   # Want to be damn sure of we're in the right directory, rm -rf * is no joke...
+
+   if  [[ \$( echo \$PWD | sed -r 's!.*/(.*)!\1!' ) =~ ^build/*$ ]]; then
+     echo "Clean build requested, will delete all the contents of build directory \"\$PWD\"."
+     echo "If you wish to abort, you have 5 seconds to hit Ctrl-c"
+     sleep 5
+     rm -rf *
+   else
+     echo "SCRIPT ERROR: you requested a clean build, but this script thinks that \$builddir isn't the build directory." >&2
+     echo "You can use "rm -rf *" to clean out the build directory, but as always with that command, BE CAREFUL." >&2
+     echo "Please contact John Freeman at jcfree@fnal.gov and notify him of this message" >&2
+     return 11
+   fi
+
+fi
+
 
 build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
@@ -258,6 +309,7 @@ for package in $packages; do
 	echo >&2
 	echo "WARNING: unable to check out $packagebranch branch of ${packagename}. Among other consequences, your build may fail..." >&2
 	echo >&2
+	sleep 5
     fi
     cd ..
 done
@@ -273,8 +325,8 @@ echo "Total time to run "$( basename $0)": "$(( endtime_s - starttime_s ))" seco
 echo "Start time: $starttime_d"
 echo "End time:   $endtime_d"
 echo
-echo "To build, run \". $basedir/source_me_to_build\""
-echo "To perform a clean build, run \"rm -rf $builddir/*\" before running the build command"
+echo "To build, run \". $basedir/$build_script\""
+echo "To perform a clean build (i.e., you rebuild everything), add the \" --clean\" option"
 echo
 echo "Script completed successfully"
 echo
