@@ -17,20 +17,22 @@ for pd in $( echo $products_dirs | tr ":" " " ) ; do
     fi
 done
 
-cmake_version=v3_17_2
-boost_version=v1_70_0
-cetlib_version=v3_10_00
-TRACE_version=v3_15_09
-
 gcc_version=v8_2_0
 gcc_version_qualifier=e19  # Make sure this matches with the version
 
+boost_version=v1_70_0
+cetlib_version=v3_10_00
+cmake_version=v3_17_2
+TRACE_version=v3_15_09
+
+boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
+TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
 basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="app-framework:develop ers:dune/ers-00-26-00"
+packages="appfwk:develop ers:dune/ers-00-26-00"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -198,7 +200,7 @@ build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
 cmake .. |& tee \$build_log
-retval="\$?"
+retval=\${PIPESTATUS[0]}  # Captures the return value of cmake .., not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
 
@@ -287,10 +289,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(TRACE REQUIRED)
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_NO_BOOST_CMAKE ON)
+set(BUILD_SHARED_LIBS ON)
+
+find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework program_options REQUIRED)
+find_package(TRACE $TRACE_version_with_dots REQUIRED)
 
 add_subdirectory(ers)
-add_subdirectory(app-framework)
+add_subdirectory(appfwk)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
