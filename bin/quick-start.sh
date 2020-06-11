@@ -260,6 +260,8 @@ echo "details or look at \${build_log}. Returning..."
     return 30
 fi
 
+num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
+
 echo
 echo "config+generate stage took \$cfggentime seconds"
 echo "Start time: \$starttime_cfggen_d"
@@ -269,7 +271,7 @@ echo "build stage took \$buildtime seconds"
 echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
-echo "Output of build is saved in \${build_log}."
+echo "Output of build is saved in \${build_log} (contains an estimated \$num_estimated_warnings warnings.)"
 echo
 echo "CMake's config+generate+build stages all completed successfully"
 echo
@@ -296,10 +298,16 @@ set(BUILD_SHARED_LIBS ON)
 find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework program_options REQUIRED)
 find_package(TRACE $TRACE_version_with_dots REQUIRED)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+add_compile_options( -g -pedantic -Wall -Wextra )
+
 add_subdirectory(ers)
 add_subdirectory(appfwk)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
+
 
 EOF
 
