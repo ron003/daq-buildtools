@@ -262,6 +262,8 @@ echo "details or look at \${build_log}. Returning..."
     return 30
 fi
 
+num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
+
 echo
 echo "config+generate stage took \$cfggentime seconds"
 echo "Start time: \$starttime_cfggen_d"
@@ -271,7 +273,7 @@ echo "build stage took \$buildtime seconds"
 echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
-echo "Output of build is saved in \${build_log}."
+echo "Output of build is saved in \${build_log} (contains an estimated \$num_estimated_warnings warnings.)"
 echo
 echo "CMake's config+generate+build stages all completed successfully"
 echo
