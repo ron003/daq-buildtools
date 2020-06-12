@@ -23,9 +23,11 @@ gcc_version_qualifier=e19  # Make sure this matches with the version
 boost_version=v1_70_0
 cetlib_version=v3_10_00
 cmake_version=v3_17_2
+nlohmann_json_version=v3_2_0
 TRACE_version=v3_15_09
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
+nlohmann_json_with_dots=$( echo $nlohmann_json_version | sed -r 's/^v//;s/_/./g' )
 TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
 basedir=$PWD
@@ -289,17 +291,33 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_NO_BOOST_CMAKE ON)
 set(BUILD_SHARED_LIBS ON)
+
+# Directories should always be added *before* the current path
+set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 
 find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework program_options REQUIRED)
 find_package(TRACE $TRACE_version_with_dots REQUIRED)
 
-add_subdirectory(ers)
-add_subdirectory(appfwk)
+find_package(nlohmann_json $nlohmann_json_version_with_dots )
+
+if(NOT \${nlohmann_json_FOUND})
+  message("nlohmann_json NOT FOUND! Downloading single-header from GitHub!")
+  file(DOWNLOAD https://github.com/nlohmann/json/raw/develop/single_include/nlohmann/json.hpp nlohmann/json.hpp)
+  include_directories(\${CMAKE_BINARY_DIR})
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+add_compile_options( -g -pedantic -Wall -Wextra )
+
+include_directories(SYSTEM \${CMAKE_SOURCE_DIR}/ers)
+add_subdirectory(ers)
+
+include_directories(\${CMAKE_SOURCE_DIR}/appfwk/include)
+add_subdirectory(appfwk)
+
+
 
 EOF
 
