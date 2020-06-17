@@ -262,6 +262,13 @@ echo "details or look at \${build_log}. Returning..."
     return 30
 fi
 
+if [[ -e \$builddir/appfwk/scripts/setupForRunning.sh ]]; then
+  . \$builddir/appfwk/scripts/setupForRunning.sh
+else
+  echo "Error: this script makes an incorrect assumption about the existence of \$builddir/appfwk/scripts/setupForRunning.sh; returning..." >&2
+  return 2
+fi
+
 num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
 
 echo
