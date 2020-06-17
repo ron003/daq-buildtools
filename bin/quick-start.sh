@@ -324,6 +324,8 @@ message(WARNING "ctest will *not* work! enable_testing() call had to be disabled
 set(CMAKE_MODULE_PATH \${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/CMake \${CMAKE_MODULE_PATH})
 include(DAQ)
 
+include_directories(\${DAQ_INCLUDES_UNIVERSAL})
+
 include_directories(SYSTEM \${CMAKE_SOURCE_DIR}/ers)
 add_subdirectory(ers)
 
