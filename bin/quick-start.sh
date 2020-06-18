@@ -23,16 +23,18 @@ gcc_version_qualifier=e19  # Make sure this matches with the version
 boost_version=v1_70_0
 cetlib_version=v3_10_00
 cmake_version=v3_17_2
+nlohmann_json_version=v3_2_0
 TRACE_version=v3_15_09
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
+nlohmann_json_with_dots=$( echo $nlohmann_json_version | sed -r 's/^v//;s/_/./g' )
 TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
 basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="appfwk:develop ers:dune/ers-00-26-00"
+packages="daq-buildtools:develop appfwk:develop ers:dune/ers-00-26-00"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -260,6 +262,13 @@ echo "details or look at \${build_log}. Returning..."
     return 30
 fi
 
+if [[ -e \$builddir/appfwk/scripts/setupForRunning.sh ]]; then
+  . \$builddir/appfwk/scripts/setupForRunning.sh
+else
+  echo "Error: this script makes an incorrect assumption about the existence of \$builddir/appfwk/scripts/setupForRunning.sh; returning..." >&2
+  return 2
+fi
+
 num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
 
 echo
@@ -291,21 +300,44 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_NO_BOOST_CMAKE ON)
 set(BUILD_SHARED_LIBS ON)
+
+# Directories should always be added *before* the current path
+set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 
 find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework program_options REQUIRED)
 find_package(TRACE $TRACE_version_with_dots REQUIRED)
+
+find_package(nlohmann_json $nlohmann_json_version_with_dots )
+
+if(NOT \${nlohmann_json_FOUND})
+  message("nlohmann_json NOT FOUND! Downloading single-header from GitHub!")
+  file(DOWNLOAD https://github.com/nlohmann/json/raw/develop/single_include/nlohmann/json.hpp nlohmann/json.hpp)
+  include_directories(\${CMAKE_BINARY_DIR})
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_options( -g -pedantic -Wall -Wextra )
 
+set(DAQ_LIBRARIES_UNIVERSAL ers pthread)
+set(DAQ_INCLUDES_UNIVERSAL \${Boost_INCLUDE_DIRS})
+
+set(DAQ_LIBRARIES_UNIVERSAL_EXE \${Boost_PROGRAM_OPTIONS_LIBRARY} \${DAQ_LIBRARIES_UNIVERSAL})
+
+message(WARNING "ctest will *not* work! enable_testing() call had to be disabled since the ers package defines a target with the name \"test\", which causes enable_testing() to fail")
+#enable_testing()
+
+set(CMAKE_MODULE_PATH \${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/CMake \${CMAKE_MODULE_PATH})
+include(DAQ)
+
+include_directories(SYSTEM \${DAQ_INCLUDES_UNIVERSAL})
+
+include_directories(SYSTEM \${CMAKE_SOURCE_DIR}/ers)
 add_subdirectory(ers)
+
+include_directories(\${CMAKE_SOURCE_DIR}/appfwk/include)
 add_subdirectory(appfwk)
-
-
 
 
 
