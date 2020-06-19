@@ -25,6 +25,7 @@ cetlib_version=v3_10_00
 cmake_version=v3_17_2
 nlohmann_json_version=v3_2_0
 TRACE_version=v3_15_09
+folly_version=v2020_05_25
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
 nlohmann_json_with_dots=$( echo $nlohmann_json_version | sed -r 's/^v//;s/_/./g' )
@@ -151,11 +152,13 @@ setup cmake $cmake_version
 setup_returns=\$setup_returns"\$? "
 setup gcc $gcc_version
 setup_returns=\$setup_returns"\$? "
-setup boost $boost_version -q ${gcc_version_qualifier}:debug
+setup boost $boost_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
-setup cetlib $cetlib_version -q ${gcc_version_qualifier}:debug
+setup cetlib $cetlib_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
 setup TRACE $TRACE_version
+setup_returns=\$setup_returns"\$? "
+setup folly $folly_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
 
 if [[ "\$setup_returns" =~ [1-9] ]]; then
