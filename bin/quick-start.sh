@@ -26,6 +26,7 @@ cmake_version=v3_17_2
 nlohmann_json_version=v3_2_0
 TRACE_version=v3_15_09
 folly_version=v2020_05_25
+ninja_version=v1_8_2
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
 nlohmann_json_with_dots=$( echo $nlohmann_json_version | sed -r 's/^v//;s/_/./g' )
@@ -160,6 +161,7 @@ setup TRACE $TRACE_version
 setup_returns=\$setup_returns"\$? "
 setup folly $folly_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
+setup ninja $ninja_version 2>/dev/null # Don't care if it fails
 
 if [[ "\$setup_returns" =~ [1-9] ]]; then
   echo "At least one of the packages this script attempted to set up didn't set up correctly; returning..." >&2
@@ -202,9 +204,14 @@ fi
 
 build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
+generator_arg=
+if [ "x\${SETUP_NINJA}" != "x" ]; then
+  generator_arg="-G Ninja"
+fi
+
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake .. |& tee \$build_log
+cmake \${generator_arg} .. |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake .., not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -241,7 +248,11 @@ fi
 
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
+if [ "x\${SETUP_NINJA}" == "x" ]; then
 cmake --build . -- \$nprocs_argument |& tee -a \$build_log
+else
+ninja \$nprocs_argument |& tee -a \$build_log
+fi
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
 endtime_build_s=\$( date +%s )
