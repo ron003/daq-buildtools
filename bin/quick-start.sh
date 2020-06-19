@@ -204,6 +204,9 @@ fi
 
 build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
+# We only need to explicitly run CMake if the cache has not yet been generated
+if ! [ -e CMakeCache.txt ];then
+
 generator_arg=
 if [ "x\${SETUP_NINJA}" != "x" ]; then
   generator_arg="-G Ninja"
@@ -232,6 +235,8 @@ echo "details or look at \${build_log}. Returning..."
    cd \$origdir
    return 20
 fi
+
+fi # !-e CMakeCache.txt
 
 nprocs=\$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
 nprocs_argument=""
