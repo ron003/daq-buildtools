@@ -205,6 +205,7 @@ fi
 build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
 # We only need to explicitly run CMake if the cache has not yet been generated
+
 if ! [ -e CMakeCache.txt ];then
 
 generator_arg=
@@ -221,6 +222,9 @@ endtime_cfggen_s=\$( date +%s )
 
 if [[ "\$retval" == "0" ]]; then
 
+sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config+generate stage is skipped in $build_script if this file exists' \$builddir/CMakeCache.txt
+sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' \$builddir/CMakeCache.txt
+
 cfggentime=\$(( endtime_cfggen_s - starttime_cfggen_s ))
 echo "CMake \${CMAKE_VERSION}'s config+generate stages took \$cfggentime seconds"
 echo "Start time: \$starttime_cfggen_d"
@@ -235,6 +239,12 @@ echo "details or look at \${build_log}. Returning..."
    cd \$origdir
    return 20
 fi
+
+else
+
+unset cfggentime starttime_cfggen_s starttime_cfggen_d endtime_cfggen_s endtime_cfggen_d
+
+echo "The config+generate stage was skipped as CMakeCache.txt was already found in \$builddir"
 
 fi # !-e CMakeCache.txt
 
@@ -266,11 +276,6 @@ if [[ "\$retval" == "0" ]]; then
 
 buildtime=\$((endtime_build_s - starttime_build_s))
 
-echo "CMake \${CMAKE_VERSION}'s build stage took \$buildtime seconds"
-echo "Start time: \$starttime_build_d"
-echo "End time:   \$endtime_build_d"
-
-
 else
 
 echo "There was a problem running "cmake --build ." from $builddir (i.e.," >&2
@@ -291,18 +296,29 @@ fi
 num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
 
 echo
-echo "config+generate stage took \$cfggentime seconds"
-echo "Start time: \$starttime_cfggen_d"
-echo "End time:   \$endtime_cfggen_d"
-echo
+
+if [[ -n \$cfggentime ]]; then
+  echo
+  echo "config+generate stage took \$cfggentime seconds"
+  echo "Start time: \$starttime_cfggen_d"
+  echo "End time:   \$endtime_cfggen_d"
+  echo
+else
+  echo "config+generate stage was skipped"
+fi
 echo "build stage took \$buildtime seconds"
 echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
 echo "Output of build is saved in \${build_log} (contains an estimated \$num_estimated_warnings warnings.)"
 echo
-echo "CMake's config+generate+build stages all completed successfully"
-echo
+
+if [[ -n \$cfggentime ]]; then
+  echo "CMake's config+generate+build stages all completed successfully"
+  echo
+else
+  echo "CMake's build stage completed successfully"
+fi
 
 cd \$origdir
 
