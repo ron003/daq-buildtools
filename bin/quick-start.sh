@@ -3,7 +3,8 @@
 empty_dir_check=true
 edits_check=true
 
-build_script=source_me_to_build
+setup_script=setup_build_environment
+build_script=build_daq_software.sh
 
 products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
 
@@ -115,17 +116,9 @@ sleep 5
 
 fi # if $edits_check
 
-cat<<EOF > $build_script
+cat<<EOF > $setup_script
 
-clean_build=false
-if [[ -n \$1 && "\$1" == "--clean" ]]; then
-  clean_build=true
-fi
-
-origdir=\$PWD
-basedir=$basedir
-
-if [[ -z \$DUNE_DAQ_BUILD_SCRIPT_SOURCED ]]; then
+if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
@@ -133,7 +126,7 @@ EOF
 
 for pd in $( echo $products_dirs | tr ":" " " ); do
 
-    cat<<EOF >> $build_script
+    cat<<EOF >> $setup_script
 
 . $pd/setup
 if [[ "\$?" != 0 ]]; then
@@ -146,7 +139,7 @@ EOF
 done
 
 
-cat<<EOF >> $build_script
+cat<<EOF >> $setup_script
 
 setup_returns=""
 setup cmake $cmake_version 
@@ -169,17 +162,41 @@ if [[ "\$setup_returns" =~ [1-9] ]]; then
   return 1
 fi
 
-builddir=$builddir
+export DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
+echo "This script has been sourced successfully"
+echo
 
-export DUNE_DAQ_BUILD_SCRIPT_SOURCED=1
+else
 
-fi    # if DUNE_DAQ_BUILD_SCRIPT_SOURCED wasn't defined
+echo "This script appears to have already been sourced successfully; returning..." >&2
+return 10
 
-if [[ ! -d \$builddir ]]; then
-    echo "Expected build directory $builddir not found; returning..." >&2
-    return 10
+fi    # if DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
+
+
+EOF
+
+cat<<EOF > $build_script
+#!/bin/bash
+
+clean_build=false
+if [[ -n \$1 && "\$1" == "--clean" ]]; then
+  clean_build=true
 fi
 
+builddir=$builddir
+
+if [[ ! -d \$builddir ]]; then
+    echo "Expected build directory \$builddir not found; exiting..." >&2
+    exit 1
+fi
+
+if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+echo
+echo "It appears you haven't yet sourced \"./setup_build_environment\" yet; please source it before running this script. Exiting..."
+echo
+exit 2
+fi
 
 cd \$builddir
 
@@ -194,9 +211,8 @@ if \$clean_build; then
      rm -rf *
    else
      echo "SCRIPT ERROR: you requested a clean build, but this script thinks that \$builddir isn't the build directory." >&2
-     echo "You can use "rm -rf *" to clean out the build directory, but as always with that command, BE CAREFUL." >&2
      echo "Please contact John Freeman at jcfree@fnal.gov and notify him of this message" >&2
-     return 11
+     exit 10
    fi
 
 fi
@@ -226,23 +242,22 @@ sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config
 sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' \$builddir/CMakeCache.txt
 
 cfggentime=\$(( endtime_cfggen_s - starttime_cfggen_s ))
-echo "CMake \${CMAKE_VERSION}'s config+generate stages took \$cfggentime seconds"
+echo "CMake's config+generate stages took \$cfggentime seconds"
 echo "Start time: \$starttime_cfggen_d"
 echo "End time:   \$endtime_cfggen_d"
 
 else
 
-echo "There was a problem running \"cmake ..\" from \$builddir (i.e., the" >&2
-echo "CMake \${CMAKE_VERSION}'s config+generate stages). Scroll up for" >&2
-echo "details or look at \${build_log}. Returning..."
+echo
+echo "There was a problem running \"cmake ..\" from \$builddir (i.e.," >&2
+echo "CMake's config+generate stages). Scroll up for" >&2
+echo "details or look at \${build_log}. Exiting..."
+echo
 
-   cd \$origdir
-   return 20
+    exit 30
 fi
 
 else
-
-unset cfggentime starttime_cfggen_s starttime_cfggen_d endtime_cfggen_s endtime_cfggen_d
 
 echo "The config+generate stage was skipped as CMakeCache.txt was already found in \$builddir"
 
@@ -255,7 +270,7 @@ if [[ -n \$nprocs && \$nprocs =~ ^[0-9]+$ ]]; then
     echo "This script believes you have \$nprocs processors available on this system, and will use as many of them as it can"
     nprocs_argument=" -j \$nprocs"
 else
-    echo "Unable to determine the number of processors available, will not pass the "-j <nprocs>" argument on to the build stage" >&2
+    echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
 fi
 
 
@@ -278,19 +293,22 @@ buildtime=\$((endtime_build_s - starttime_build_s))
 
 else
 
-echo "There was a problem running "cmake --build ." from $builddir (i.e.," >&2
-echo "CMake \${CMAKE_VERSION}'s build stage). Scroll up for" >&2
-echo "details or look at \${build_log}. Returning..."
+echo
+echo "There was a problem running \"cmake --build .\" from \$builddir (i.e.," >&2
+echo "CMake's build stage). Scroll up for" >&2
+echo "details or look at \${build_log}. Exiting..."
+echo
 
-    cd \$origdir
-    return 30
+   exit 40
 fi
 
 if [[ -e \$builddir/appfwk/scripts/setupForRunning.sh ]]; then
   . \$builddir/appfwk/scripts/setupForRunning.sh
 else
-  echo "Error: this script makes an incorrect assumption about the existence of \$builddir/appfwk/scripts/setupForRunning.sh; returning..." >&2
-  return 2
+  echo
+  echo "Error: this script makes an incorrect assumption about the existence of \$builddir/appfwk/scripts/setupForRunning.sh; exiting..." >&2
+  echo
+  exit 50
 fi
 
 num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
@@ -320,10 +338,8 @@ else
   echo "CMake's build stage completed successfully"
 fi
 
-cd \$origdir
-
 EOF
-
+chmod +x $build_script
 
 cat >CMakeLists.txt<<EOF
 
@@ -407,8 +423,9 @@ echo "Total time to run "$( basename $0)": "$(( endtime_s - starttime_s ))" seco
 echo "Start time: $starttime_d"
 echo "End time:   $endtime_d"
 echo
-echo "To build, run \". $basedir/$build_script\""
-echo "To perform a clean build (i.e., you rebuild everything), add the \" --clean\" option"
+echo "To build, execute the following commands: "
+echo ". ./$setup_script"
+echo "./$build_script  # And add the \" --clean\" option to rebuild everything"
 echo
 echo "Script completed successfully"
 echo
