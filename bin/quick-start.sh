@@ -347,7 +347,7 @@ find_package(nlohmann_json $nlohmann_json_version_with_dots )
 
 if(NOT \${nlohmann_json_FOUND})
   message("nlohmann_json NOT FOUND! Downloading single-header from GitHub!")
-  file(DOWNLOAD https://github.com/nlohmann/json/raw/develop/single_include/nlohmann/json.hpp nlohmann/json.hpp)
+  file(DOWNLOAD https://github.com/nlohmann/json/raw/v3.8.0/single_include/nlohmann/json.hpp nlohmann/json.hpp)
   include_directories(\${CMAKE_BINARY_DIR})
 endif()
 
