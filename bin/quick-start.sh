@@ -179,10 +179,32 @@ EOF
 cat<<EOF > $build_script
 #!/bin/bash
 
-clean_build=false
-if [[ -n \$1 && "\$1" == "--clean" ]]; then
-  clean_build=true
-fi
+run_tests=false
+clean_build=false 
+
+for arg in "\$@" ; do
+  if [[ "\$arg" == "--help" ]]; then
+    echo "Usage: "\$( basename \$0 )" --clean --unittest --help "
+    echo
+    echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
+    echo " --unittest means that unit test executables found in build are all run"
+    echo
+    echo "All arguments are optional. With no arguments, CMake will typically just run "
+    echo "build, unless build/CMakeCache.txt is missing"
+    echo
+    exit 0    
+
+  elif [[ "\$arg" == "--clean" ]]; then
+    clean_build=true
+  elif [[ "\$arg" == "--unittest" ]]; then
+    run_tests=true
+  else
+    echo "Unknown argument provided; run with \" --help\" to see valid options. Exiting..." >&2
+    exit 1
+  fi
+done
+
+
 
 builddir=$builddir
 
@@ -231,7 +253,7 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake \${generator_arg} .. |& tee \$build_log
+unbuffer cmake \${generator_arg} .. |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake .., not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -279,9 +301,9 @@ fi
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
 if [ "x\${SETUP_NINJA}" == "x" ]; then
-cmake --build . -- \$nprocs_argument |& tee -a \$build_log
+unbuffer cmake --build . -- \$nprocs_argument |& tee -a \$build_log
 else
-ninja \$nprocs_argument |& tee -a \$build_log
+unbuffer ninja \$nprocs_argument |& tee -a \$build_log
 fi
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
@@ -296,7 +318,7 @@ else
 echo
 echo "There was a problem running \"cmake --build .\" from \$builddir (i.e.," >&2
 echo "CMake's build stage). Scroll up for" >&2
-echo "details or look at \${build_log}. Exiting..."
+echo "details or look at the build log via \"more \${build_log}\". Exiting..."
 echo
 
    exit 40
@@ -328,7 +350,8 @@ echo "build stage took \$buildtime seconds"
 echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
-echo "Output of build is saved in \${build_log} (contains an estimated \$num_estimated_warnings warnings.)"
+echo "Output of build contains an estimated \$num_estimated_warnings warnings, and can be viewed later via: "
+echo "\"more \${build_log}\""
 echo
 
 if [[ -n \$cfggentime ]]; then
@@ -337,6 +360,39 @@ if [[ -n \$cfggentime ]]; then
 else
   echo "CMake's build stage completed successfully"
 fi
+
+if \$run_tests ; then
+ 
+     echo 
+     echo
+     echo
+     echo 
+     test_log=$logdir/unit_tests_\$( date | sed -r 's/[: ]+/_/g' ).log
+
+     for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
+       echo
+       echo
+       echo "RUNNING UNIT TESTS IN \$unittestdir"
+       echo "======================================================================"
+       for unittest in \$unittestdir/* ; do
+           if [[ -x \$unittest ]]; then
+               unbuffer \$unittest -l all |& tee \$test_log
+           fi
+       done
+ 
+     done
+ 
+     echo 
+     echo 
+     echo "Testing complete."
+     echo "This implies your code compiled before testing, though you can either scroll up or run \"more \$build_log\" to see build results"
+     echo "Test results are saved and can be viewed via \"more \$test_log\""
+     echo
+fi
+
+
+
+
 
 EOF
 chmod +x $build_script
@@ -425,7 +481,7 @@ echo "End time:   $endtime_d"
 echo
 echo "To build, execute the following commands: "
 echo ". ./$setup_script"
-echo "./$build_script  # And add the \" --clean\" option to rebuild everything"
+echo "./$build_script  # And add \" --help\" to just see your options"
 echo
 echo "Script completed successfully"
 echo
