@@ -29,7 +29,7 @@ folly_version=v2020_05_25
 ninja_version=v1_8_2
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
-nlohmann_json_with_dots=$( echo $nlohmann_json_version | sed -r 's/^v//;s/_/./g' )
+nlohmann_json_version_with_dots=$( echo $nlohmann_json_version | sed -r 's/^v//;s/_/./g' )
 TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
 basedir=$PWD
@@ -347,7 +347,7 @@ find_package(nlohmann_json $nlohmann_json_version_with_dots )
 
 if(NOT \${nlohmann_json_FOUND})
   message("nlohmann_json NOT FOUND! Downloading single-header from GitHub!")
-  file(DOWNLOAD https://github.com/nlohmann/json/raw/v${nlohmann_json_with_dots}/single_include/nlohmann/json.hpp nlohmann/json.hpp)
+  file(DOWNLOAD https://github.com/nlohmann/json/raw/v${nlohmann_json_version_with_dots}/single_include/nlohmann/json.hpp nlohmann/json.hpp)
   include_directories(\${CMAKE_BINARY_DIR})
 endif()
 
