@@ -3,7 +3,8 @@
 empty_dir_check=true
 edits_check=true
 
-build_script=source_me_to_build
+setup_script=setup_build_environment
+build_script=build_daq_software.sh
 
 products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
 
@@ -115,17 +116,9 @@ sleep 5
 
 fi # if $edits_check
 
-cat<<EOF > $build_script
+cat<<EOF > $setup_script
 
-clean_build=false
-if [[ -n \$1 && "\$1" == "--clean" ]]; then
-  clean_build=true
-fi
-
-origdir=\$PWD
-basedir=$basedir
-
-if [[ -z \$DUNE_DAQ_BUILD_SCRIPT_SOURCED ]]; then
+if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
@@ -133,7 +126,7 @@ EOF
 
 for pd in $( echo $products_dirs | tr ":" " " ); do
 
-    cat<<EOF >> $build_script
+    cat<<EOF >> $setup_script
 
 . $pd/setup
 if [[ "\$?" != 0 ]]; then
@@ -146,7 +139,7 @@ EOF
 done
 
 
-cat<<EOF >> $build_script
+cat<<EOF >> $setup_script
 
 setup_returns=""
 setup cmake $cmake_version 
@@ -169,17 +162,63 @@ if [[ "\$setup_returns" =~ [1-9] ]]; then
   return 1
 fi
 
+export DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
+echo "This script has been sourced successfully"
+echo
+
+else
+
+echo "This script appears to have already been sourced successfully; returning..." >&2
+return 10
+
+fi    # if DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
+
+
+EOF
+
+cat<<EOF > $build_script
+#!/bin/bash
+
+run_tests=false
+clean_build=false 
+
+for arg in "\$@" ; do
+  if [[ "\$arg" == "--help" ]]; then
+    echo "Usage: "\$( basename \$0 )" --clean --unittest --help "
+    echo
+    echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
+    echo " --unittest means that unit test executables found in build are all run"
+    echo
+    echo "All arguments are optional. With no arguments, CMake will typically just run "
+    echo "build, unless build/CMakeCache.txt is missing"
+    echo
+    exit 0    
+
+  elif [[ "\$arg" == "--clean" ]]; then
+    clean_build=true
+  elif [[ "\$arg" == "--unittest" ]]; then
+    run_tests=true
+  else
+    echo "Unknown argument provided; run with \" --help\" to see valid options. Exiting..." >&2
+    exit 1
+  fi
+done
+
+
+
 builddir=$builddir
 
-export DUNE_DAQ_BUILD_SCRIPT_SOURCED=1
-
-fi    # if DUNE_DAQ_BUILD_SCRIPT_SOURCED wasn't defined
-
 if [[ ! -d \$builddir ]]; then
-    echo "Expected build directory $builddir not found; returning..." >&2
-    return 10
+    echo "Expected build directory \$builddir not found; exiting..." >&2
+    exit 1
 fi
 
+if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+echo
+echo "It appears you haven't yet sourced \"./setup_build_environment\" yet; please source it before running this script. Exiting..."
+echo
+exit 2
+fi
 
 cd \$builddir
 
@@ -194,9 +233,8 @@ if \$clean_build; then
      rm -rf *
    else
      echo "SCRIPT ERROR: you requested a clean build, but this script thinks that \$builddir isn't the build directory." >&2
-     echo "You can use "rm -rf *" to clean out the build directory, but as always with that command, BE CAREFUL." >&2
      echo "Please contact John Freeman at jcfree@fnal.gov and notify him of this message" >&2
-     return 11
+     exit 10
    fi
 
 fi
@@ -215,7 +253,7 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake \${generator_arg} .. |& tee \$build_log
+unbuffer cmake \${generator_arg} .. |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake .., not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -226,23 +264,22 @@ sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config
 sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' \$builddir/CMakeCache.txt
 
 cfggentime=\$(( endtime_cfggen_s - starttime_cfggen_s ))
-echo "CMake \${CMAKE_VERSION}'s config+generate stages took \$cfggentime seconds"
+echo "CMake's config+generate stages took \$cfggentime seconds"
 echo "Start time: \$starttime_cfggen_d"
 echo "End time:   \$endtime_cfggen_d"
 
 else
 
-echo "There was a problem running \"cmake ..\" from \$builddir (i.e., the" >&2
-echo "CMake \${CMAKE_VERSION}'s config+generate stages). Scroll up for" >&2
-echo "details or look at \${build_log}. Returning..."
+echo
+echo "There was a problem running \"cmake ..\" from \$builddir (i.e.," >&2
+echo "CMake's config+generate stages). Scroll up for" >&2
+echo "details or look at \${build_log}. Exiting..."
+echo
 
-   cd \$origdir
-   return 20
+    exit 30
 fi
 
 else
-
-unset cfggentime starttime_cfggen_s starttime_cfggen_d endtime_cfggen_s endtime_cfggen_d
 
 echo "The config+generate stage was skipped as CMakeCache.txt was already found in \$builddir"
 
@@ -255,7 +292,7 @@ if [[ -n \$nprocs && \$nprocs =~ ^[0-9]+$ ]]; then
     echo "This script believes you have \$nprocs processors available on this system, and will use as many of them as it can"
     nprocs_argument=" -j \$nprocs"
 else
-    echo "Unable to determine the number of processors available, will not pass the "-j <nprocs>" argument on to the build stage" >&2
+    echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
 fi
 
 
@@ -264,9 +301,9 @@ fi
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
 if [ "x\${SETUP_NINJA}" == "x" ]; then
-cmake --build . -- \$nprocs_argument |& tee -a \$build_log
+unbuffer cmake --build . -- \$nprocs_argument |& tee -a \$build_log
 else
-ninja \$nprocs_argument |& tee -a \$build_log
+unbuffer ninja \$nprocs_argument |& tee -a \$build_log
 fi
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
@@ -278,19 +315,22 @@ buildtime=\$((endtime_build_s - starttime_build_s))
 
 else
 
-echo "There was a problem running "cmake --build ." from $builddir (i.e.," >&2
-echo "CMake \${CMAKE_VERSION}'s build stage). Scroll up for" >&2
-echo "details or look at \${build_log}. Returning..."
+echo
+echo "There was a problem running \"cmake --build .\" from \$builddir (i.e.," >&2
+echo "CMake's build stage). Scroll up for" >&2
+echo "details or look at the build log via \"more \${build_log}\". Exiting..."
+echo
 
-    cd \$origdir
-    return 30
+   exit 40
 fi
 
 if [[ -e \$builddir/appfwk/scripts/setupForRunning.sh ]]; then
   . \$builddir/appfwk/scripts/setupForRunning.sh
 else
-  echo "Error: this script makes an incorrect assumption about the existence of \$builddir/appfwk/scripts/setupForRunning.sh; returning..." >&2
-  return 2
+  echo
+  echo "Error: this script makes an incorrect assumption about the existence of \$builddir/appfwk/scripts/setupForRunning.sh; exiting..." >&2
+  echo
+  exit 50
 fi
 
 num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
@@ -310,7 +350,8 @@ echo "build stage took \$buildtime seconds"
 echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
-echo "Output of build is saved in \${build_log} (contains an estimated \$num_estimated_warnings warnings.)"
+echo "Output of build contains an estimated \$num_estimated_warnings warnings, and can be viewed later via: "
+echo "\"more \${build_log}\""
 echo
 
 if [[ -n \$cfggentime ]]; then
@@ -320,10 +361,41 @@ else
   echo "CMake's build stage completed successfully"
 fi
 
-cd \$origdir
+if \$run_tests ; then
+ 
+     echo 
+     echo
+     echo
+     echo 
+     test_log=$logdir/unit_tests_\$( date | sed -r 's/[: ]+/_/g' ).log
+
+     for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
+       echo
+       echo
+       echo "RUNNING UNIT TESTS IN \$unittestdir"
+       echo "======================================================================"
+       for unittest in \$unittestdir/* ; do
+           if [[ -x \$unittest ]]; then
+               unbuffer \$unittest -l all |& tee \$test_log
+           fi
+       done
+ 
+     done
+ 
+     echo 
+     echo 
+     echo "Testing complete."
+     echo "This implies your code compiled before testing, though you can either scroll up or run \"more \$build_log\" to see build results"
+     echo "Test results are saved and can be viewed via \"more \$test_log\""
+     echo
+fi
+
+
+
+
 
 EOF
-
+chmod +x $build_script
 
 cat >CMakeLists.txt<<EOF
 
@@ -409,8 +481,9 @@ echo "Total time to run "$( basename $0)": "$(( endtime_s - starttime_s ))" seco
 echo "Start time: $starttime_d"
 echo "End time:   $endtime_d"
 echo
-echo "To build, run \". $basedir/$build_script\""
-echo "To perform a clean build (i.e., you rebuild everything), add the \" --clean\" option"
+echo "To build, execute the following commands: "
+echo ". ./$setup_script"
+echo "./$build_script  # And add \" --help\" to just see your options"
 echo
 echo "Script completed successfully"
 echo
