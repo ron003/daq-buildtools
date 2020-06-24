@@ -340,8 +340,13 @@ set(BUILD_SHARED_LIBS ON)
 # Directories should always be added *before* the current path
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 
+set(CMAKE_MODULE_PATH \${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/CMake \${CMAKE_MODULE_PATH})
+include(DAQ)
+
 find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework program_options REQUIRED)
 find_package(TRACE $TRACE_version_with_dots REQUIRED)
+find_package(cetlib REQUIRED)   # Uses the daq-buildtools/CMake/Findcetlib.cmake
+find_package(folly REQUIRED)
 
 find_package(nlohmann_json $nlohmann_json_version_with_dots )
 
@@ -362,9 +367,6 @@ set(DAQ_LIBRARIES_UNIVERSAL_EXE \${Boost_PROGRAM_OPTIONS_LIBRARY} \${DAQ_LIBRARI
 
 message(WARNING "ctest will *not* work! enable_testing() call had to be disabled since the ers package defines a target with the name \"test\", which causes enable_testing() to fail")
 #enable_testing()
-
-set(CMAKE_MODULE_PATH \${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/CMake \${CMAKE_MODULE_PATH})
-include(DAQ)
 
 include_directories(SYSTEM \${DAQ_INCLUDES_UNIVERSAL})
 
