@@ -253,7 +253,7 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-unbuffer cmake \${generator_arg} .. |& tee \$build_log
+cmake \${generator_arg} .. |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake .., not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -301,9 +301,9 @@ fi
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
 if [ "x\${SETUP_NINJA}" == "x" ]; then
-unbuffer cmake --build . -- \$nprocs_argument |& tee -a \$build_log
+cmake --build . -- \$nprocs_argument |& tee -a \$build_log
 else
-unbuffer ninja \$nprocs_argument |& tee -a \$build_log
+ninja \$nprocs_argument |& tee -a \$build_log
 fi
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
@@ -318,7 +318,7 @@ else
 echo
 echo "There was a problem running \"cmake --build .\" from \$builddir (i.e.," >&2
 echo "CMake's build stage). Scroll up for" >&2
-echo "details or look at the build log via \"more \${build_log}\". Exiting..."
+echo "details or look at the build log via \"less \${build_log}\". Exiting..."
 echo
 
    exit 40
@@ -351,7 +351,7 @@ echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
 echo "Output of build contains an estimated \$num_estimated_warnings warnings, and can be viewed later via: "
-echo "\"more \${build_log}\""
+echo "\"less \${build_log}\""
 echo
 
 if [[ -n \$cfggentime ]]; then
@@ -376,7 +376,7 @@ if \$run_tests ; then
        echo "======================================================================"
        for unittest in \$unittestdir/* ; do
            if [[ -x \$unittest ]]; then
-               unbuffer \$unittest -l all |& tee \$test_log
+               \$unittest -l all |& tee \$test_log
            fi
        done
  
@@ -385,8 +385,8 @@ if \$run_tests ; then
      echo 
      echo 
      echo "Testing complete."
-     echo "This implies your code compiled before testing, though you can either scroll up or run \"more \$build_log\" to see build results"
-     echo "Test results are saved and can be viewed via \"more \$test_log\""
+     echo "This implies your code compiled before testing, though you can either scroll up or run \"less \$build_log\" to see build results"
+     echo "Test results are saved and can be viewed via \"less \$test_log\""
      echo
 fi
 
