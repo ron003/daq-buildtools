@@ -1,0 +1,23 @@
+WORKAREA_ROOT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
+BUILD_DIR="${WORKAREA_ROOT}/build"
+if [ ! -d "$BUILD_DIR" ]; then
+   ### Take action if $DIR exists ###
+   echo "WARNING: ${WORKAREA_ROOT} doesn't exist, run build and try again..."
+   return
+fi
+function sanitize_path {
+         p=""
+         for d in "$@"
+         do
+            p="${BUILD_DIR}/${d}:${p}"
+         done
+         p=${p%?};
+         echo $p
+}
+DAQ_APPS_PATHS=$(find build -type d -not -path '*CMakeFiles*' -name 'apps')
+DAQ_LIB_PATHS=$(find build -type d -not -path '*CMakeFiles*' -name 'src')
+DAQ_TEST_PATHS=$(find build -type d -not -path '*CMakeFiles*' -name 'test')
+
+export PATH="$(sanitize_path $DAQ_APPS_PATHS):$(sanitize_path DAQ_TEST_PATHS):$PATH"
+export LD_LIBRARY_PATH="$(sanitize_path $DAQ_LIB_PATHS):$(sanitize_path DAQ_TEST_PATHS):$LD_LIBRARY_PATH"
+export CET_PLUGIN_PATH="$(sanitize_path $DAQ_LIB_PATHS):$CET_PLUGIN_PATH"
