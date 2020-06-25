@@ -1,23 +1,72 @@
+
+
 WORKAREA_ROOT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 BUILD_DIR="${WORKAREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
-   ### Take action if $DIR exists ###
-   echo "WARNING: ${WORKAREA_ROOT} doesn't exist, run build and try again..."
-   return
+   echo "There doesn't appear to be a ./build subdirectory in this script's directory." >&2
+   echo "Please run a copy of this script from the base directory of a development area installed with quick-start.sh" >&2
+   echo "Returning..." >&2
+   return 10
+
 fi
+
+if [[ -n $DUNE_SETUP_RUNTIME_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+   echo "This script appears to have already been sourced successfully, returning..." >&2
+
+   return 20
+fi
+
+if [[ -z $DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+      if [[ -e $WORKAREA_ROOT/setup_build_environment ]]; then
+          echo "Lines between the ='s are the output of the sourcing of $WORKAREA_ROOT/setup_build_environment"
+	  echo "======================================================================"
+          . $WORKAREA_ROOT/setup_build_environment 
+	  echo "======================================================================"
+      else 
+          echo "Error: the build environment setup script doesn't appear to have been sourced, " >&2
+          echo "but this script can't find $WORKAREA_ROOT/setup_build_environment. You can try " >&2
+	  echo "finding it and sourcing it yourself before sourcing this script, but an assumption " >&2
+	  echo "is being broken somewhere" >&2
+	  return 20
+      fi    
+else
+      echo "The build environment setup script already appears to have been sourced, so this " 
+      echo "script won't try to source it"
+fi
+
+
 function sanitize_path {
          p=""
          for d in "$@"
          do
-            p="${BUILD_DIR}/${d}:${p}"
+            p="${d}:${p}"
          done
-         p=${p%?};
+         p=${p%?} # chop off last character, i.e. ":"
          echo $p
 }
-DAQ_APPS_PATHS=$(find build -type d -not -path '*CMakeFiles*' -name 'apps')
-DAQ_LIB_PATHS=$(find build -type d -not -path '*CMakeFiles*' -name 'src')
-DAQ_TEST_PATHS=$(find build -type d -not -path '*CMakeFiles*' -name 'test')
+DAQ_APPS_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'apps')
+DAQ_LIB_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'src')
+DAQ_TEST_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'test')
 
-export PATH="$(sanitize_path $DAQ_APPS_PATHS):$(sanitize_path DAQ_TEST_PATHS):$PATH"
-export LD_LIBRARY_PATH="$(sanitize_path $DAQ_LIB_PATHS):$(sanitize_path DAQ_TEST_PATHS):$LD_LIBRARY_PATH"
-export CET_PLUGIN_PATH="$(sanitize_path $DAQ_LIB_PATHS):$CET_PLUGIN_PATH"
+sre_path_addition=$(sanitize_path $DAQ_APPS_PATHS):$(sanitize_path $DAQ_TEST_PATHS)
+echo
+echo "Adding $sre_path_addition to beginning of PATH environment variable"
+export PATH="$sre_path_addition:$PATH"
+
+sre_libpath_addition=$(sanitize_path $DAQ_LIB_PATHS):$(sanitize_path $DAQ_TEST_PATHS)
+echo
+echo "Adding $sre_libpath_addition to beginning of LD_LIBRARY_PATH environment variable"
+export LD_LIBRARY_PATH="$sre_libpath_addition:$LD_LIBRARY_PATH"
+
+sre_cetpath_addition=$(sanitize_path $DAQ_LIB_PATHS):$(sanitize_path $DAQ_TEST_PATHS)
+echo
+echo "Adding $sre_cetpath_addition to beginning of CET_PLUGIN_PATH environment variable"
+export CET_PLUGIN_PATH="$sre_cetpath_addition:$CET_PLUGIN_PATH"
+
+unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_TEST_PATHS
+unset sre_path_addition sre_libpath_addition sre_cetpath_addition
+
+
+export DUNE_SETUP_RUNTIME_ENVIRONMENT_SCRIPT_SOURCED=1
+echo "This script has been sourced successfully"
+echo
