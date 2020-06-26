@@ -10,12 +10,6 @@ if [ ! -d "$BUILD_DIR" ]; then
 
 fi
 
-if [[ -n $DUNE_SETUP_RUNTIME_ENVIRONMENT_SCRIPT_SOURCED ]]; then
-   echo "This script appears to have already been sourced successfully, returning..." >&2
-
-   return 20
-fi
-
 if [[ -z $DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
       if [[ -e $WORKAREA_ROOT/setup_build_environment ]]; then
           echo "Lines between the ='s are the output of the sourcing of $WORKAREA_ROOT/setup_build_environment"
@@ -66,7 +60,5 @@ export CET_PLUGIN_PATH="$sre_cetpath_addition:$CET_PLUGIN_PATH"
 unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_TEST_PATHS
 unset sre_path_addition sre_libpath_addition sre_cetpath_addition
 
-
-export DUNE_SETUP_RUNTIME_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
 echo
