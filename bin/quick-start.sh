@@ -473,6 +473,18 @@ done
 mkdir -p $builddir
 mkdir -p $logdir
 
+
+runtime_script="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/setup_runtime_environment"
+curl -O $runtime_script
+
+if [[ "$?" != "0" ]]; then
+    echo >&2
+    echo "Error: there was a problem trying to get the setup_runtime_environment script off the web: "  >&2
+    echo "Assumed location was $runtime script" >&2
+    echo >&2
+    exit 1
+fi
+
 endtime_d=$( date )
 endtime_s=$( date +%s )
 
