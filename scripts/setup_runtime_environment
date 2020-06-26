@@ -1,5 +1,4 @@
 
-
 WORKAREA_ROOT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 BUILD_DIR="${WORKAREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
@@ -28,37 +27,60 @@ else
       echo "script won't try to source it"
 fi
 
+# Colors
+COL_RED="\e[31m"
+COL_GREEN="\e[32m"
+COL_YELLOW="\e[33m"
+COL_BLUE="\e[34m"
+COL_NULL="\e[0m"
 
-function sanitize_path {
-         p=""
-         for d in "$@"
-         do
-            p="${d}:${p}"
-         done
-         p=${p%?} # chop off last character, i.e. ":"
-         echo $p
+#------------------------------------------------------------------------------
+function add_path() {
+  # Assert that we got enough arguments
+  if [[ $# -ne 2 ]]; then
+    echo "path add: needs 2 arguments"
+    return 1
+  fi
+  PATH_NAME=$1
+  PATH_VAL=${!1}
+  PATH_ADD=$2
+
+  # Add the new path only if it is not already there
+  if [[ ":$PATH_VAL:" != *":$PATH_ADD:"* ]]; then
+    # Note
+    # ${PARAMETER:+WORD}
+    #   This form expands to nothing if the parameter is unset or empty. If it
+    #   is set, it does not expand to the parameter's value, but to some text
+    #   you can specify
+    PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
+
+    echo -e "${COL_BLUE}Added ${PATH_ADD} to ${PATH_NAME}${COL_NULL}"
+
+    # use eval to reset the target
+    eval "${PATH_NAME}=${PATH_VAL}"
+  fi
 }
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+function add_many_paths() {
+  for d in "${@:2}"
+  do
+    add_path $1 $d
+  done
+}
+#------------------------------------------------------------------------------
+
 DAQ_APPS_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'apps')
 DAQ_LIB_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'src')
 DAQ_TEST_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'test')
 
-sre_path_addition=$(sanitize_path $DAQ_APPS_PATHS):$(sanitize_path $DAQ_TEST_PATHS)
-echo
-echo "Adding $sre_path_addition to beginning of PATH environment variable"
-export PATH="$sre_path_addition:$PATH"
-
-sre_libpath_addition=$(sanitize_path $DAQ_LIB_PATHS):$(sanitize_path $DAQ_TEST_PATHS)
-echo
-echo "Adding $sre_libpath_addition to beginning of LD_LIBRARY_PATH environment variable"
-export LD_LIBRARY_PATH="$sre_libpath_addition:$LD_LIBRARY_PATH"
-
-sre_cetpath_addition=$(sanitize_path $DAQ_LIB_PATHS):$(sanitize_path $DAQ_TEST_PATHS)
-echo
-echo "Adding $sre_cetpath_addition to beginning of CET_PLUGIN_PATH environment variable"
-export CET_PLUGIN_PATH="$sre_cetpath_addition:$CET_PLUGIN_PATH"
+add_many_paths PATH $DAQ_APPS_PATHS $DAQ_TEST_PATHS
+add_many_paths LD_LIBRARY_PATH $DAQ_LIB_PATHS $DAQ_TEST_PATHS
+add_many_paths CET_PLUGIN_PATH $DAQ_LIB_PATHS $DAQ_TEST_PATHS
 
 unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_TEST_PATHS
-unset sre_path_addition sre_libpath_addition sre_cetpath_addition
 
-echo "This script has been sourced successfully"
+echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
 echo
