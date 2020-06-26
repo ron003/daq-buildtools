@@ -401,7 +401,7 @@ cat >CMakeLists.txt<<EOF
 
 cmake_minimum_required(VERSION 3.12)
 
-project(dune-app-framework LANGUAGES CXX)
+project(dune-daq LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
