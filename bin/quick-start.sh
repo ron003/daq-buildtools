@@ -324,15 +324,6 @@ echo
    exit 40
 fi
 
-if [[ -e \$builddir/appfwk/scripts/setupForRunning.sh ]]; then
-  . \$builddir/appfwk/scripts/setupForRunning.sh
-else
-  echo
-  echo "Error: this script makes an incorrect assumption about the existence of \$builddir/appfwk/scripts/setupForRunning.sh; exiting..." >&2
-  echo
-  exit 50
-fi
-
 num_estimated_warnings=\$( grep "warning: " \${build_log} | wc -l )
 
 echo
