@@ -403,12 +403,12 @@ set(BUILD_SHARED_LIBS ON)
 # Directories should always be added *before* the current path
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 
-set(CMAKE_MODULE_PATH \${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/CMake \${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH \${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/cmake \${CMAKE_MODULE_PATH})
 include(DAQ)
 
 find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework program_options REQUIRED)
 find_package(TRACE $TRACE_version_with_dots REQUIRED)
-find_package(cetlib REQUIRED)   # Uses the daq-buildtools/CMake/Findcetlib.cmake
+find_package(cetlib REQUIRED)   # Uses the daq-buildtools/cmake/Findcetlib.cmake
 find_package(folly REQUIRED)
 
 find_package(nlohmann_json $nlohmann_json_version_with_dots )
