@@ -27,6 +27,7 @@ cmake_version=v3_17_2
 nlohmann_json_version=v3_8_0
 TRACE_version=v3_15_09
 folly_version=v2020_05_25
+ers_version=v0_26_00
 ninja_version=v1_8_2
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
@@ -37,7 +38,7 @@ basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="daq-buildtools:develop appfwk:develop ers:dune/ers-00-26-00"
+packages="daq-buildtools:develop appfwk:develop"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -153,6 +154,8 @@ setup_returns=\$setup_returns"\$? "
 setup TRACE $TRACE_version
 setup_returns=\$setup_returns"\$? "
 setup folly $folly_version -q ${gcc_version_qualifier}:prof
+setup_returns=\$setup_returns"\$? "
+setup ers $ers_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
 setup ninja $ninja_version 2>/dev/null # Don't care if it fails
 
@@ -410,6 +413,7 @@ find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework progr
 find_package(TRACE $TRACE_version_with_dots REQUIRED)
 find_package(cetlib REQUIRED)   # Uses the daq-buildtools/cmake/Findcetlib.cmake
 find_package(folly REQUIRED)
+find_package(ers REQUIRED)
 
 find_package(nlohmann_json $nlohmann_json_version_with_dots )
 
@@ -423,8 +427,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_options( -g -pedantic -Wall -Wextra )
 
-set(DAQ_LIBRARIES_UNIVERSAL ers pthread)
-set(DAQ_INCLUDES_UNIVERSAL \${Boost_INCLUDE_DIRS})
+set(DAQ_LIBRARIES_UNIVERSAL ers::ers pthread)
+set(DAQ_INCLUDES_UNIVERSAL \${Boost_INCLUDE_DIRS} \$ENV{ERS_INC})
 
 set(DAQ_LIBRARIES_UNIVERSAL_EXE \${Boost_PROGRAM_OPTIONS_LIBRARY} \${DAQ_LIBRARIES_UNIVERSAL})
 
@@ -432,9 +436,6 @@ message(WARNING "ctest will *not* work! enable_testing() call had to be disabled
 #enable_testing()
 
 include_directories(SYSTEM \${DAQ_INCLUDES_UNIVERSAL})
-
-include_directories(SYSTEM \${CMAKE_SOURCE_DIR}/ers)
-add_subdirectory(ers)
 
 include_directories(\${CMAKE_SOURCE_DIR}/appfwk/include)
 add_subdirectory(appfwk)
