@@ -1,4 +1,27 @@
 
+
+macro(daq_setup_environment)
+
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+  set(BUILD_SHARED_LIBS ON)
+
+  # Directories should always be added *before* the current path
+  set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
+  include_directories( ${CMAKE_SOURCE_DIR}/include )
+
+  # Needed for clang-tidy (called by our linters) to work
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+  add_compile_options( -g -pedantic -Wall -Wextra )
+
+  enable_testing()
+
+endmacro()
+
+
 function( point_build_to output_dir )
 
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${output_dir} PARENT_SCOPE)
@@ -16,3 +39,4 @@ function(add_unit_test testname)
   add_test(NAME ${testname} COMMAND ${testname})
 
 endfunction()
+
