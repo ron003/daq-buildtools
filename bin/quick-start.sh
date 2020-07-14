@@ -184,16 +184,19 @@ cat<<EOF > $build_script
 
 run_tests=false
 clean_build=false 
+pkgname_specified=false
+pkgname="appfwk"
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "\$( basename \$0 )" --clean --unittest --help "
+    echo "Usage: "\$( basename \$0 )" --clean --unittest --pkgname <name> --help "
     echo
-    echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
+    echo " --clean means the contents of ./build/<pkgname> are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in build are all run"
+    echo " --pkgname means the code directory you want to build (default is \$pkgname)"
     echo
     echo "All arguments are optional. With no arguments, CMake will typically just run "
-    echo "build, unless build/CMakeCache.txt is missing"
+    echo "build, unless build/<pkgname>/CMakeCache.txt is missing"
     echo
     exit 0    
 
@@ -201,20 +204,16 @@ for arg in "\$@" ; do
     clean_build=true
   elif [[ "\$arg" == "--unittest" ]]; then
     run_tests=true
+  elif [[ "\$arg" == "--pkgname" ]]; then
+    pkgname_specified=true
+  elif \$pkgname_specified ; then
+    pkgname="\$arg"
+    pkgname_specified=false
   else
     echo "Unknown argument provided; run with \" --help\" to see valid options. Exiting..." >&2
     exit 1
   fi
 done
-
-
-
-builddir=$builddir
-
-if [[ ! -d \$builddir ]]; then
-    echo "Expected build directory \$builddir not found; exiting..." >&2
-    exit 1
-fi
 
 if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 echo
@@ -223,13 +222,27 @@ echo
 exit 2
 fi
 
+if [[ ! -d $builddir ]]; then
+    echo "Expected build directory $builddir not found; exiting..." >&2
+    exit 1
+fi
+
+builddir=$builddir/\$pkgname
+mkdir -p \$builddir
 cd \$builddir
+
+if [[ ! -e ../../\$pkgname/CMakeLists.txt ]]; then
+     echo "Error: this script has been told to build \$pkgname, but either: " >&2
+     echo "(A) That directory doesn't exist" >&2
+     echo "(B) It does exist, but it doesn't contain a CMakeLists.txt file" >&2
+     exit 20
+fi
 
 if \$clean_build; then 
   
    # Want to be damn sure of we're in the right directory, rm -rf * is no joke...
 
-   if  [[ \$( echo \$PWD | sed -r 's!.*/(.*)!\1!' ) =~ ^build/*$ ]]; then
+   if  [[ \$( echo \$PWD | sed -r 's!.*/(.*/.*)!\1!' ) =~ ^build/\${pkgname}/*$ ]]; then
      echo "Clean build requested, will delete all the contents of build directory \"\$PWD\"."
      echo "If you wish to abort, you have 5 seconds to hit Ctrl-c"
      sleep 5
@@ -256,8 +269,8 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake \${generator_arg} .. |& tee \$build_log
-retval=\${PIPESTATUS[0]}  # Captures the return value of cmake .., not tee
+cmake \${generator_arg} ../../\$pkgname |& tee \$build_log
+retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
 
@@ -274,7 +287,7 @@ echo "End time:   \$endtime_cfggen_d"
 else
 
 echo
-echo "There was a problem running \"cmake ..\" from \$builddir (i.e.," >&2
+echo "There was a problem running \"cmake ../../\$pkgname\" from \$builddir (i.e.," >&2
 echo "CMake's config+generate stages). Scroll up for" >&2
 echo "details or look at \${build_log}. Exiting..."
 echo
@@ -390,59 +403,6 @@ fi
 
 EOF
 chmod +x $build_script
-
-cat >CMakeLists.txt<<EOF
-
-cmake_minimum_required(VERSION 3.12)
-
-project(dune-daq LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(BUILD_SHARED_LIBS ON)
-
-# Directories should always be added *before* the current path
-set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
-
-set(CMAKE_MODULE_PATH \${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/cmake \${CMAKE_MODULE_PATH})
-include(DAQ)
-
-find_package(Boost $boost_version_with_dots COMPONENTS unit_test_framework program_options REQUIRED)
-find_package(TRACE $TRACE_version_with_dots REQUIRED)
-find_package(cetlib REQUIRED)   # Uses the daq-buildtools/cmake/Findcetlib.cmake
-find_package(folly REQUIRED)
-find_package(ers REQUIRED)
-
-find_package(nlohmann_json $nlohmann_json_version_with_dots )
-
-if(NOT \${nlohmann_json_FOUND})
-  message("nlohmann_json NOT FOUND! Downloading single-header from GitHub!")
-  file(DOWNLOAD https://github.com/nlohmann/json/raw/v${nlohmann_json_version_with_dots}/single_include/nlohmann/json.hpp nlohmann/json.hpp)
-  include_directories(\${CMAKE_BINARY_DIR})
-endif()
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-add_compile_options( -g -pedantic -Wall -Wextra )
-
-set(DAQ_LIBRARIES_UNIVERSAL ers::ers pthread)
-set(DAQ_INCLUDES_UNIVERSAL \${Boost_INCLUDE_DIRS} \$ENV{ERS_INC})
-
-set(DAQ_LIBRARIES_UNIVERSAL_EXE \${Boost_PROGRAM_OPTIONS_LIBRARY} \${DAQ_LIBRARIES_UNIVERSAL})
-
-message(WARNING "ctest will *not* work! enable_testing() call had to be disabled since the ers package defines a target with the name \"test\", which causes enable_testing() to fail")
-#enable_testing()
-
-include_directories(SYSTEM \${DAQ_INCLUDES_UNIVERSAL})
-
-include_directories(\${CMAKE_SOURCE_DIR}/appfwk/include)
-add_subdirectory(appfwk)
-
-
-
-EOF
 
 
 for package in $packages; do
