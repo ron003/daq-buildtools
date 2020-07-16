@@ -1,4 +1,6 @@
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 macro(daq_setup_environment)
 
@@ -14,6 +16,11 @@ macro(daq_setup_environment)
 
   # Needed for clang-tidy (called by our linters) to work
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+  # Want find_package() to be able to locate packages we've installed in the 
+  # local development area via daq_install(), defined later in this file
+
+  set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../install )
 
   add_compile_options( -g -pedantic -Wall -Wextra )
 
@@ -39,3 +46,33 @@ function(add_unit_test testname)
 
 endfunction()
 
+
+function(daq_install) 
+
+  cmake_parse_arguments(DAQ_INSTALL "" VERSION TARGETS ${ARGN} )
+
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/../install/${PROJECT_NAME} CACHE PATH "No comment" FORCE)
+
+  set(exportset ${PROJECT_NAME}Targets)
+  set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake)
+
+  install(TARGETS ${DAQ_INSTALL_TARGETS} EXPORT ${exportset} )
+  install(EXPORT ${exportset} FILE ${exportset}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
+
+  install(DIRECTORY include/${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h??")
+
+  set(versionfile        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake)
+  set(configfiletemplate ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in)
+  set(configfile         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake)
+
+  write_basic_package_version_file(${versionfile} VERSION $DAQ_INSTALL_VERSION COMPATIBILITY ExactVersion)
+
+  if (EXISTS ${configfiletemplate})
+    configure_package_config_file(${configfiletemplate} ${configfile} INSTALL_DESTINATION ${cmakedestination})
+  else()
+     message(FATAL_ERROR "Error: unable to find needed file ${configfiletemplate} for ${PROJECT_NAME} installation")
+  endif()
+
+  install(FILES ${versionfile} ${configfile} DESTINATION ${cmakedestination})
+
+endfunction()
