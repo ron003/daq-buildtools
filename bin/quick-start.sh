@@ -186,10 +186,11 @@ run_tests=false
 clean_build=false 
 pkgname_specified=false
 pkgname="appfwk"
+perform_install=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "\$( basename \$0 )" --clean --unittest --pkgname <name> --help "
+    echo "Usage: "\$( basename \$0 )" --clean --unittest --install --pkgname <name> --help "
     echo
     echo " --clean means the contents of ./build/<pkgname> are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in build are all run"
@@ -209,6 +210,8 @@ for arg in "\$@" ; do
   elif \$pkgname_specified ; then
     pkgname="\$arg"
     pkgname_specified=false
+  elif [[ "\$arg" == "--install" ]]; then
+    perform_install=true
   else
     echo "Unknown argument provided; run with \" --help\" to see valid options. Exiting..." >&2
     exit 1
@@ -368,6 +371,25 @@ else
   echo "CMake's build stage completed successfully"
 fi
 
+if \$perform_install ; then
+  cd \$builddir
+  cmake --build . --target install -- -j \$nprocs
+ 
+  if [[ "\$?" == "0" ]]; then
+    echo 
+    echo "Installation complete."
+    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"less \$build_log\" to see build results"
+  else
+    echo
+    echo "Installation failed. There was a problem running \"cmake --build . --target install -- -j \$nprocs\"" >&2
+    echo "Exiting..." >&2
+    exit 50
+  fi
+ 
+fi
+
+
+
 if \$run_tests ; then
  
      echo 
@@ -392,7 +414,7 @@ if \$run_tests ; then
      echo 
      echo 
      echo "Testing complete."
-     echo "This implies your code compiled before testing, though you can either scroll up or run \"less \$build_log\" to see build results"
+     echo "This implies your code successfully compiled before testing; you can either scroll up or run \"less \$build_log\" to see build results"
      echo "Test results are saved and can be viewed via \"less \$test_log\""
      echo
 fi
