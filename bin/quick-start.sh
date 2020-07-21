@@ -190,10 +190,11 @@ perform_install=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "\$( basename \$0 )" --clean --unittest --install --pkgname <name> --help "
+    echo "Usage: "./\$( basename \$0 )" --clean --unittest --install --pkgname <package name> --help "
     echo
-    echo " --clean means the contents of ./build/<pkgname> are deleted and CMake's config+generate+build stages are run"
-    echo " --unittest means that unit test executables found in build are all run"
+    echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
+    echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
+    echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
     echo " --pkgname means the code directory you want to build (default is \$pkgname)"
     echo
     echo "All arguments are optional. With no arguments, CMake will typically just run "
