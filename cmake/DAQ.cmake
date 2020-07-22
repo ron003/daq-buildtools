@@ -68,7 +68,7 @@ endfunction()
 
 function(daq_install) 
 
-  cmake_parse_arguments(DAQ_INSTALL "" VERSION TARGETS ${ARGN} )
+  cmake_parse_arguments(DAQ_INSTALL "" "" TARGETS ${ARGN} )
 
   set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/../install/${PROJECT_NAME} CACHE PATH "No comment" FORCE)
 
@@ -84,7 +84,11 @@ function(daq_install)
   set(configfiletemplate ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in)
   set(configfile         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake)
 
-  write_basic_package_version_file(${versionfile} VERSION $DAQ_INSTALL_VERSION COMPATIBILITY ExactVersion)
+  if (DEFINED PROJECT_VERSION)
+    write_basic_package_version_file(${versionfile} COMPATIBILITY ExactVersion)
+  else()
+    message(FATAL_ERROR "Error: the PROJECT_VERSION CMake variable needs to be defined in order to install. The way to do this is by adding the version to the project() call at the top of your CMakeLists.txt file, e.g. \"project(${PROJECT_NAME} VERSION 1.0.0)\"")
+  endif()
 
   if (EXISTS ${configfiletemplate})
     configure_package_config_file(${configfiletemplate} ${configfile} INSTALL_DESTINATION ${cmakedestination})
