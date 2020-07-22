@@ -2,6 +2,12 @@
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
+# daq_setup_environment
+
+# This macro should be called immediately after the DAQ module is
+# included in your DUNE DAQ project's CMakeLists.txt file; it ensures
+# that DUNE DAQ projects all have a common build environment.
+
 macro(daq_setup_environment)
 
   set(CMAKE_CXX_STANDARD 17)
@@ -10,8 +16,10 @@ macro(daq_setup_environment)
 
   set(BUILD_SHARED_LIBS ON)
 
-  # Directories should always be added *before* the current path
+  # Include directories within CMAKE_SOURCE_DIR and CMAKE_BINARY_DIR should take precedence over everything else
   set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
+
+  # All code for the project should be able to see the project's public include directory
   include_directories( ${CMAKE_SOURCE_DIR}/include )
 
   # Needed for clang-tidy (called by our linters) to work
@@ -46,6 +54,17 @@ function(add_unit_test testname)
 
 endfunction()
 
+# daq_install
+# This function should be called with a signature like the following:
+#
+# daq_install(VERSION <version> TARGETS <target1> <target2> ...)
+#
+
+# ...where <version> should be formatted like
+#  integer-dot-integer-dot-integer (e.g., 1.2.3) and <target1>
+#  <target2> ... is the list of targets in your project which you want
+#  installed. Conventionally this would be targets from your src/ and
+#  apps/ subdirectories, and not include your test apps.
 
 function(daq_install) 
 
