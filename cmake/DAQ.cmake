@@ -57,14 +57,13 @@ endfunction()
 # daq_install
 # This function should be called with a signature like the following:
 #
-# daq_install(VERSION <version> TARGETS <target1> <target2> ...)
+# daq_install(TARGETS <target1> <target2> ...)
 #
 
-# ...where <version> should be formatted like
-#  integer-dot-integer-dot-integer (e.g., 1.2.3) and <target1>
-#  <target2> ... is the list of targets in your project which you want
-#  installed. Conventionally this would be targets from your src/ and
-#  apps/ subdirectories, and not include your test apps.
+# ...where <target1> <target2> ... is the list of targets in your
+#  project which you want installed. Conventionally this should be
+#  targets from your src/ and apps/ subdirectories, and not include
+#  your test apps.
 
 function(daq_install) 
 
