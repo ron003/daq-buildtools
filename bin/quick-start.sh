@@ -262,7 +262,11 @@ fi
 
 build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
-# We only need to explicitly run CMake if the cache has not yet been generated
+# We usually only need to explicitly run the CMake configure+generate
+# makefiles stages when it hasn't already been successfully run;
+# otherwise we can skip to the compilation. We use the existence of
+# CMakeCache.txt to tell us whether this has happened; notice that it
+# gets renamed if it's produced but there's a failure.
 
 if ! [ -e CMakeCache.txt ];then
 
@@ -289,6 +293,8 @@ echo "Start time: \$starttime_cfggen_d"
 echo "End time:   \$endtime_cfggen_d"
 
 else
+
+mv -f CMakeCache.txt CMakeCache.txt.most_recent_failure
 
 echo
 echo "There was a problem running \"cmake ../../\$pkgname\" from \$builddir (i.e.," >&2
