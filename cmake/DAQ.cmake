@@ -2,8 +2,9 @@
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-# daq_setup_environment
+####################################################################################################
 
+# daq_setup_environment:
 # This macro should be called immediately after the DAQ module is
 # included in your DUNE DAQ project's CMakeLists.txt file; it ensures
 # that DUNE DAQ projects all have a common build environment.
@@ -36,8 +37,16 @@ macro(daq_setup_environment)
 
 endmacro()
 
+####################################################################################################
 
-function( point_build_to output_dir )
+# daq_point_build_to:
+# This function should be called before building the targets
+# associated with a given subdirectory in your code tree, and given
+# that subdirectory as argument. The consequence of this is that it
+# avoids dumping all executable, shared object libraries, etc. from
+# across the tree into the same build directory when you compile. 
+
+function( daq_point_build_to output_dir )
 
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${output_dir} PARENT_SCOPE)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${output_dir} PARENT_SCOPE)
@@ -45,7 +54,18 @@ function( point_build_to output_dir )
 
 endfunction()
 
-function(add_unit_test testname)
+####################################################################################################
+
+# daq_add_unit_test:
+# This function, when given the extension-free name of a unit test
+# sourcefile in unittest/, will handle the needed boost functionality
+# to build the unit test, as well as provide other support (CTest,
+# etc.). Optional additional arguments can be libraries you need to
+# link, e.g.
+#
+# daq_add_unit_test(FooLibrary_test Foo)
+
+function(daq_add_unit_test testname)
 
   add_executable( ${testname} unittest/${testname}.cxx )
   target_link_libraries( ${testname} ${ARGN} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -54,7 +74,9 @@ function(add_unit_test testname)
 
 endfunction()
 
-# daq_install
+####################################################################################################
+
+# daq_install:
 # This function should be called with a signature like the following:
 #
 # daq_install(TARGETS <target1> <target2> ...)
@@ -98,3 +120,5 @@ function(daq_install)
   install(FILES ${versionfile} ${configfile} DESTINATION ${cmakedestination})
 
 endfunction()
+
+####################################################################################################
