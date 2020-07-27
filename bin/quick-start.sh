@@ -474,9 +474,7 @@ echo "Total time to run "$( basename $0)": "$(( endtime_s - starttime_s ))" seco
 echo "Start time: $starttime_d"
 echo "End time:   $endtime_d"
 echo
-echo "To build, execute the following commands: "
-echo ". ./$setup_script"
-echo "./$build_script  # And add \" --help\" to just see your options"
+echo "See https://github.com/DUNE-DAQ/appfwk/wiki/Compiling-and-running for build instructions"
 echo
 echo "Script completed successfully"
 echo
