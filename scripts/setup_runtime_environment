@@ -82,5 +82,8 @@ add_many_paths CET_PLUGIN_PATH $DAQ_LIB_PATHS $DAQ_TEST_PATHS
 
 unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_TEST_PATHS
 
+echo "Manually adding ${ERS_LIB}64 to LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH=${ERS_LIB}64:${LD_LIBRARY_PATH}
+
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
 echo
