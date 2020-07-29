@@ -331,11 +331,8 @@ fi
 
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
-if [ "x\${SETUP_NINJA}" == "x" ]; then
 cmake --build . -- \$nprocs_argument |& tee -a \$build_log
-else
-ninja \$nprocs_argument |& tee -a \$build_log
-fi
+
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
 endtime_build_s=\$( date +%s )
