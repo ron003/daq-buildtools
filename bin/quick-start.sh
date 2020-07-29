@@ -189,18 +189,21 @@ cat<<EOF > $build_script
 
 run_tests=false
 clean_build=false 
+verbose=false
 pkgname_specified=false
 pkgname="appfwk"
 perform_install=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "./\$( basename \$0 )" --clean --unittest --install --pkgname <package name> --help "
+    echo "Usage: "./\$( basename \$0 )" --clean --unittest --install --verbose --pkgname <package name> --help "
     echo
     echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
     echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
+    echo " --verbose means that you want verbose output from the compiler"
     echo " --pkgname means the code directory you want to build (default is \$pkgname)"
+
     echo
     echo "All arguments are optional. With no arguments, CMake will typically just run "
     echo "build, unless build/<pkgname>/CMakeCache.txt is missing"
@@ -211,6 +214,8 @@ for arg in "\$@" ; do
     clean_build=true
   elif [[ "\$arg" == "--unittest" ]]; then
     run_tests=true
+  elif [[ "\$arg" == "--verbose" ]]; then
+    verbose=true
   elif [[ "\$arg" == "--pkgname" ]]; then
     pkgname_specified=true
   elif \$pkgname_specified ; then
@@ -331,7 +336,13 @@ fi
 
 starttime_build_d=\$( date )
 starttime_build_s=\$( date +%s )
-cmake --build . -- \$nprocs_argument |& tee -a \$build_log
+
+build_options=""
+if \$verbose; then
+  build_options=" --verbose"
+fi
+
+cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
 
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
