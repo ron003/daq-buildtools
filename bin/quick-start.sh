@@ -24,14 +24,13 @@ gcc_version_qualifier=e19  # Make sure this matches with the version
 boost_version=v1_70_0
 cetlib_version=v3_10_00
 cmake_version=v3_17_2
-nlohmann_json_version=v3_8_0
+nlohmann_json_version=v3_9_0
 TRACE_version=v3_15_09
 folly_version=v2020_05_25
 ers_version=v0_26_00
 ninja_version=v1_10_0
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
-nlohmann_json_version_with_dots=$( echo $nlohmann_json_version | sed -r 's/^v//;s/_/./g' )
 TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
 basedir=$PWD
@@ -156,6 +155,8 @@ setup_returns=\$setup_returns"\$? "
 setup folly $folly_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
 setup ers $ers_version -q ${gcc_version_qualifier}:prof
+setup_returns=\$setup_returns"\$? "
+setup nlohmann_json $nlohmann_json_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
 
 setup ninja $ninja_version 2>/dev/null # Don't care if it fails
