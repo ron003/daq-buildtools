@@ -24,10 +24,10 @@ gcc_version_qualifier=e19  # Make sure this matches with the version
 boost_version=v1_70_0
 cetlib_version=v3_10_00
 cmake_version=v3_17_2
-nlohmann_json_version=v3_9_0
+nlohmann_json_version=v3_9_0b
 TRACE_version=v3_15_09
 folly_version=v2020_05_25
-ers_version=v0_26_00
+ers_version=v0_26_00c
 ninja_version=v1_10_0
 
 boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
