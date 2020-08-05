@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(toylibrary VERSION 1.0.0)
+project(toylibrary VERSION 1.1.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../daq-buildtools/cmake ${CMAKE_MODULE_PATH})
 include(DAQ)
@@ -40,9 +40,13 @@ target_link_libraries( toylibrary_test_program ${Boost_PROGRAM_OPTIONS_LIBRARY} 
 ##############################################################################
 daq_point_build_to( unittest )
 
-daq_add_unit_test(ValueWrapper_test          toylibrary)
+daq_add_unit_test(ValueWrapper_test)
 
 ##############################################################################
+
+# Could add "toylibrary_test_program" to the argument list here, but
+# presumably end users wouldn't care about an integration test program
+# and just want the shared object library installed
 
 daq_install(TARGETS toylibrary)
 
