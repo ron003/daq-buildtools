@@ -271,7 +271,7 @@ if \$clean_build; then
 fi
 
 
-build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
+build_log=$logdir/build_attempt_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
 
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
@@ -417,7 +417,7 @@ if \$run_tests ; then
      echo
      echo
      echo 
-     test_log=$logdir/unit_tests_\$( date | sed -r 's/[: ]+/_/g' ).log
+     test_log=$logdir/unit_tests_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
 
      for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
        echo
