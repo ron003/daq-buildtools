@@ -37,7 +37,7 @@ basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="daq-buildtools:develop appfwk:develop"
+packages="daq-buildtools:v1.1.0 appfwk:v1.1.0"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
