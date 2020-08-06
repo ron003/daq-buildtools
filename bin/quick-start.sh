@@ -418,7 +418,7 @@ if \$run_tests ; then
      echo
      echo 
      test_log=$logdir/unit_tests_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
-
+     num_unit_tests=0
      for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
        echo
        echo
@@ -427,6 +427,7 @@ if \$run_tests ; then
        for unittest in \$unittestdir/* ; do
            if [[ -x \$unittest ]]; then
                \$unittest -l all |& tee \$test_log
+               num_unit_tests=\$((num_unit_tests + 1))
            fi
        done
  
@@ -434,10 +435,15 @@ if \$run_tests ; then
  
      echo 
      echo 
-     echo "Testing complete."
+     if (( \$num_unit_tests > 0)); then
+     echo "Testing complete. Ran \$num_unit_tests unit test suites."
      echo "This implies your code successfully compiled before testing; you can either scroll up or run \"less \$build_log\" to see build results"
-     echo "Test results are saved and can be viewed via \"less \$test_log\""
+     echo "Test results are saved in \$test_log"
      echo
+     else
+     echo "Ran no unit tests because the developer(s) of \$pkgname didn't write any."
+     echo
+     fi
 fi
 
 
