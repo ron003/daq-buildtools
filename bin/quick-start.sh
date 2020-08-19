@@ -37,7 +37,7 @@ basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="daq-buildtools:develop appfwk:develop"
+packages="daq-buildtools:develop styleguide:develop appfwk:develop"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -194,13 +194,15 @@ verbose=false
 pkgname_specified=false
 pkgname="appfwk"
 perform_install=false
+lint=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "./\$( basename \$0 )" --clean --unittest --install --verbose --pkgname <package name> --help "
+    echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --pkgname <package name> --help "
     echo
     echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
+    echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
     echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
     echo " --verbose means that you want verbose output from the compiler"
     echo " --pkgname means the code directory you want to build (default is \$pkgname)"
@@ -215,6 +217,8 @@ for arg in "\$@" ; do
     clean_build=true
   elif [[ "\$arg" == "--unittest" ]]; then
     run_tests=true
+  elif [[ "\$arg" == "--lint" ]]; then
+    lint=true
   elif [[ "\$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "\$arg" == "--pkgname" ]]; then
@@ -446,7 +450,11 @@ if \$run_tests ; then
      fi
 fi
 
+if \$lint; then
 
+    cd $basedir
+    ./styleguide/cpplint/dune-cpp-style-check.sh ./build/\$pkgname \$pkgname
+fi
 
 
 
