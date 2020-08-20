@@ -1,4 +1,5 @@
-project(daq-buildtools 1.1.1)
+cmake_minimum_required(VERSION 3.12)
+project(daq-buildtools VERSION 1.1.1)
 
 # Installation stuff copied from the double-conversion CMakeLists.txt, which in turn got it from
 # https://github.com/forexample/package-example
