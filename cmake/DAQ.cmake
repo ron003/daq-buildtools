@@ -91,8 +91,6 @@ function(daq_install)
 
   cmake_parse_arguments(DAQ_INSTALL "" "" TARGETS ${ARGN} )
 
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/../install/${PROJECT_NAME} CACHE PATH "No comment" FORCE)
-
   set(exportset ${PROJECT_NAME}Targets)
   set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake)
 
