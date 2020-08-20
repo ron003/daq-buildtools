@@ -12,6 +12,6 @@ include(CMakeFindDependencyMacro)
 # set_and_check(targets_file ${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake)
 # include(${targets_file})
 
-list(APPEND CMAKE_MODULE_PATH ${PACKAGE_PREFIX_DIR}/lib64/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PACKAGE_PREFIX_DIR}/lib64/cmake/daq-buildtools)
 
 check_required_components(@PROJECT_NAME@)
