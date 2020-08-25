@@ -92,7 +92,7 @@ function(daq_install)
   cmake_parse_arguments(DAQ_INSTALL "" "" TARGETS ${ARGN} )
 
   set(exportset ${PROJECT_NAME}Targets)
-  set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake)
+  set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 
   install(TARGETS ${DAQ_INSTALL_TARGETS} EXPORT ${exportset} )
   install(EXPORT ${exportset} FILE ${exportset}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
