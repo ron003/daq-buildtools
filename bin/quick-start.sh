@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=true
+edits_check=false
 
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
@@ -37,7 +37,7 @@ basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="daq-buildtools:develop styleguide:develop appfwk:develop"
+packages="daq-buildtools:spack-build appfwk:spack-build"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -121,6 +121,9 @@ cat<<EOF > $setup_script
 if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
+
+export DUNE_INSTALL_DIR=\$(dirname \$(readlink -f \${BASH_SOURCE[0]}) )/install
+export CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH:\$DUNE_INSTALL_DIR/lib64:\$DUNE_INSTALL_DIR/lib
 
 EOF
 
@@ -292,7 +295,7 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake \${generator_arg} ../../\$pkgname |& tee \$build_log
+cmake -DCMAKE_INSTALL_PREFIX=\$DUNE_INSTALL_DIR \${generator_arg} ../../\$pkgname |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -466,7 +469,7 @@ for package in $packages; do
     packagename=$( echo $package | sed -r 's/:.*//g' )
     packagebranch=$( echo $package | sed -r 's/.*://g' )
     echo "Cloning $packagename repo, will use $packagebranch branch..."
-    git clone https://github.com/DUNE-DAQ/${packagename}.git
+    git clone https://github.com/philiprodrigues/${packagename}.git
     cd ${packagename}
     git checkout $packagebranch
 
