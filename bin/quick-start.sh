@@ -416,7 +416,8 @@ fi
 
 
 if \$run_tests ; then
- 
+     COL_YELLOW="\e[33m"
+     COL_NULL="\e[0m"
      echo 
      echo
      echo
@@ -430,7 +431,10 @@ if \$run_tests ; then
        echo "======================================================================"
        for unittest in \$unittestdir/* ; do
            if [[ -x \$unittest ]]; then
+               echo
+               echo -e "\${COL_YELLOW}Begin of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
                \$unittest -l all |& tee -a \$test_log
+               echo -e "\${COL_YELLOW}End of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
                num_unit_tests=\$((num_unit_tests + 1))
            fi
        done
