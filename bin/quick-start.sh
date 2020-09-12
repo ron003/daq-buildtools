@@ -165,9 +165,10 @@ if [[ "\$?" != "0" ]]; then
 fi
 
 
-if [[ "\$setup_returns" =~ [1-9] ]]; then
+if ! [[ "\$setup_returns" =~ [1-9] ]]; then
+  echo "All setup calls on the packages returned 0, indicative of success"
+else
   echo "At least one of the required packages this script attempted to set up didn't set up correctly; returning..." >&2
-  cd \$origdir
   return 1
 fi
 
