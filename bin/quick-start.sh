@@ -30,12 +30,10 @@ folly_version=v2020_05_25
 ers_version=v0_26_00c
 ninja_version=v1_10_0
 
-boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
-TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
-
 basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
+srcdir=$basedir/sourcecode
 
 packages="daq-buildtools:develop styleguide:develop appfwk:develop"
 
@@ -193,24 +191,22 @@ run_tests=false
 clean_build=false 
 verbose=false
 pkgname_specified=false
-pkgname="appfwk"
 perform_install=false
 lint=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --pkgname <package name> --help "
+    echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --help "
     echo
     echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
     echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
     echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
     echo " --verbose means that you want verbose output from the compiler"
-    echo " --pkgname means the code directory you want to build (default is \$pkgname)"
 
     echo
     echo "All arguments are optional. With no arguments, CMake will typically just run "
-    echo "build, unless build/<pkgname>/CMakeCache.txt is missing"
+    echo "build, unless build/CMakeCache.txt is missing"
     echo
     exit 0    
 
@@ -223,10 +219,8 @@ for arg in "\$@" ; do
   elif [[ "\$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "\$arg" == "--pkgname" ]]; then
-    pkgname_specified=true
-  elif \$pkgname_specified ; then
-    pkgname="\$arg"
-    pkgname_specified=false
+    echo "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..." >&2
+    exit 1
   elif [[ "\$arg" == "--install" ]]; then
     perform_install=true
   else
@@ -247,28 +241,19 @@ if [[ ! -d $builddir ]]; then
     exit 1
 fi
 
-builddir=$builddir/\$pkgname
-mkdir -p \$builddir
-cd \$builddir
-
-if [[ ! -e ../../\$pkgname/CMakeLists.txt ]]; then
-     echo "Error: this script has been told to build \$pkgname, but either: " >&2
-     echo "(A) That directory doesn't exist" >&2
-     echo "(B) It does exist, but it doesn't contain a CMakeLists.txt file" >&2
-     exit 20
-fi
+cd $builddir
 
 if \$clean_build; then 
   
    # Want to be damn sure of we're in the right directory, rm -rf * is no joke...
 
-   if  [[ \$( echo \$PWD | sed -r 's!.*/(.*/.*)!\1!' ) =~ ^build/\${pkgname}/*$ ]]; then
+   if  [[ \$( echo \$PWD | sed -r 's!.*/(.*)!\1!' ) =~ ^build/*$ ]]; then
      echo "Clean build requested, will delete all the contents of build directory \"\$PWD\"."
      echo "If you wish to abort, you have 5 seconds to hit Ctrl-c"
      sleep 5
      rm -rf *
    else
-     echo "SCRIPT ERROR: you requested a clean build, but this script thinks that \$builddir isn't the build directory." >&2
+     echo "SCRIPT ERROR: you requested a clean build, but this script thinks that $builddir isn't the build directory." >&2
      echo "Please contact John Freeman at jcfree@fnal.gov and notify him of this message" >&2
      exit 10
    fi
@@ -276,7 +261,7 @@ if \$clean_build; then
 fi
 
 
-build_log=$logdir/build_attempt_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
+build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
@@ -293,15 +278,15 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake \${generator_arg} ../../\$pkgname |& tee \$build_log
+cmake \${generator_arg} $srcdir |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
 
 if [[ "\$retval" == "0" ]]; then
 
-sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config+generate stage is skipped in $build_script if this file exists' \$builddir/CMakeCache.txt
-sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' \$builddir/CMakeCache.txt
+sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config+generate stage is skipped in $build_script if this file exists' $builddir/CMakeCache.txt
+sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' $builddir/CMakeCache.txt
 
 cfggentime=\$(( endtime_cfggen_s - starttime_cfggen_s ))
 echo "CMake's config+generate stages took \$cfggentime seconds"
@@ -313,7 +298,7 @@ else
 mv -f CMakeCache.txt CMakeCache.txt.most_recent_failure
 
 echo
-echo "There was a problem running \"cmake ../../\$pkgname\" from \$builddir (i.e.," >&2
+echo "There was a problem running \"cmake $srcdir\" from $builddir (i.e.," >&2
 echo "CMake's config+generate stages). Scroll up for" >&2
 echo "details or look at \${build_log}. Exiting..."
 echo
@@ -323,7 +308,7 @@ fi
 
 else
 
-echo "The config+generate stage was skipped as CMakeCache.txt was already found in \$builddir"
+echo "The config+generate stage was skipped as CMakeCache.txt was already found in $builddir"
 
 fi # !-e CMakeCache.txt
 
@@ -361,7 +346,7 @@ buildtime=\$((endtime_build_s - starttime_build_s))
 else
 
 echo
-echo "There was a problem running \"cmake --build .\" from \$builddir (i.e.," >&2
+echo "There was a problem running \"cmake --build .\" from $builddir (i.e.," >&2
 echo "CMake's build stage). Scroll up for" >&2
 echo "details or look at the build log via \"less \${build_log}\". Exiting..."
 echo
@@ -398,7 +383,7 @@ else
 fi
 
 if \$perform_install ; then
-  cd \$builddir
+  cd $builddir
   cmake --build . --target install -- -j \$nprocs
  
   if [[ "\$?" == "0" ]]; then
@@ -423,9 +408,9 @@ if \$run_tests ; then
      echo
      echo
      echo 
-     test_log=$logdir/unit_tests_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
+     test_log=$logdir/unit_tests_\$( date | sed -r 's/[: ]+/_/g' ).log
      num_unit_tests=0
-     for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
+     for unittestdir in \$( find $builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
        echo
        echo
        echo "RUNNING UNIT TESTS IN \$unittestdir"
@@ -450,15 +435,15 @@ if \$run_tests ; then
      echo "Test results are saved in \$test_log"
      echo
      else
-     echo "Ran no unit tests because the developer(s) of \$pkgname didn't write any."
+     echo "Ran no unit tests because the developer(s) of the repo(s) in $srcdir didn't write any."
      echo
      fi
 fi
 
 if \$lint; then
-
-    cd $basedir
-    ./styleguide/cpplint/dune-cpp-style-check.sh ./build/\$pkgname \$pkgname
+    echo "LINTING HAS NOT YET BEEN MODIFIED TO WORK WITH MULTI-REPOSITORY BUILD" >&2
+    #cd $basedir
+    #./styleguide/cpplint/dune-cpp-style-check.sh ./build/\$pkgname \$pkgname
 fi
 
 
@@ -486,7 +471,21 @@ done
 
 mkdir -p $builddir
 mkdir -p $logdir
+mkdir -p $srcdir
 
+cat<<EOF > $srcdir/CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.12)
+
+project(dunedaq)
+
+# To ensure that a given package will be build, you need to add a line of the form
+
+# add_subdirectory(<your package name>)
+
+# ...where the name of your package doubles as the name of the subdirectory containing its code
+
+EOF
 
 runtime_script="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/setup_runtime_environment"
 curl -O $runtime_script
