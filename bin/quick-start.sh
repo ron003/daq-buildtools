@@ -122,7 +122,7 @@ if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
-export DUNE_INSTALL_DIR=\$(dirname \$(readlink -f \${BASH_SOURCE[0]}) )/install
+export DUNE_INSTALL_DIR=\$(cd \$(dirname \${BASH_SOURCE}) && pwd)/install
 export CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH:\$DUNE_INSTALL_DIR/lib64:\$DUNE_INSTALL_DIR/lib
 
 EOF
