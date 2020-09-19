@@ -29,7 +29,11 @@ macro(daq_setup_environment)
   # Want find_package() to be able to locate packages we've installed in the 
   # local development area via daq_install(), defined later in this file
 
-  set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../install )
+  set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/../install )
+
+  set(CMAKE_INSTALL_LIBDIR ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR})
+  set(CMAKE_INSTALL_BINDIR ${PROJECT_NAME}/${CMAKE_INSTALL_BINDIR})
+  set(CMAKE_INSTALL_INCLUDEDIR ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
 
   add_compile_options( -g -pedantic -Wall -Wextra )
 
@@ -91,11 +95,7 @@ function(daq_install)
 
   cmake_parse_arguments(DAQ_INSTALL "" "" TARGETS ${ARGN} )
 
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/../../install/ CACHE PATH "No comment" FORCE)
-
-  set(CMAKE_INSTALL_LIBDIR ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR})
-  set(CMAKE_INSTALL_BINDIR ${PROJECT_NAME}/${CMAKE_INSTALL_BINDIR})
-  set(CMAKE_INSTALL_INCLUDEDIR ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../install/ CACHE PATH "No comment" FORCE)
 
   set(exportset ${PROJECT_NAME}Targets)
   set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake)
