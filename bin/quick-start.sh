@@ -418,7 +418,9 @@ if \$run_tests ; then
        unittestdirs=\$( find /home/jcfree/daqbuild_multirepo6/build/\$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
 
        if [[ -z \$unittestdirs ]]; then
+             echo
              echo -e "\${COL_RED}No unit tests have been written for \$pkgname\${COL_NULL}"
+             echo
              continue
        fi
 
@@ -441,17 +443,13 @@ if \$run_tests ; then
  
        done
  
-     echo 
-     echo 
-     if (( \$num_unit_tests > 0)); then
-     echo -e "\${COL_YELLOW}Testing complete. Ran \$num_unit_tests unit test suites.\${COL_NULL}"
-     echo "This implies your code successfully compiled before testing; you can either scroll up or run \"less \$build_log\" to see build results"
+       echo 
+       echo -e "\${COL_YELLOW}Testing complete for package \"\$pkgname\". Ran \$num_unit_tests unit test suites.\${COL_NULL}"
+     done
+     
+     echo
      echo "Test results are saved in \$test_log"
      echo
-     else
-     echo -e "\${COL_RED}Ran no unit tests because the developer(s) of the repo(s) in $srcdir didn't write any.\${COL_NULL}"
-     echo
-     fi
 fi
 
 if \$lint; then
