@@ -198,10 +198,10 @@ for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
     echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --help "
     echo
-    echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
-    echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
+    echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
+    echo " --unittest means that unit test executables found in ./build/*/*/unittest are all run"
     echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
-    echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
+    echo " --install means that you want the code from your package(s) installed in a local ./install/<package name> directory"
     echo " --verbose means that you want verbose output from the compiler"
 
     echo
@@ -404,46 +404,63 @@ fi
 if \$run_tests ; then
      COL_YELLOW="\e[33m"
      COL_NULL="\e[0m"
+     COL_RED="\e[31m"
      echo 
      echo
      echo
      echo 
      test_log=$logdir/unit_tests_\$( date | sed -r 's/[: ]+/_/g' ).log
-     num_unit_tests=0
-     for unittestdir in \$( find $builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
-       echo
-       echo
-       echo "RUNNING UNIT TESTS IN \$unittestdir"
-       echo "======================================================================"
-       for unittest in \$unittestdir/* ; do
-           if [[ -x \$unittest ]]; then
-               echo
-               echo -e "\${COL_YELLOW}Begin of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
-               \$unittest -l all |& tee -a \$test_log
-               echo -e "\${COL_YELLOW}End of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
-               num_unit_tests=\$((num_unit_tests + 1))
-           fi
-       done
+
+     cd $builddir
+
+     for pkgname in \$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
+
+       unittestdirs=\$( find /home/jcfree/daqbuild_multirepo6/build/\$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
+
+       if [[ -z \$unittestdirs ]]; then
+             echo -e "\${COL_RED}No unit tests have been written for \$pkgname\${COL_NULL}"
+             continue
+       fi
+
+       num_unit_tests=0
+
+       for unittestdir in \$unittestdirs; do
+           echo
+           echo
+           echo "RUNNING UNIT TESTS IN \$unittestdir"
+           echo "======================================================================"
+           for unittest in \$unittestdir/* ; do
+               if [[ -x \$unittest ]]; then
+                   echo
+                   echo -e "\${COL_YELLOW}Start of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
+                   \$unittest -l all |& tee -a \$test_log
+                   echo -e "\${COL_YELLOW}End of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
+                   num_unit_tests=\$((num_unit_tests + 1))
+               fi
+           done
  
-     done
+       done
  
      echo 
      echo 
      if (( \$num_unit_tests > 0)); then
-     echo "Testing complete. Ran \$num_unit_tests unit test suites."
+     echo -e "\${COL_YELLOW}Testing complete. Ran \$num_unit_tests unit test suites.\${COL_NULL}"
      echo "This implies your code successfully compiled before testing; you can either scroll up or run \"less \$build_log\" to see build results"
      echo "Test results are saved in \$test_log"
      echo
      else
-     echo "Ran no unit tests because the developer(s) of the repo(s) in $srcdir didn't write any."
+     echo -e "\${COL_RED}Ran no unit tests because the developer(s) of the repo(s) in $srcdir didn't write any.\${COL_NULL}"
      echo
      fi
 fi
 
 if \$lint; then
-    echo "LINTING HAS NOT YET BEEN MODIFIED TO WORK WITH MULTI-REPOSITORY BUILD" >&2
-    #cd $basedir
-    #./styleguide/cpplint/dune-cpp-style-check.sh ./build/\$pkgname \$pkgname
+    cd $basedir
+
+    for pkgdir in \$( find build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
+        pkgname=\$( echo \$pkgdir | sed -r 's!.*/(.*)!\1!' )
+        ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/\$pkgname
+    done
 fi
 
 
