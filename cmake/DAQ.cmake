@@ -28,8 +28,8 @@ macro(daq_setup_environment)
 
   # Want find_package() to be able to locate packages we've installed in the 
   # local development area via daq_install(), defined later in this file
-
-  set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/../install )
+ 
+  set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/../build ${CMAKE_SOURCE_DIR}/../install )
 
   set(CMAKE_INSTALL_LIBDIR ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR})
   set(CMAKE_INSTALL_BINDIR ${PROJECT_NAME}/${CMAKE_INSTALL_BINDIR})
