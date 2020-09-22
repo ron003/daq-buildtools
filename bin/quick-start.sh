@@ -35,7 +35,7 @@ builddir=$basedir/build
 logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
-packages="daq-buildtools:develop styleguide:develop appfwk:develop"
+packages="daq-buildtools:develop styleguide:develop"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
