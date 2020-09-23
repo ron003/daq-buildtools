@@ -474,7 +474,7 @@ for package in $packages; do
     packagename=$( echo $package | sed -r 's/:.*//g' )
     packagebranch=$( echo $package | sed -r 's/.*://g' )
     echo "Cloning $packagename repo, will use $packagebranch branch..."
-    git clone https://github.com/philiprodrigues/${packagename}.git
+    git clone https://github.com/DUNE-DAQ/${packagename}.git
     cd ${packagename}
     git checkout $packagebranch
 
