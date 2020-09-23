@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=false
+edits_check=false # This is the quick-start.sh for v1.1.1; it won't match quick-start.sh at the head of develop  
 
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
@@ -37,7 +37,7 @@ basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 
-packages="daq-buildtools:spack-build appfwk:spack-build"
+packages="daq-buildtools:v1.1.1 appfwk:v1.1.1"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
