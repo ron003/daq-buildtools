@@ -7,7 +7,7 @@ if(EXISTS $ENV{CETLIB_LIB})
   set(cetlib_FOUND TRUE)
 else()
 	# Spack
-	find_package(cetlib REQUIRED)
+	find_package(cetlib REQUIRED CONFIG)
 	set(CETLIB cetlib)
 	set(CETLIB_EXCEPT cetlib_except)
 endif()
