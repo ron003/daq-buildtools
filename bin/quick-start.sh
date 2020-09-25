@@ -1,68 +1,43 @@
 #!/bin/env bash
 
-PARAMS=""
-while (( "$#" )); do
-  case "$1" in
-    -n|--new-env)
-      MY_FLAG=0
-      shift
-      ;;
-    -r|--release)
-      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
-        NEW_RELEASE=$2
-        shift 2
-      else
-        echo "Error: Argument for $1 is missing" >&2
-        exit 1
-      fi
-      ;;
-    -*|--*=) # unsupported flags
-      echo "Error: Unsupported flag $1" >&2
-      exit 1
-      ;;
-    *) # preserve positional arguments
-      PARAMS="$PARAMS $1"
-      shift
-      ;;
-  esac
-done
-# set positional arguments in their proper place
-eval set -- "$PARAMS"
+empty_dir_check=true
+edits_check=true
 
-packages="daq-buildtools:dingpf/introduce-release-manifest-files daq-release:develop"
+setup_script=setup_build_environment
+build_script=build_daq_software.sh
 
-for package in $packages; do
-    packagename=$( echo $package | sed -r 's/:.*//g' )
-    packagebranch=$( echo $package | sed -r 's/.*://g' )
-    echo "Cloning $packagename repo, will use $packagebranch branch..."
-    git clone https://github.com/DUNE-DAQ/${packagename}.git
-    cd ${packagename}
-    git checkout $packagebranch
+products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
 
-    if [[ "$?" != "0" ]]; then
-	echo >&2
-	echo "WARNING: unable to check out $packagebranch branch of ${packagename}. Among other consequences, your build may fail..." >&2
-	echo >&2
-	sleep 5
+starttime_d=$( date )
+starttime_s=$( date +%s )
+
+for pd in $( echo $products_dirs | tr ":" " " ) ; do
+    if [[ ! -e $pd ]]; then
+	echo "Unable to find needed products area \"$pd\"; exiting..." >&2
+	exit 1
     fi
-    cd ..
 done
 
-# if --new-release is used, create user.yaml file
+gcc_version=v8_2_0
+gcc_version_qualifier=e19  # Make sure this matches with the version
 
+boost_version=v1_70_0
+cetlib_version=v3_10_00
+cmake_version=v3_17_2
+nlohmann_json_version=v3_9_0b
+TRACE_version=v3_15_09
+folly_version=v2020_05_25
+ers_version=v0_26_00c
+ninja_version=v1_10_0
 
+boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
+TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
-if [ -s user.yaml ]; then
-    cat<<EOF >&2                                                                               
+basedir=$PWD
+builddir=$basedir/build
+logdir=$basedir/log
 
-There appear to be files in $basedir besides this script; this script
-should only be run in a clean directory. Exiting...
-
-EOF
-    exit 20
-
-
-
+packages="daq-buildtools:v1.1.0 appfwk:v1.1.0"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -190,10 +165,9 @@ if [[ "\$?" != "0" ]]; then
 fi
 
 
-if ! [[ "\$setup_returns" =~ [1-9] ]]; then
-  echo "All setup calls on the packages returned 0, indicative of success"
-else
+if [[ "\$setup_returns" =~ [1-9] ]]; then
   echo "At least one of the required packages this script attempted to set up didn't set up correctly; returning..." >&2
+  cd \$origdir
   return 1
 fi
 
@@ -220,15 +194,13 @@ verbose=false
 pkgname_specified=false
 pkgname="appfwk"
 perform_install=false
-lint=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --pkgname <package name> --help "
+    echo "Usage: "./\$( basename \$0 )" --clean --unittest --install --verbose --pkgname <package name> --help "
     echo
     echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
-    echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
     echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
     echo " --verbose means that you want verbose output from the compiler"
     echo " --pkgname means the code directory you want to build (default is \$pkgname)"
@@ -243,8 +215,6 @@ for arg in "\$@" ; do
     clean_build=true
   elif [[ "\$arg" == "--unittest" ]]; then
     run_tests=true
-  elif [[ "\$arg" == "--lint" ]]; then
-    lint=true
   elif [[ "\$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "\$arg" == "--pkgname" ]]; then
@@ -442,14 +412,13 @@ fi
 
 
 if \$run_tests ; then
-     COL_YELLOW="\e[33m"
-     COL_NULL="\e[0m"
+ 
      echo 
      echo
      echo
      echo 
      test_log=$logdir/unit_tests_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
-     num_unit_tests=0
+
      for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
        echo
        echo
@@ -457,11 +426,7 @@ if \$run_tests ; then
        echo "======================================================================"
        for unittest in \$unittestdir/* ; do
            if [[ -x \$unittest ]]; then
-               echo
-               echo -e "\${COL_YELLOW}Begin of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
-               \$unittest -l all |& tee -a \$test_log
-               echo -e "\${COL_YELLOW}End of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
-               num_unit_tests=\$((num_unit_tests + 1))
+               \$unittest -l all |& tee \$test_log
            fi
        done
  
@@ -469,22 +434,13 @@ if \$run_tests ; then
  
      echo 
      echo 
-     if (( \$num_unit_tests > 0)); then
-     echo "Testing complete. Ran \$num_unit_tests unit test suites."
+     echo "Testing complete."
      echo "This implies your code successfully compiled before testing; you can either scroll up or run \"less \$build_log\" to see build results"
-     echo "Test results are saved in \$test_log"
+     echo "Test results are saved and can be viewed via \"less \$test_log\""
      echo
-     else
-     echo "Ran no unit tests because the developer(s) of \$pkgname didn't write any."
-     echo
-     fi
 fi
 
-if \$lint; then
 
-    cd $basedir
-    ./styleguide/cpplint/dune-cpp-style-check.sh ./build/\$pkgname \$pkgname
-fi
 
 
 
