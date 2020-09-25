@@ -93,8 +93,25 @@ def cmd_git_clone(fman, user=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-            description="Parse DUNE DAQ release manifest files.")
-    parser.add_argument()
+            prof='parse-manifest.py',
+            description="Parse DUNE DAQ release manifest files.",
+            epilog="Questions and comments to dingpf@fnal.gov")
+    parser.add_argument('--setup-external', action='store_true',
+            help='''Generate line separated bash commands of setting up UPS
+            products for external dependencies;''')
+    parser.add_argument('--setup-prebuilt', action='store_true',
+            help='''generate line separated bash commands of setting up ups
+            products for prebuilt daq packages;''')
+    parser.add_argument('--git-checkout', action='store_true',
+            help='''generate line separated bash commands of checking out DAQ
+            source packages from GitHub;''')
+    parser.add_argument('-r', '--release', default='development',
+            help="set the DAQ release to use;")
+    parser.add_argument('-p', '--path-to-manifest', default='./daq-release',
+            help="set the path to DAQ release manifest files;")
+    parser.add_argument('-u', '--users-manifest',
+            default='./daq-release/user.yaml',
+            help="set the path to user's manifest files;")
 
     args = parser.parse_args()
 
