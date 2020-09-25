@@ -1,43 +1,68 @@
 #!/bin/env bash
 
-empty_dir_check=true
-edits_check=true
+PARAMS=""
+while (( "$#" )); do
+  case "$1" in
+    -n|--new-env)
+      MY_FLAG=0
+      shift
+      ;;
+    -r|--release)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        NEW_RELEASE=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    -*|--*=) # unsupported flags
+      echo "Error: Unsupported flag $1" >&2
+      exit 1
+      ;;
+    *) # preserve positional arguments
+      PARAMS="$PARAMS $1"
+      shift
+      ;;
+  esac
+done
+# set positional arguments in their proper place
+eval set -- "$PARAMS"
 
-setup_script=setup_build_environment
-build_script=build_daq_software.sh
+packages="daq-buildtools:dingpf/introduce-release-manifest-files daq-release:develop"
 
-products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
+for package in $packages; do
+    packagename=$( echo $package | sed -r 's/:.*//g' )
+    packagebranch=$( echo $package | sed -r 's/.*://g' )
+    echo "Cloning $packagename repo, will use $packagebranch branch..."
+    git clone https://github.com/DUNE-DAQ/${packagename}.git
+    cd ${packagename}
+    git checkout $packagebranch
 
-starttime_d=$( date )
-starttime_s=$( date +%s )
-
-for pd in $( echo $products_dirs | tr ":" " " ) ; do
-    if [[ ! -e $pd ]]; then
-	echo "Unable to find needed products area \"$pd\"; exiting..." >&2
-	exit 1
+    if [[ "$?" != "0" ]]; then
+	echo >&2
+	echo "WARNING: unable to check out $packagebranch branch of ${packagename}. Among other consequences, your build may fail..." >&2
+	echo >&2
+	sleep 5
     fi
+    cd ..
 done
 
-gcc_version=v8_2_0
-gcc_version_qualifier=e19  # Make sure this matches with the version
+# if --new-release is used, create user.yaml file
 
-boost_version=v1_70_0
-cetlib_version=v3_10_00
-cmake_version=v3_17_2
-nlohmann_json_version=v3_9_0b
-TRACE_version=v3_15_09
-folly_version=v2020_05_25
-ers_version=v0_26_00c
-ninja_version=v1_10_0
 
-boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
-TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
-basedir=$PWD
-builddir=$basedir/build
-logdir=$basedir/log
+if [ -s user.yaml ]; then
+    cat<<EOF >&2                                                                               
 
-packages="daq-buildtools:develop styleguide:develop appfwk:develop"
+There appear to be files in $basedir besides this script; this script
+should only be run in a clean directory. Exiting...
+
+EOF
+    exit 20
+
+
+
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
