@@ -498,6 +498,7 @@ if [[ "$?" != "0" ]]; then
     exit 2    
 fi
 echo "DOWNLOADED issue28_mrb BRANCH VERSION OF CMakeLists.txt; YOU SHOULD ONLY SEE THIS IF YOU'RE TESTING THIS BRANCH"
+mv $superproject_cmakelists $srcdir
 sleep 5
 
 runtime_script="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/setup_runtime_environment"
