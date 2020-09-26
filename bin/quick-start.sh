@@ -35,7 +35,9 @@ builddir=$basedir/build
 logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
-packages="daq-buildtools:develop styleguide:develop"
+echo "USING issue28_mrb BRANCH VERSION OF daq-buildtools; YOU SHOULD ONLY SEE THIS IF YOU'RE TESTING THIS BRANCH"
+sleep 5
+packages="daq-buildtools:jcfreeman2/issue28_mrb styleguide:develop"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -490,16 +492,7 @@ mkdir -p $srcdir
 
 # JCF, Sep-26-2020: will replace the curl with a straightforward copy from the clone'd daq-buildtools repo after 
 # this jcfreeman2/issue28_mrb gets merged into develop
-superproject_cmakelists="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/jcfreeman2/issue28_mrb/configs/CMakeLists.txt"
-curl -O $superproject_cmakelists
-
-if [[ "$?" != "0" ]]; then
-    echo "Developer error: an assumption about daq-buildtools was broken. Please contact John Freeman at jcfree@fnal.gov. Exiting..." >&2
-    exit 2    
-fi
-echo "DOWNLOADED issue28_mrb BRANCH VERSION OF CMakeLists.txt; YOU SHOULD ONLY SEE THIS IF YOU'RE TESTING THIS BRANCH"
-mv $superproject_cmakelists $srcdir
-sleep 5
+cp $basedir/daq-buildtools/configs/CMakeLists.txt $srcdir
 
 runtime_script="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/setup_runtime_environment"
 curl -O $runtime_script
