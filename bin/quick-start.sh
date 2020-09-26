@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=true
+edits_check=false
 
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
@@ -415,7 +415,7 @@ if \$run_tests ; then
 
      for pkgname in \$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
 
-       unittestdirs=\$( find /home/jcfree/daqbuild_multirepo6/build/\$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
+       unittestdirs=\$( find $builddir/\$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
 
        if [[ -z \$unittestdirs ]]; then
              echo
@@ -488,19 +488,17 @@ mkdir -p $builddir
 mkdir -p $logdir
 mkdir -p $srcdir
 
-cat<<EOF > $srcdir/CMakeLists.txt
+# JCF, Sep-26-2020: will replace the curl with a straightforward copy from the clone'd daq-buildtools repo after 
+# this jcfreeman2/issue28_mrb gets merged into develop
+superproject_cmakelists="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/jcfreeman2/issue28_mrb/configs/CMakeLists.txt"
+curl -O $superproject_cmakelists
 
-cmake_minimum_required(VERSION 3.12)
-
-project(dunedaq)
-
-# To ensure that a given package will be build, you need to add a line of the form
-
-# add_subdirectory(<your package name>)
-
-# ...where the name of your package doubles as the name of the subdirectory containing its code
-
-EOF
+if [[ "$?" != "0" ]]; then
+    echo "Developer error: an assumption about daq-buildtools was broken. Please contact John Freeman at jcfree@fnal.gov. Exiting..." >&2
+    exit 2    
+fi
+echo "DOWNLOADED issue28_mrb BRANCH VERSION OF CMakeLists.txt; YOU SHOULD ONLY SEE THIS IF YOU'RE TESTING THIS BRANCH"
+sleep 5
 
 runtime_script="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/setup_runtime_environment"
 curl -O $runtime_script
