@@ -6,38 +6,12 @@ edits_check=true
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
 
-products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
-
 starttime_d=$( date )
 starttime_s=$( date +%s )
-
-for pd in $( echo $products_dirs | tr ":" " " ) ; do
-    if [[ ! -e $pd ]]; then
-	echo "Unable to find needed products area \"$pd\"; exiting..." >&2
-	exit 1
-    fi
-done
-
-gcc_version=v8_2_0
-gcc_version_qualifier=e19  # Make sure this matches with the version
-
-boost_version=v1_70_0
-cetlib_version=v3_10_00
-cmake_version=v3_17_2
-nlohmann_json_version=v3_9_0b
-TRACE_version=v3_15_09
-folly_version=v2020_05_25
-ers_version=v0_26_00c
-ninja_version=v1_10_0
-
-boost_version_with_dots=$( echo $boost_version | sed -r 's/^v//;s/_/./g' )
-TRACE_version_with_dots=$( echo $TRACE_version | sed -r 's/^v//;s/_/./g' )
 
 basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
-
-packages="daq-buildtools:v1.1.0 appfwk:v1.1.0"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -116,6 +90,17 @@ sleep 5
 
 fi # if $edits_check
 
+## setup products, python, pyyaml
+product_dir="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
+. $product_dir/setup
+#setup python3
+setup pyyaml -q p383b
+
+git clone https://github.com/DUNE-DAQ/daq-release.git 
+parserloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/introduce-release-manifest-files/bin/parse-manifest.py
+curl -O $parserloc
+chmod +x parse-manifest.py
+
 cat<<EOF > $setup_script
 
 if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
@@ -124,52 +109,17 @@ echo "This script hasn't yet been sourced (successfully) in this shell; setting 
 
 EOF
 
-for pd in $( echo $products_dirs | tr ":" " " ); do
 
-    cat<<EOF >> $setup_script
+## setup_script: Setup products area -- eval
+parser.py --setup-products-area >> $setup_script
+parser.py --setup-external >> $setup_script
+parser.py --setup-prebuilt >> $setup_script
 
-. $pd/setup
-if [[ "\$?" != 0 ]]; then
-  echo "Executing \". $pd/setup\" resulted in a nonzero return value; returning..."
-  return 10
-fi
 
-EOF
-
-done
-
+## setup externals, and prebuilt pkgs.
 
 cat<<EOF >> $setup_script
 
-setup_returns=""
-setup cmake $cmake_version 
-setup_returns=\$setup_returns"\$? "
-setup gcc $gcc_version
-setup_returns=\$setup_returns"\$? "
-setup boost $boost_version -q ${gcc_version_qualifier}:prof
-setup_returns=\$setup_returns"\$? "
-setup cetlib $cetlib_version -q ${gcc_version_qualifier}:prof
-setup_returns=\$setup_returns"\$? "
-setup TRACE $TRACE_version
-setup_returns=\$setup_returns"\$? "
-setup folly $folly_version -q ${gcc_version_qualifier}:prof
-setup_returns=\$setup_returns"\$? "
-setup ers $ers_version -q ${gcc_version_qualifier}:prof
-setup_returns=\$setup_returns"\$? "
-setup nlohmann_json $nlohmann_json_version -q ${gcc_version_qualifier}:prof
-setup_returns=\$setup_returns"\$? "
-
-setup ninja $ninja_version 2>/dev/null # Don't care if it fails
-if [[ "\$?" != "0" ]]; then
-  echo "Unable to set up ninja $ninja_version; this will likely result in a slower build process" >&2
-fi
-
-
-if [[ "\$setup_returns" =~ [1-9] ]]; then
-  echo "At least one of the required packages this script attempted to set up didn't set up correctly; returning..." >&2
-  cd \$origdir
-  return 1
-fi
 
 export DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
@@ -185,6 +135,10 @@ fi    # if DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
 
 EOF
 
+
+## run git checkout
+parser.py --git-checkout
+
 cat<<EOF > $build_script
 #!/bin/bash
 
@@ -194,13 +148,15 @@ verbose=false
 pkgname_specified=false
 pkgname="appfwk"
 perform_install=false
+lint=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "./\$( basename \$0 )" --clean --unittest --install --verbose --pkgname <package name> --help "
+    echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --pkgname <package name> --help "
     echo
     echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
+    echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
     echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
     echo " --verbose means that you want verbose output from the compiler"
     echo " --pkgname means the code directory you want to build (default is \$pkgname)"
@@ -215,6 +171,8 @@ for arg in "\$@" ; do
     clean_build=true
   elif [[ "\$arg" == "--unittest" ]]; then
     run_tests=true
+  elif [[ "\$arg" == "--lint" ]]; then
+    lint=true
   elif [[ "\$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "\$arg" == "--pkgname" ]]; then
@@ -412,13 +370,14 @@ fi
 
 
 if \$run_tests ; then
- 
+     COL_YELLOW="\e[33m"
+     COL_NULL="\e[0m"
      echo 
      echo
      echo
      echo 
      test_log=$logdir/unit_tests_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
-
+     num_unit_tests=0
      for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
        echo
        echo
@@ -426,7 +385,11 @@ if \$run_tests ; then
        echo "======================================================================"
        for unittest in \$unittestdir/* ; do
            if [[ -x \$unittest ]]; then
-               \$unittest -l all |& tee \$test_log
+               echo
+               echo -e "\${COL_YELLOW}Begin of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
+               \$unittest -l all |& tee -a \$test_log
+               echo -e "\${COL_YELLOW}End of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
+               num_unit_tests=\$((num_unit_tests + 1))
            fi
        done
  
@@ -434,36 +397,28 @@ if \$run_tests ; then
  
      echo 
      echo 
-     echo "Testing complete."
+     if (( \$num_unit_tests > 0)); then
+     echo "Testing complete. Ran \$num_unit_tests unit test suites."
      echo "This implies your code successfully compiled before testing; you can either scroll up or run \"less \$build_log\" to see build results"
-     echo "Test results are saved and can be viewed via \"less \$test_log\""
+     echo "Test results are saved in \$test_log"
      echo
+     else
+     echo "Ran no unit tests because the developer(s) of \$pkgname didn't write any."
+     echo
+     fi
 fi
 
+if \$lint; then
 
+    cd $basedir
+    ./styleguide/cpplint/dune-cpp-style-check.sh ./build/\$pkgname \$pkgname
+fi
 
 
 
 EOF
 chmod +x $build_script
 
-
-for package in $packages; do
-    packagename=$( echo $package | sed -r 's/:.*//g' )
-    packagebranch=$( echo $package | sed -r 's/.*://g' )
-    echo "Cloning $packagename repo, will use $packagebranch branch..."
-    git clone https://github.com/DUNE-DAQ/${packagename}.git
-    cd ${packagename}
-    git checkout $packagebranch
-
-    if [[ "$?" != "0" ]]; then
-	echo >&2
-	echo "WARNING: unable to check out $packagebranch branch of ${packagename}. Among other consequences, your build may fail..." >&2
-	echo >&2
-	sleep 5
-    fi
-    cd ..
-done
 
 mkdir -p $builddir
 mkdir -p $logdir

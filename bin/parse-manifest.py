@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import yaml
 import argparse
+import subprocess
+import StringIO
 
 
 def get_field(fman, fkey):
@@ -14,6 +17,9 @@ def get_field(fman, fkey):
 
 
 def parse_manifest_file(fname):
+    if not os.path.exists(fname):
+        print("Error: -- Manifest file {} does not exist".format(fname))
+        exit(20)
     with open(fname, 'r') as stream:
         try:
             fman = yaml.safe_load(stream)
@@ -66,28 +72,58 @@ def merge_manifest_files(fnames):
 
     return fman
 
+def cmd_setup_product_path(fman):
+    setup_string=""
+    for i in fman["product_paths"]:
+        setup_string += ". {}/setup\n".format(i)
+        setup_string += """if [[ "$?" != 0 ]]; then
+  echo "Executing \". {}/setup\" resulted in a nonzero return value; returning..."
+  return 10
+fi\n""".format(i)
+    print(setup_string)
+    return setup_string
 
-def cmd_external_setup(fman, user=False):
+
+def cmd_products_setup(fman, fsection):
     """return line seperated UPS setup commands to be used in 'eval' in bash
     scripts"""
+    setup_string = 'setup_returns=""\n'
+    for i in fman["fsection"]:
+        if i["name"] == "ninja":
+            setup_string += "setup ninja {} 2>/dev/null\n".format(i["version"])
+            setup_string += """if [[ "$?" != "0" ]]; then
+  echo "Unable to set up ninja {}; this will likely result in a slower build process" >&2
+fi\n""".format(i["version"])
+            continue;
+        if i["variant"] is not None:
+            setup_string += "setup {} {} -q {}\n".format(
+            i["name"], i["version"], i["variant"])
+        else:
+            setup_string += "setup {} -v {}\n".format(
+            i["name"], i["version"])
+        setup_string += 'setup_returns=$setup_returns"$? "\n'
+    print(setup_string)
     return setup_string
 
 
-def cmd_prebuilt_setup(fman, user=False):
-    """return line seperated UPS setup commands to be used in 'eval' in bash
-    scripts"""
-    return setup_string
+def check_output(cmd):
+    irun = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    out = irun.communicate()
+    return out
+
+def run_git_checkout(fman):
+    git_repos = fman["src_pkgs"]
+    for i in git_repos:
+        icmd = "git clone {}; cd {}; git checkout {}; cd ..;".format(
+                i["repo"], i["name"], i["tag"])
+        iout = check_output(icmd)
+        s = StringIO.StringIO(iout[0])
+        for line in s:
+            print("Info[Git Checkout]: -- {}".format(line))
+    return
 
 
-def cmd_git_clone(fman, user=False):
-    """return line seperated git clone commands for DAQ source packages"""
-    return setup_string
-
-
-#fnames = ["run.yml", "develop.yml", "user.yml"]
-#fman = merge_manifest_files(fnames)
-#print(fman)
-#print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
 
 ###MAIN FUNCTION#########
 
@@ -114,4 +150,26 @@ if __name__ == "__main__":
             help="set the path to user's manifest files;")
 
     args = parser.parse_args()
+
+    if args.release == "development":
+        release = "development"
+    else:
+        release = args.release.replace('.', '-')
+    release_manifest = "{}/release_{}.yaml".format(
+            args.path_to_manifest, release)
+    user_manifest = args.user_manifest
+    # test if manifest files exists
+
+
+    fnames = [release_manifest, user_manifest]
+    fman = merge_manifest_files(fnames)
+    #print(fman)
+    #print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
+
+    if args.setup_external:
+        cmd_products_setup(fman, "external_pkgs")
+    if args.setup_prebuilt:
+        cmd_products_setup(fman, "prebuilt_pkgs")
+    if args.git_checkout:
+        run_git_checkout(fman)
 
