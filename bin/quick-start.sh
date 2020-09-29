@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=false
+edits_check=true
 
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
@@ -35,9 +35,7 @@ builddir=$basedir/build
 logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
-echo "USING issue28_mrb BRANCH VERSION OF daq-buildtools; YOU SHOULD ONLY SEE THIS IF YOU'RE TESTING THIS BRANCH"
-sleep 5
-packages="daq-buildtools:jcfreeman2/issue28_mrb styleguide:develop"
+packages="daq-buildtools:develop styleguide:develop"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
