@@ -6,7 +6,7 @@ project(dunedaq)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../daq-buildtools/cmake ${CMAKE_MODULE_PATH})
 
 macro(subdirlist result curdir)
-  file(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  file(GLOB children RELATIVE ${curdir} CONFIGURE_DEPENDS ${curdir}/*)
   set(dirlist "")
   foreach (child ${children})
     if (IS_DIRECTORY ${curdir}/${child})
