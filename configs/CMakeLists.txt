@@ -3,8 +3,21 @@ cmake_minimum_required(VERSION 3.12)
 
 project(dunedaq)
 
-# To ensure that a given package will be build, you need to add a line of the form
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../daq-buildtools/cmake ${CMAKE_MODULE_PATH})
 
-# add_subdirectory(<your package name>)
+macro(subdirlist result curdir)
+  file(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  set(dirlist "")
+  foreach (child ${children})
+    if (IS_DIRECTORY ${curdir}/${child})
+      list(APPEND dirlist ${child})
+    endif()
+  endforeach()
+  set(${result} ${dirlist})
+endmacro()
 
-# ...where the name of your package doubles as the name of the subdirectory containing its code
+subdirlist(subdirs ${CMAKE_CURRENT_LIST_DIR})
+
+foreach (subdir ${subdirs})
+  add_subdirectory(${subdir})
+endforeach()
