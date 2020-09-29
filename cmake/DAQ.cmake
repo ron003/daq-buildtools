@@ -35,7 +35,7 @@ macro(daq_setup_environment)
   set(CMAKE_INSTALL_BINDIR ${PROJECT_NAME}/${CMAKE_INSTALL_BINDIR})
   set(CMAKE_INSTALL_INCLUDEDIR ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
 
-  add_compile_options( -g -pedantic -Wall -Wextra )
+  add_compile_options( -g -pedantic -Wall -Wextra -fdiagnostics-color=always )
 
   enable_testing()
 
