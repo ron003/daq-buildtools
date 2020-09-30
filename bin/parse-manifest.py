@@ -147,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--path-to-manifest', default='./daq-release',
             help="set the path to DAQ release manifest files;")
     parser.add_argument('-u', '--users-manifest',
-            default='./daq-release/user.yaml',
+            default=None,
             help="set the path to user's manifest files;")
 
     args = parser.parse_args()
@@ -161,7 +161,9 @@ if __name__ == "__main__":
     user_manifest = args.users_manifest
 
 
-    fnames = [release_manifest, user_manifest]
+    fnames = [release_manifest]
+    if user_manifest is not None:
+        fnames.append(user_manifest)
     fman = merge_manifest_files(fnames)
     #print(fman)
     #print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
