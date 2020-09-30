@@ -63,7 +63,7 @@ def merge_dict_list(listd):
 
 
 def merge_manifest_files(fnames):
-    """Merge dictionaries in the list, elements with higher index take 
+    """Merge dictionaries in the list, elements with higher index take
     precedence; fnames looks like [running, develop, user]"""
     fman = {}
     for i in fnames:
@@ -72,6 +72,7 @@ def merge_manifest_files(fnames):
         fman[i] = merge_dict_list(fman[i])
 
     return fman
+
 
 def cmd_setup_product_path(fman):
     setup_string=""
@@ -89,15 +90,7 @@ def cmd_products_setup(fman, fsection):
     """return line seperated UPS setup commands to be used in 'eval' in bash
     scripts"""
     setup_string = 'setup_returns=""\n'
-    #print(fsection)
-    #print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
     for i in fman[fsection]:
-        if i["name"] == "ninja":
-            setup_string += "setup ninja {} 2>/dev/null\n".format(i["version"])
-            setup_string += """if [[ "$?" != "0" ]]; then
-  echo "Unable to set up ninja {}; this will likely result in a slower build process" >&2
-fi\n""".format(i["version"])
-            continue;
         if i["variant"] is not None:
             setup_string += "setup {} {} -q {}\n".format(
             i["name"], i["version"], i["variant"])
@@ -113,18 +106,22 @@ def check_output(cmd):
     irun = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     out = irun.communicate()
+    rc = irun.returncode
+    if rc != 0:
+        print('Error: command "{}" has exit non-zero exit status, please check!'.format(cmd))
+        print('Output from the commnd: {}'.format(out))
+        exit(10)
     return out
 
 
 def run_git_checkout(fman):
     git_repos = fman["src_pkgs"]
     for i in git_repos:
-        icmd = "git clone {}; cd {}; git checkout {}; cd ..;".format(
+        icmd = "git clone {} && cd {} && git checkout {} && cd ..;".format(
                 i["repo"], i["name"], i["tag"])
         iout = check_output(icmd)
         print("Info[Git Checkout]: -- {}".format(iout))
     return
-
 
 
 ###MAIN FUNCTION#########
@@ -134,15 +131,17 @@ if __name__ == "__main__":
             prog='parse-manifest.py',
             description="Parse DUNE DAQ release manifest files.",
             epilog="Questions and comments to dingpf@fnal.gov")
+    parser.add_argument('--setup-product-path', action='store_true',
+            help='''Generate bash commands for setting up UPS product path;''')
     parser.add_argument('--setup-external', action='store_true',
-            help='''Generate line separated bash commands of setting up UPS
+            help='''generate line separated bash commands of setting up UPS
             products for external dependencies;''')
     parser.add_argument('--setup-prebuilt', action='store_true',
             help='''generate line separated bash commands of setting up ups
             products for prebuilt daq packages;''')
     parser.add_argument('--git-checkout', action='store_true',
-            help='''generate line separated bash commands of checking out DAQ
-            source packages from GitHub;''')
+            help='''Run git clone and checkout commands for DAQ source packages
+            from GitHub repos;''')
     parser.add_argument('-r', '--release', default='development',
             help="set the DAQ release to use;")
     parser.add_argument('-p', '--path-to-manifest', default='./daq-release',
@@ -160,7 +159,6 @@ if __name__ == "__main__":
     release_manifest = "{}/release_{}.yaml".format(
             args.path_to_manifest, release)
     user_manifest = args.users_manifest
-    # test if manifest files exists
 
 
     fnames = [release_manifest, user_manifest]
@@ -168,10 +166,11 @@ if __name__ == "__main__":
     #print(fman)
     #print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
 
+    if args.setup_product_path:
+       cmd_setup_product_path(fman)
     if args.setup_external:
         cmd_products_setup(fman, "external_deps")
     if args.setup_prebuilt:
         cmd_products_setup(fman, "prebuilt_pkgs")
     if args.git_checkout:
         run_git_checkout(fman)
-
