@@ -20,26 +20,12 @@ find_package(Boost COMPONENTS unit_test_framework program_options REQUIRED)
 # Note that when the ers library is linked in, it uses a "::" because
 # it's in an external package, not a local CMake target. The semantics
 # are <namespace>::<shared library / executable>
-
-daq_point_build_to( src )
-
-add_library(               toylibrary       src/IntPrinter.cpp )
-target_link_libraries(     toylibrary       ers::ers)
-target_include_directories(toylibrary 
-		           PUBLIC 
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
-			   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> 
-			   )
+daq_add_library(SHARED IntPrinter.cpp LINK_LIBRARIES ers::ers)
 
 ##############################################################################
-daq_point_build_to( test )
-
-add_executable(        toylibrary_test_program test/toylibrary_test_program.cxx)
-target_link_libraries( toylibrary_test_program ${Boost_PROGRAM_OPTIONS_LIBRARY} toylibrary)
+daq_add_application( toylibrary_test_program toylibrary_test_program.cxx TEST LINK_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} toylibrary )
 
 ##############################################################################
-daq_point_build_to( unittest )
-
 daq_add_unit_test(ValueWrapper_test)
 
 ##############################################################################
