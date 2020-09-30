@@ -90,7 +90,7 @@ def cmd_products_setup(fman, fsection):
     scripts"""
     setup_string = 'setup_returns=""\n'
     #print(fsection)
-    print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
+    #print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
     for i in fman[fsection]:
         if i["name"] == "ninja":
             setup_string += "setup ninja {} 2>/dev/null\n".format(i["version"])
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     fnames = [release_manifest, user_manifest]
     fman = merge_manifest_files(fnames)
     #print(fman)
-    print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
+    #print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
 
     if args.setup_external:
         cmd_products_setup(fman, "external_deps")
