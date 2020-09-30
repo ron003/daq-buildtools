@@ -5,7 +5,6 @@ import sys
 import yaml
 import argparse
 import subprocess
-import StringIO
 
 
 def get_field(fman, fkey):
@@ -20,18 +19,21 @@ def parse_manifest_file(fname):
     if not os.path.exists(fname):
         print("Error: -- Manifest file {} does not exist".format(fname))
         exit(20)
+    fman = ""
     with open(fname, 'r') as stream:
         try:
             fman = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
-            print(exe)
+            print(exc)
     return fman
 
 
 def merge_dict(y1, y2):
     for key, value in y2.items():
         if key in y1:
-            if type(value) is dict:
+            if value is None:
+                continue
+            elif type(value) is dict:
                 merge_dict(y1[key], y2[key])
             elif type(value) is list:
                 y1[key].extend(y2[key])
@@ -66,7 +68,6 @@ def merge_manifest_files(fnames):
     fman = {}
     for i in fnames:
         merge_dict(fman, parse_manifest_file(i))
-
     for i in ["external_deps", "src_pkgs", "prebuilt_pkgs"]:
         fman[i] = merge_dict_list(fman[i])
 
@@ -88,7 +89,9 @@ def cmd_products_setup(fman, fsection):
     """return line seperated UPS setup commands to be used in 'eval' in bash
     scripts"""
     setup_string = 'setup_returns=""\n'
-    for i in fman["fsection"]:
+    #print(fsection)
+    print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
+    for i in fman[fsection]:
         if i["name"] == "ninja":
             setup_string += "setup ninja {} 2>/dev/null\n".format(i["version"])
             setup_string += """if [[ "$?" != "0" ]]; then
@@ -112,15 +115,14 @@ def check_output(cmd):
     out = irun.communicate()
     return out
 
+
 def run_git_checkout(fman):
     git_repos = fman["src_pkgs"]
     for i in git_repos:
         icmd = "git clone {}; cd {}; git checkout {}; cd ..;".format(
                 i["repo"], i["name"], i["tag"])
         iout = check_output(icmd)
-        s = StringIO.StringIO(iout[0])
-        for line in s:
-            print("Info[Git Checkout]: -- {}".format(line))
+        print("Info[Git Checkout]: -- {}".format(iout))
     return
 
 
@@ -129,7 +131,7 @@ def run_git_checkout(fman):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-            prof='parse-manifest.py',
+            prog='parse-manifest.py',
             description="Parse DUNE DAQ release manifest files.",
             epilog="Questions and comments to dingpf@fnal.gov")
     parser.add_argument('--setup-external', action='store_true',
@@ -157,17 +159,17 @@ if __name__ == "__main__":
         release = args.release.replace('.', '-')
     release_manifest = "{}/release_{}.yaml".format(
             args.path_to_manifest, release)
-    user_manifest = args.user_manifest
+    user_manifest = args.users_manifest
     # test if manifest files exists
 
 
     fnames = [release_manifest, user_manifest]
     fman = merge_manifest_files(fnames)
     #print(fman)
-    #print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
+    print(yaml.dump(fman, default_flow_style=False, sort_keys=False))
 
     if args.setup_external:
-        cmd_products_setup(fman, "external_pkgs")
+        cmd_products_setup(fman, "external_deps")
     if args.setup_prebuilt:
         cmd_products_setup(fman, "prebuilt_pkgs")
     if args.git_checkout:
