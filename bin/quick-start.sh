@@ -472,8 +472,6 @@ mkdir -p $builddir
 mkdir -p $logdir
 mkdir -p $srcdir
 
-echo $PWD
-
 # JCF, Sep-26-2020: will replace the curl with a straightforward copy from the clone'd daq-buildtools repo after 
 # this jcfreeman2/issue28_mrb gets merged into develop
 cp $basedir/daq-buildtools/configs/CMakeLists.txt $srcdir
