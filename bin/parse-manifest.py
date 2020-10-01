@@ -95,9 +95,16 @@ def cmd_products_setup(fman, fsection):
             setup_string += "setup {} {} -q {}\n".format(
             i["name"], i["version"], i["variant"])
         else:
-            setup_string += "setup {} -v {}\n".format(
+            setup_string += "setup {} {}\n".format(
             i["name"], i["version"])
         setup_string += 'setup_returns=$setup_returns"$? "\n'
+    setup_string += """if ! [[ "$setup_returns" =~ [1-9] ]]; then
+  echo "All setup calls on the packages returned 0, indicative of success"
+else
+  echo "At least one of the required packages this script attempted to set up didn't set up correctly; returning..." >&2
+  return 1
+fi
+"""
     print(setup_string)
     return setup_string
 
@@ -114,11 +121,11 @@ def check_output(cmd):
     return out
 
 
-def run_git_checkout(fman):
+def run_git_checkout(fman, srcdir):
     git_repos = fman["src_pkgs"]
     for i in git_repos:
-        icmd = "git clone {} && cd {} && git checkout {} && cd ..;".format(
-                i["repo"], i["name"], i["tag"])
+        icmd = "mkdir -p {} && cd {} && git clone {} && cd {} && git checkout {} && cd ..;".format(
+                srcdir, srcdir, i["repo"], i["name"], i["tag"])
         iout = check_output(icmd)
         print("Info[Git Checkout]: -- {}".format(iout))
     return
@@ -142,7 +149,9 @@ if __name__ == "__main__":
     parser.add_argument('--git-checkout', action='store_true',
             help='''Run git clone and checkout commands for DAQ source packages
             from GitHub repos;''')
-    parser.add_argument('-r', '--release', default='development',
+    parser.add_argument('-s', '--src-dir', default='./sourcecode',
+            help="source code directory;")
+    parser.add_argument('-r', '--release', default='develop',
             help="set the DAQ release to use;")
     parser.add_argument('-p', '--path-to-manifest', default='./daq-release',
             help="set the path to DAQ release manifest files;")
@@ -152,8 +161,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.release == "development":
-        release = "development"
+    if args.release == "develop":
+        release = "develop"
     else:
         release = args.release.replace('.', '-')
     release_manifest = "{}/release_{}.yaml".format(
@@ -175,4 +184,4 @@ if __name__ == "__main__":
     if args.setup_prebuilt:
         cmd_products_setup(fman, "prebuilt_pkgs")
     if args.git_checkout:
-        run_git_checkout(fman)
+        run_git_checkout(fman, args.src_dir)

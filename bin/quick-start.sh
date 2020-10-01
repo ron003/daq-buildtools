@@ -2,16 +2,31 @@
 
 empty_dir_check=true
 edits_check=true
+user_manifest=true
+release="develop"
+packages="daq-buildtools:$release styleguide:$release"
+pyyaml_setup="setup pyyaml -q p383b"
 
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
 
+
 starttime_d=$( date )
 starttime_s=$( date +%s )
+
+products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
+for pd in $( echo $products_dirs | tr ":" " " ) ; do
+    if [[ ! -e $pd ]]; then
+	echo "Unable to find needed products area \"$pd\"; exiting..." >&2
+	exit 1
+    fi
+done
+eval "setup pyyaml v5_3_1 -q p383b"
 
 basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
+srcdir=$basedir/sourcecode
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -90,16 +105,25 @@ sleep 5
 
 fi # if $edits_check
 
-## setup products, python, pyyaml
-product_dir="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
-. $product_dir/setup
-#setup python3
-setup pyyaml -q p383b
-
 git clone https://github.com/DUNE-DAQ/daq-release.git 
+if [[ "$?" != "0" ]]; then
+  echo >&2
+  echo "WARNING: unable to clone daq-release repo. Among other consequences, your build may fail..." >&2
+  echo >&2
+  sleep 5
+fi
+cd ..
+
 parserloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/introduce-release-manifest-files/bin/parse-manifest.py
 curl -O $parserloc
 chmod +x parse-manifest.py
+parser_cmd="$basedir/parse-manifest.py -r $release -p $srcdir/daq-release"
+if $user_manifest; then
+  parser_cmd="$basedir/parse-manifest.py -r $release -p $srcdir/daq-release -u $basedir/user.yaml"
+elif
+  parser_cmd="$basedir/parse-manifest.py -r $release -p $srcdir/daq-release"
+fi
+
 
 cat<<EOF > $setup_script
 
@@ -107,19 +131,16 @@ if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
-EOF
+# Setting up UPS products path.
+source <($parser_cmd --setup-products-area)"
 
+eval "$pyyaml_setup"
 
-## setup_script: Setup products area -- eval
-parser.py --setup-products-area >> $setup_script
-parser.py --setup-external >> $setup_script
-parser.py --setup-prebuilt >> $setup_script
+# Setting up external products
+source <($parser_cmd --setup-external)"
 
-
-## setup externals, and prebuilt pkgs.
-
-cat<<EOF >> $setup_script
-
+# Setting up UPS products path.
+source <($parser_cmd --setup-prebuilt)"
 
 export DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
@@ -132,12 +153,7 @@ return 10
 
 fi    # if DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
 
-
 EOF
-
-
-## run git checkout
-parser.py --git-checkout
 
 cat<<EOF > $build_script
 #!/bin/bash
@@ -146,24 +162,22 @@ run_tests=false
 clean_build=false 
 verbose=false
 pkgname_specified=false
-pkgname="appfwk"
 perform_install=false
 lint=false
 
 for arg in "\$@" ; do
   if [[ "\$arg" == "--help" ]]; then
-    echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --pkgname <package name> --help "
+    echo "Usage: "./\$( basename \$0 )" --clean --unittest --lint --install --verbose --help "
     echo
-    echo " --clean means the contents of ./build/<package name> are deleted and CMake's config+generate+build stages are run"
-    echo " --unittest means that unit test executables found in ./build/<package name>/<package name>/unittest are all run"
+    echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
+    echo " --unittest means that unit test executables found in ./build/*/*/unittest are all run"
     echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
-    echo " --install means that you want your package's code installed in a local ./install/<package name> directory"
+    echo " --install means that you want the code from your package(s) installed in a local ./install/<package name> directory"
     echo " --verbose means that you want verbose output from the compiler"
-    echo " --pkgname means the code directory you want to build (default is \$pkgname)"
 
     echo
     echo "All arguments are optional. With no arguments, CMake will typically just run "
-    echo "build, unless build/<pkgname>/CMakeCache.txt is missing"
+    echo "build, unless build/CMakeCache.txt is missing"
     echo
     exit 0    
 
@@ -176,10 +190,8 @@ for arg in "\$@" ; do
   elif [[ "\$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "\$arg" == "--pkgname" ]]; then
-    pkgname_specified=true
-  elif \$pkgname_specified ; then
-    pkgname="\$arg"
-    pkgname_specified=false
+    echo "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..." >&2
+    exit 1
   elif [[ "\$arg" == "--install" ]]; then
     perform_install=true
   else
@@ -200,28 +212,19 @@ if [[ ! -d $builddir ]]; then
     exit 1
 fi
 
-builddir=$builddir/\$pkgname
-mkdir -p \$builddir
-cd \$builddir
-
-if [[ ! -e ../../\$pkgname/CMakeLists.txt ]]; then
-     echo "Error: this script has been told to build \$pkgname, but either: " >&2
-     echo "(A) That directory doesn't exist" >&2
-     echo "(B) It does exist, but it doesn't contain a CMakeLists.txt file" >&2
-     exit 20
-fi
+cd $builddir
 
 if \$clean_build; then 
   
    # Want to be damn sure of we're in the right directory, rm -rf * is no joke...
 
-   if  [[ \$( echo \$PWD | sed -r 's!.*/(.*/.*)!\1!' ) =~ ^build/\${pkgname}/*$ ]]; then
+   if  [[ \$( echo \$PWD | sed -r 's!.*/(.*)!\1!' ) =~ ^build/*$ ]]; then
      echo "Clean build requested, will delete all the contents of build directory \"\$PWD\"."
      echo "If you wish to abort, you have 5 seconds to hit Ctrl-c"
      sleep 5
      rm -rf *
    else
-     echo "SCRIPT ERROR: you requested a clean build, but this script thinks that \$builddir isn't the build directory." >&2
+     echo "SCRIPT ERROR: you requested a clean build, but this script thinks that $builddir isn't the build directory." >&2
      echo "Please contact John Freeman at jcfree@fnal.gov and notify him of this message" >&2
      exit 10
    fi
@@ -229,7 +232,7 @@ if \$clean_build; then
 fi
 
 
-build_log=$logdir/build_attempt_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
+build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
@@ -246,15 +249,15 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake \${generator_arg} ../../\$pkgname |& tee \$build_log
+cmake \${generator_arg} $srcdir |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
 
 if [[ "\$retval" == "0" ]]; then
 
-sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config+generate stage is skipped in $build_script if this file exists' \$builddir/CMakeCache.txt
-sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' \$builddir/CMakeCache.txt
+sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config+generate stage is skipped in $build_script if this file exists' $builddir/CMakeCache.txt
+sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' $builddir/CMakeCache.txt
 
 cfggentime=\$(( endtime_cfggen_s - starttime_cfggen_s ))
 echo "CMake's config+generate stages took \$cfggentime seconds"
@@ -266,7 +269,7 @@ else
 mv -f CMakeCache.txt CMakeCache.txt.most_recent_failure
 
 echo
-echo "There was a problem running \"cmake ../../\$pkgname\" from \$builddir (i.e.," >&2
+echo "There was a problem running \"cmake $srcdir\" from $builddir (i.e.," >&2
 echo "CMake's config+generate stages). Scroll up for" >&2
 echo "details or look at \${build_log}. Exiting..."
 echo
@@ -276,7 +279,7 @@ fi
 
 else
 
-echo "The config+generate stage was skipped as CMakeCache.txt was already found in \$builddir"
+echo "The config+generate stage was skipped as CMakeCache.txt was already found in $builddir"
 
 fi # !-e CMakeCache.txt
 
@@ -314,7 +317,7 @@ buildtime=\$((endtime_build_s - starttime_build_s))
 else
 
 echo
-echo "There was a problem running \"cmake --build .\" from \$builddir (i.e.," >&2
+echo "There was a problem running \"cmake --build .\" from $builddir (i.e.," >&2
 echo "CMake's build stage). Scroll up for" >&2
 echo "details or look at the build log via \"less \${build_log}\". Exiting..."
 echo
@@ -351,7 +354,7 @@ else
 fi
 
 if \$perform_install ; then
-  cd \$builddir
+  cd $builddir
   cmake --build . --target install -- -j \$nprocs
  
   if [[ "\$?" == "0" ]]; then
@@ -372,46 +375,61 @@ fi
 if \$run_tests ; then
      COL_YELLOW="\e[33m"
      COL_NULL="\e[0m"
+     COL_RED="\e[31m"
      echo 
      echo
      echo
      echo 
-     test_log=$logdir/unit_tests_\${pkgname}_\$( date | sed -r 's/[: ]+/_/g' ).log
-     num_unit_tests=0
-     for unittestdir in \$( find \$builddir -type d -name "unittest" -not -regex ".*CMakeFiles.*" ); do
-       echo
-       echo
-       echo "RUNNING UNIT TESTS IN \$unittestdir"
-       echo "======================================================================"
-       for unittest in \$unittestdir/* ; do
-           if [[ -x \$unittest ]]; then
-               echo
-               echo -e "\${COL_YELLOW}Begin of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
-               \$unittest -l all |& tee -a \$test_log
-               echo -e "\${COL_YELLOW}End of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
-               num_unit_tests=\$((num_unit_tests + 1))
-           fi
+     test_log=$logdir/unit_tests_\$( date | sed -r 's/[: ]+/_/g' ).log
+
+     cd $builddir
+
+     for pkgname in \$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
+
+       unittestdirs=\$( find $builddir/\$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
+
+       if [[ -z \$unittestdirs ]]; then
+             echo
+             echo -e "\${COL_RED}No unit tests have been written for \$pkgname\${COL_NULL}"
+             echo
+             continue
+       fi
+
+       num_unit_tests=0
+
+       for unittestdir in \$unittestdirs; do
+           echo
+           echo
+           echo "RUNNING UNIT TESTS IN \$unittestdir"
+           echo "======================================================================"
+           for unittest in \$unittestdir/* ; do
+               if [[ -x \$unittest ]]; then
+                   echo
+                   echo -e "\${COL_YELLOW}Start of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
+                   \$unittest -l all |& tee -a \$test_log
+                   echo -e "\${COL_YELLOW}End of unit test suite \"\$unittest\"\${COL_NULL}" |& tee -a \$test_log
+                   num_unit_tests=\$((num_unit_tests + 1))
+               fi
+           done
+ 
        done
  
+       echo 
+       echo -e "\${COL_YELLOW}Testing complete for package \"\$pkgname\". Ran \$num_unit_tests unit test suites.\${COL_NULL}"
      done
- 
-     echo 
-     echo 
-     if (( \$num_unit_tests > 0)); then
-     echo "Testing complete. Ran \$num_unit_tests unit test suites."
-     echo "This implies your code successfully compiled before testing; you can either scroll up or run \"less \$build_log\" to see build results"
+     
+     echo
      echo "Test results are saved in \$test_log"
      echo
-     else
-     echo "Ran no unit tests because the developer(s) of \$pkgname didn't write any."
-     echo
-     fi
 fi
 
 if \$lint; then
-
     cd $basedir
-    ./styleguide/cpplint/dune-cpp-style-check.sh ./build/\$pkgname \$pkgname
+
+    for pkgdir in \$( find build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
+        pkgname=\$( echo \$pkgdir | sed -r 's!.*/(.*)!\1!' )
+        ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/\$pkgname
+    done
 fi
 
 
@@ -419,10 +437,30 @@ fi
 EOF
 chmod +x $build_script
 
+for package in $packages; do
+    packagename=$( echo $package | sed -r 's/:.*//g' )
+    packagebranch=$( echo $package | sed -r 's/.*://g' )
+    echo "Cloning $packagename repo, will use $packagebranch branch..."
+    git clone https://github.com/DUNE-DAQ/${packagename}.git
+    cd ${packagename}
+    git checkout $packagebranch
+
+    if [[ "$?" != "0" ]]; then
+	echo >&2
+	echo "WARNING: unable to check out $packagebranch branch of ${packagename}. Among other consequences, your build may fail..." >&2
+	echo >&2
+	sleep 5
+    fi
+    cd ..
+done
 
 mkdir -p $builddir
 mkdir -p $logdir
+mkdir -p $srcdir
 
+# JCF, Sep-26-2020: will replace the curl with a straightforward copy from the clone'd daq-buildtools repo after 
+# this jcfreeman2/issue28_mrb gets merged into develop
+cp $basedir/daq-buildtools/configs/CMakeLists.txt $srcdir
 
 runtime_script="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/setup_runtime_environment"
 curl -O $runtime_script
