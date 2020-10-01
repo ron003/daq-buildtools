@@ -1,11 +1,11 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=true
+edits_check=false
 user_manifest=true
 release="develop"
 packages="daq-buildtools:$release styleguide:$release"
-pyyaml_setup="setup pyyaml -q p383b"
+pyyaml_setup="setup pyyaml v5_3_1 -q p383b"
 
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
@@ -14,13 +14,17 @@ build_script=build_daq_software.sh
 starttime_d=$( date )
 starttime_s=$( date +%s )
 
-products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
-for pd in $( echo $products_dirs | tr ":" " " ) ; do
-    if [[ ! -e $pd ]]; then
-	echo "Unable to find needed products area \"$pd\"; exiting..." >&2
+products_dir="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
+if [[ ! -e $products_dir ]]; then
+	echo "Unable to find needed products area \"$products_dir\"; exiting..." >&2
 	exit 1
-    fi
-done
+fi
+. $products_dir/setup
+if [[ "$?" != 0 ]]; then
+  echo "Executing \". $products_dir/setup\" resulted in a nonzero return value; returning..."
+  exit 10
+fi
+
 eval "setup pyyaml v5_3_1 -q p383b"
 
 basedir=$PWD
@@ -36,7 +40,7 @@ if [[ -z $USER || -z $HOSTNAME ]]; then
     exit 10
 fi
 
-if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^quick-start.*" | grep -E -v "^\.\.?$" ) ]]; then
+if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^quick-start.*|^parse-manifest.*" | grep -E -v "^\.\.?$" ) ]]; then
 
     cat<<EOF >&2                                                                               
 
@@ -112,16 +116,16 @@ if [[ "$?" != "0" ]]; then
   echo >&2
   sleep 5
 fi
-cd ..
 
 parserloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/introduce-release-manifest-files/bin/parse-manifest.py
 curl -O $parserloc
 chmod +x parse-manifest.py
-parser_cmd="$basedir/parse-manifest.py -r $release -p $srcdir/daq-release"
+parser_cmd="$basedir/parse-manifest.py -r $release -p $basedir/daq-release"
 if $user_manifest; then
-  parser_cmd="$basedir/parse-manifest.py -r $release -p $srcdir/daq-release -u $basedir/user.yaml"
-elif
-  parser_cmd="$basedir/parse-manifest.py -r $release -p $srcdir/daq-release"
+  cp $basedir/daq-release/user_template.yaml $basedir/user.yaml
+  parser_cmd="$basedir/parse-manifest.py -r $release -p $basedir/daq-release -u $basedir/user.yaml"
+else
+  parser_cmd="$basedir/parse-manifest.py -r $release -p $basedir/daq-release"
 fi
 
 
@@ -131,16 +135,26 @@ if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
-# Setting up UPS products path.
-source <($parser_cmd --setup-products-area)"
+if [[ ! -e $products_dir ]]; then
+	echo "Unable to find needed products area \"$products_dir\"; exiting..." >&2
+	exit 1
+fi
+. $products_dir/setup
+if [[ "\$?" != 0 ]]; then
+  echo "Executing \". $products_dir/setup\" resulted in a nonzero return value; returning..."
+  exit 10
+fi
 
 eval "$pyyaml_setup"
 
+# Setting up UPS products path.
+source <($parser_cmd --setup-product-path)
+
 # Setting up external products
-source <($parser_cmd --setup-external)"
+source <($parser_cmd --setup-external)
 
 # Setting up UPS products path.
-source <($parser_cmd --setup-prebuilt)"
+source <($parser_cmd --setup-prebuilt)
 
 export DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
@@ -457,6 +471,8 @@ done
 mkdir -p $builddir
 mkdir -p $logdir
 mkdir -p $srcdir
+
+echo $PWD
 
 # JCF, Sep-26-2020: will replace the curl with a straightforward copy from the clone'd daq-buildtools repo after 
 # this jcfreeman2/issue28_mrb gets merged into develop
