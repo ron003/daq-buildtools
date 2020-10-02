@@ -276,9 +276,14 @@ if [ "x\${SETUP_NINJA}" != "x" ]; then
   generator_arg="-G Ninja"
 fi
 
+unbuffer_cmd=
+if [[ -n \$( which unbuffer ) ]]; then
+  unbuffer_cmd="unbuffer "
+fi
+
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-unbuffer cmake \${generator_arg} $srcdir |& tee \$build_log
+\${unbuffer_cmd} cmake \${generator_arg} $srcdir |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -333,7 +338,7 @@ if \$verbose; then
   build_options=" --verbose"
 fi
 
-unbuffer cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
+\${unbuffer_cmd} cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
 
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
@@ -348,7 +353,7 @@ else
 echo
 echo "There was a problem running \"cmake --build .\" from $builddir (i.e.," >&2
 echo "CMake's build stage). Scroll up for" >&2
-echo "details or look at the build log via \"less \${build_log}\". Exiting..."
+echo "details or look at the build log via \"more \${build_log}\". Exiting..."
 echo
 
    exit 40
@@ -372,7 +377,7 @@ echo "Start time: \$starttime_build_d"
 echo "End time:   \$endtime_build_d"
 echo
 echo "Output of build contains an estimated \$num_estimated_warnings warnings, and can be viewed later via: "
-echo "\"less \${build_log}\""
+echo "\"more \${build_log}\""
 echo
 
 if [[ -n \$cfggentime ]]; then
@@ -384,12 +389,12 @@ fi
 
 if \$perform_install ; then
   cd $builddir
-  unbuffer cmake --build . --target install -- -j \$nprocs
+  \${unbuffer_cmd} cmake --build . --target install -- -j \$nprocs
  
   if [[ "\$?" == "0" ]]; then
     echo 
     echo "Installation complete."
-    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"less \$build_log\" to see build results"
+    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"more \$build_log\" to see build results"
   else
     echo
     echo "Installation failed. There was a problem running \"cmake --build . --target install -- -j \$nprocs\"" >&2
