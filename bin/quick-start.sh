@@ -276,14 +276,20 @@ if [ "x\${SETUP_NINJA}" != "x" ]; then
   generator_arg="-G Ninja"
 fi
 
-unbuffer_cmd=
+can_unbuffer=false
 if [[ -n \$( which unbuffer ) ]]; then
-  unbuffer_cmd="unbuffer "
+  can_unbuffer=true
 fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-\${unbuffer_cmd} cmake \${generator_arg} $srcdir |& tee \$build_log
+
+if \$can_unbuffer ; then
+unbuffer cmake \${generator_arg} $srcdir |& tee \$build_log
+else
+cmake \${generator_arg} $srcdir |& tee \$build_log
+fi
+
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -338,7 +344,11 @@ if \$verbose; then
   build_options=" --verbose"
 fi
 
-\${unbuffer_cmd} cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
+if \$can_unbuffer ; then
+unbuffer cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
+else
+cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
+fi
 
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
@@ -389,7 +399,8 @@ fi
 
 if \$perform_install ; then
   cd $builddir
-  \${unbuffer_cmd} cmake --build . --target install -- -j \$nprocs
+
+  cmake --build . --target install -- -j \$nprocs
  
   if [[ "\$?" == "0" ]]; then
     echo 
