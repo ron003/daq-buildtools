@@ -504,19 +504,20 @@ mkdir -p $builddir
 mkdir -p $logdir
 mkdir -p $srcdir
 
-# JCF, Sep-26-2020: will replace the curl with a straightforward copy from the clone'd daq-buildtools repo after 
-# this jcfreeman2/issue28_mrb gets merged into develop
-cp $basedir/daq-buildtools/configs/CMakeLists.txt $srcdir
+superproject_cmakeliststxt=$basedir/daq-buildtools/configs/CMakeLists.txt
+if [[ -e $superproject_cmakeliststxt ]]; then
+    cp $superproject_cmakeliststxt .
+else
+    echo "Error: expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..." >&2
+    exit 60
+fi
 
-runtime_script="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/setup_runtime_environment"
-curl -O $runtime_script
-
-if [[ "$?" != "0" ]]; then
-    echo >&2
-    echo "Error: there was a problem trying to get the setup_runtime_environment script off the web: "  >&2
-    echo "Assumed location was $runtime script" >&2
-    echo >&2
-    exit 1
+setup_runtime=$basedir/daq-buildtools/scripts/setup_runtime_environment
+if [[ -e $setup_runtime ]]; then
+    cp $setup_runtime $basedir/sourcecode
+else
+    echo "Error: expected file \"$setup_runtime\" doesn't appear to exist. Exiting..." >&2
+    exit 70
 fi
 
 endtime_d=$( date )
