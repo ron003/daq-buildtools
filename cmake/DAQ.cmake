@@ -63,7 +63,6 @@ macro(daq_setup_environment)
 endmacro()
 
 ####################################################################################################
-
 # daq_point_build_to:
 # This function should be called before building the targets
 # associated with a given subdirectory in your code tree, and given
@@ -80,6 +79,7 @@ function( daq_point_build_to output_dir )
 endfunction()
 
 
+####################################################################################################
 # _daq_set_target_output
 # This utility function updates the target output properites and points
 # them to the chosen project subdirectory
@@ -93,6 +93,12 @@ macro( _daq_set_target_output target output_dir )
   )
 
 endmacro()
+
+####################################################################################################
+# macro( _daq_define_exportname )
+#   set( DAQ_PROJECT_EXPORTNAME ${PROJECT_NAME}Targets )
+#   message(">>>>>>> " ${DAQ_PROJECT_EXPORTNAME})
+# endmacro()
 
 
 ####################################################################################################
@@ -138,6 +144,10 @@ function(daq_add_library)
 
   _daq_set_target_output( ${libname} ${LIB_PATH} )
 
+  # _daq_define_exportname()
+  # message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
+  install(TARGETS ${pluginlibname} EXPORT ${PROJECT_NAME}Targets )
+
 endfunction()
 
 ####################################################################################################
@@ -147,7 +157,7 @@ function(daq_add_plugin pluginname plugintype)
 
   cmake_parse_arguments(PLUGOPTS "TEST" "" "LINK_LIBRARIES" ${ARGN})
 
-  set(libname "${PROJECT_NAME}_${pluginname}_${plugintype}")
+  set(pluginlibname "${PROJECT_NAME}_${pluginname}_${plugintype}")
 
   set(PLUGIN_PATH "plugins")
   if(${PLUGOPTS_TEST})
@@ -155,10 +165,16 @@ function(daq_add_plugin pluginname plugintype)
   endif()
   
 
-  add_library( ${libname} ${PLUGIN_PATH}/${pluginname}.cpp )
-  target_link_libraries(${libname} PUBLIC ${PLUGOPTS_LINK_LIBRARIES}) 
+  add_library( ${pluginlibname} ${PLUGIN_PATH}/${pluginname}.cpp )
+  target_link_libraries(${pluginlibname} PUBLIC ${PLUGOPTS_LINK_LIBRARIES}) 
 
-  _daq_set_target_output( ${libname} ${PLUGIN_PATH} )
+  _daq_set_target_output( ${pluginlibname} ${PLUGIN_PATH} )
+
+  # if ( NOT ${PLUGOPTS_TEST} )
+  #   _daq_define_exportname()
+  #   message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
+  #   install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
+  # endif()
 
   endfunction()
 
@@ -193,6 +209,12 @@ function(daq_add_application appname)
   target_link_libraries(${appname} PUBLIC ${APPOPTS_LINK_LIBRARIES}) 
 
   _daq_set_target_output( ${appname} ${APP_PATH} )
+
+  # if( NOT ${APPOPTS_TEST} )
+  #   _daq_define_exportname()
+  #   message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
+  #   install(TARGETS ${appname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
+  # endif()
 
 endfunction()
 
@@ -237,12 +259,12 @@ endfunction()
 
 function(daq_install) 
 
-  cmake_parse_arguments(DAQ_INSTALL "" "" TARGETS ${ARGN} )
   set(exportset ${PROJECT_NAME}Targets)
   set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 
-  install(TARGETS ${DAQ_INSTALL_TARGETS} EXPORT ${exportset} )
-  install(EXPORT ${exportset} FILE ${exportset}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
+  # install(TARGETS ${DAQ_INSTALL_TARGETS} EXPORT ${exportset} )
+  # _daq_define_exportname()
+  install(EXPORT ${exportset}  FILE ${exportset}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
 
   install(DIRECTORY include/${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h??")
 
