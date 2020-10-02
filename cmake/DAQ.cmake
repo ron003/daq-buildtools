@@ -95,10 +95,10 @@ macro( _daq_set_target_output target output_dir )
 endmacro()
 
 ####################################################################################################
-# macro( _daq_define_exportname )
-#   set( DAQ_PROJECT_EXPORTNAME ${PROJECT_NAME}Targets )
-#   message(">>>>>>> " ${DAQ_PROJECT_EXPORTNAME})
-# endmacro()
+macro( _daq_define_exportname )
+  set( DAQ_PROJECT_EXPORTNAME ${PROJECT_NAME}Targets )
+  # message(">>>>>>> " ${DAQ_PROJECT_EXPORTNAME})
+endmacro()
 
 
 ####################################################################################################
@@ -119,9 +119,6 @@ function(daq_add_library)
   endif()
 
   set(LIB_PATH "src")
-  # if(LIBOPTS_TEST)
-  #   set(LIB_PATH "test")
-  # endif()
 
   set(libsrcs)
   foreach(f ${LIBOPTS_UNPARSED_ARGUMENTS})
@@ -144,9 +141,8 @@ function(daq_add_library)
 
   _daq_set_target_output( ${libname} ${LIB_PATH} )
 
-  # _daq_define_exportname()
-  # message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
-  install(TARGETS ${pluginlibname} EXPORT ${PROJECT_NAME}Targets )
+  _daq_define_exportname()
+  install(TARGETS ${libname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
 
 endfunction()
 
@@ -170,11 +166,11 @@ function(daq_add_plugin pluginname plugintype)
 
   _daq_set_target_output( ${pluginlibname} ${PLUGIN_PATH} )
 
-  # if ( NOT ${PLUGOPTS_TEST} )
-  #   _daq_define_exportname()
-  #   message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
-  #   install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
-  # endif()
+  if ( NOT ${PLUGOPTS_TEST} )
+    _daq_define_exportname()
+    message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
+    install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
+  endif()
 
   endfunction()
 
@@ -210,11 +206,10 @@ function(daq_add_application appname)
 
   _daq_set_target_output( ${appname} ${APP_PATH} )
 
-  # if( NOT ${APPOPTS_TEST} )
-  #   _daq_define_exportname()
-  #   message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
-  #   install(TARGETS ${appname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
-  # endif()
+  if( NOT ${APPOPTS_TEST} )
+    _daq_define_exportname()
+    install(TARGETS ${appname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
+  endif()
 
 endfunction()
 
@@ -259,12 +254,12 @@ endfunction()
 
 function(daq_install) 
 
-  set(exportset ${PROJECT_NAME}Targets)
-  set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+  # set(exportset ${PROJECT_NAME}Targets)
+  set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake)
 
   # install(TARGETS ${DAQ_INSTALL_TARGETS} EXPORT ${exportset} )
-  # _daq_define_exportname()
-  install(EXPORT ${exportset}  FILE ${exportset}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
+  _daq_define_exportname()
+  install(EXPORT ${DAQ_PROJECT_EXPORTNAME} FILE ${DAQ_PROJECT_EXPORTNAME}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
 
   install(DIRECTORY include/${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h??")
 
