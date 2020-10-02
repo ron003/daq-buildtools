@@ -278,7 +278,7 @@ fi
 
 starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
-cmake \${generator_arg} $srcdir |& tee \$build_log
+unbuffer cmake \${generator_arg} $srcdir |& tee \$build_log
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=\$( date )
 endtime_cfggen_s=\$( date +%s )
@@ -333,7 +333,7 @@ if \$verbose; then
   build_options=" --verbose"
 fi
 
-cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
+unbuffer cmake --build . \$build_options -- \$nprocs_argument |& tee -a \$build_log
 
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=\$( date )
@@ -384,7 +384,7 @@ fi
 
 if \$perform_install ; then
   cd $builddir
-  cmake --build . --target install -- -j \$nprocs
+  unbuffer cmake --build . --target install -- -j \$nprocs
  
   if [[ "\$?" == "0" ]]; then
     echo 
