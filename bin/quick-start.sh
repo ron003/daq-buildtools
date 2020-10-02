@@ -506,7 +506,7 @@ mkdir -p $srcdir
 
 superproject_cmakeliststxt=$basedir/daq-buildtools/configs/CMakeLists.txt
 if [[ -e $superproject_cmakeliststxt ]]; then
-    cp $superproject_cmakeliststxt .
+    cp $superproject_cmakeliststxt $srcdir
 else
     echo "Error: expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..." >&2
     exit 60
@@ -514,7 +514,7 @@ fi
 
 setup_runtime=$basedir/daq-buildtools/scripts/setup_runtime_environment
 if [[ -e $setup_runtime ]]; then
-    cp $setup_runtime $basedir/sourcecode
+    cp $setup_runtime $basedir
 else
     echo "Error: expected file \"$setup_runtime\" doesn't appear to exist. Exiting..." >&2
     exit 70
