@@ -35,7 +35,8 @@ builddir=$basedir/build
 logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
-packages="daq-buildtools:develop styleguide:develop"
+
+precloned_packages="daq-buildtools:develop"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -119,6 +120,9 @@ cat<<EOF > $setup_script
 if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
+
+export DUNE_INSTALL_DIR=\$(cd \$(dirname \${BASH_SOURCE}) && pwd)/install
+export CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH:\$DUNE_INSTALL_DIR/lib64:\$DUNE_INSTALL_DIR/lib
 
 EOF
 
@@ -285,9 +289,9 @@ starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
 
 if \$can_unbuffer ; then
-unbuffer cmake \${generator_arg} $srcdir |& tee \$build_log
+unbuffer cmake -DCMAKE_INSTALL_PREFIX=\$DUNE_INSTALL_DIR \${generator_arg} $srcdir |& tee \$build_log
 else
-cmake \${generator_arg} $srcdir |& tee \$build_log
+cmake -DCMAKE_INSTALL_PREFIX=\$DUNE_INSTALL_DIR \${generator_arg} $srcdir |& tee \$build_log
 fi
 
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
@@ -471,6 +475,11 @@ fi
 if \$lint; then
     cd $basedir
 
+    if [[ ! -d ./styleguide ]]; then
+      echo "Cloning styleguide into $basedir so linting can be applied"
+      git clone https://github.com/DUNE-DAQ/styleguide.git
+    fi
+
     for pkgdir in \$( find build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
         pkgname=\$( echo \$pkgdir | sed -r 's!.*/(.*)!\1!' )
         ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/\$pkgname
@@ -483,7 +492,12 @@ EOF
 chmod +x $build_script
 
 
-for package in $packages; do
+mkdir -p $builddir
+mkdir -p $logdir
+mkdir -p $srcdir
+
+cd $srcdir
+for package in $precloned_packages; do
     packagename=$( echo $package | sed -r 's/:.*//g' )
     packagebranch=$( echo $package | sed -r 's/.*://g' )
     echo "Cloning $packagename repo, will use $packagebranch branch..."
@@ -500,11 +514,7 @@ for package in $packages; do
     cd ..
 done
 
-mkdir -p $builddir
-mkdir -p $logdir
-mkdir -p $srcdir
-
-superproject_cmakeliststxt=$basedir/daq-buildtools/configs/CMakeLists.txt
+superproject_cmakeliststxt=$srcdir/daq-buildtools/configs/CMakeLists.txt
 if [[ -e $superproject_cmakeliststxt ]]; then
     cp $superproject_cmakeliststxt $srcdir
 else
@@ -512,7 +522,7 @@ else
     exit 60
 fi
 
-setup_runtime=$basedir/daq-buildtools/scripts/setup_runtime_environment
+setup_runtime=$srcdir/daq-buildtools/scripts/setup_runtime_environment
 if [[ -e $setup_runtime ]]; then
     cp $setup_runtime $basedir
 else
