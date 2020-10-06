@@ -106,36 +106,32 @@ endmacro()
 
 function(daq_add_library)
 
-  cmake_parse_arguments(LIBOPTS "SHARED;STATIC" "" "LINK_LIBRARIES" ${ARGN})
+  cmake_parse_arguments(LIBOPTS "" "" "LINK_LIBRARIES" ${ARGN})
 
   set(libname ${PROJECT_NAME})
-
-  if(LIBOPTS_STATIC)
-    set(libtype STATIC)
-  elseif(LIBOPTS_SHARED)
-    set(libtype SHARED)
-  else()
-    message( FATAL_ERROR "Library type undefined: It must be either SHARED or STATIC." )
-  endif()
 
   set(LIB_PATH "src")
 
   set(libsrcs)
   foreach(f ${LIBOPTS_UNPARSED_ARGUMENTS})
 
-    if(${f} MATCHES ".*\\*.*")
+    if(${f} MATCHES ".*\\*.*")  # An argument with an "*" in it is treated as a glob
 
       set(fpaths)
       file(GLOB fpaths CONFIGURE_DEPENDS ${LIB_PATH}/${f})
 
-      set(libsrcs ${libsrcs} ${fpaths})
+      if (fpaths)
+        set(libsrcs ${libsrcs} ${fpaths})
+      else()
+        message(WARNING "When defining list of files from which to build library \"${libname}\", no files in ${CMAKE_CURRENT_SOURCE_DIR}/${LIB_PATH} match the glob \"${f}\"")
+      endif()
     else()
        # may be generated file, so just add
       set(libsrcs ${libsrcs} ${LIB_PATH}/${f})
     endif()
   endforeach()
 
-  add_library(${libname} ${libtype} ${libsrcs})
+  add_library(${libname} SHARED ${libsrcs})
   target_link_libraries(${libname} PUBLIC ${LIBOPTS_LINK_LIBRARIES}) 
   target_include_directories(${libname} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 
@@ -161,15 +157,15 @@ function(daq_add_plugin pluginname plugintype)
   endif()
   
 
-  add_library( ${pluginlibname} ${PLUGIN_PATH}/${pluginname}.cpp )
-  target_link_libraries(${pluginlibname} PUBLIC ${PLUGOPTS_LINK_LIBRARIES}) 
+  add_library( ${pluginlibname} MODULE ${PLUGIN_PATH}/${pluginname}.cpp )
+  target_link_libraries(${pluginlibname} ${PLUGOPTS_LINK_LIBRARIES}) 
 
   _daq_set_target_output( ${pluginlibname} ${PLUGIN_PATH} )
 
   if ( NOT ${PLUGOPTS_TEST} )
     _daq_define_exportname()
     message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
-    install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
+    install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
   endif()
 
   endfunction()
@@ -188,12 +184,16 @@ function(daq_add_application appname)
   set(appsrcs)
   foreach(f ${APPOPTS_UNPARSED_ARGUMENTS})
 
-    if(${f} MATCHES ".*\\*.*")
+    if(${f} MATCHES ".*\\*.*")   # An argument with an "*" in it is treated as a glob
 
       set(fpaths)
       file(GLOB fpaths CONFIGURE_DEPENDS ${APP_PATH}/${f})
 
-      set(appsrcs ${appsrcs} ${fpaths})
+      if (fpaths)
+        set(appsrcs ${appsrcs} ${fpaths})
+      else()
+        message(WARNING "When defining list of files from which to build application \"${appname}\", no files in ${CMAKE_CURRENT_SOURCE_DIR}/${APP_PATH} match the glob \"${f}\"")
+      endif()
     else()
        # may be generated file, so just add
       set(appsrcs ${appsrcs} ${APP_PATH}/${f})
