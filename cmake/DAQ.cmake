@@ -26,15 +26,6 @@ macro(daq_setup_environment)
   # Needed for clang-tidy (called by our linters) to work
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-  # Want find_package() to be able to locate packages we've installed in the 
-  # local development area via daq_install(), defined later in this file
- 
-  set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/../build ${CMAKE_SOURCE_DIR}/../install )
-
-  set(CMAKE_INSTALL_LIBDIR     ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR})
-  set(CMAKE_INSTALL_BINDIR     ${PROJECT_NAME}/${CMAKE_INSTALL_BINDIR})
-  set(CMAKE_INSTALL_INCLUDEDIR ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
-
   set(CMAKE_INSTALL_CMAKEDIR   ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake ) # Not defined in GNUInstallDirs
 
   add_compile_options( -g -pedantic -Wall -Wextra -fdiagnostics-color=always )
@@ -49,12 +40,11 @@ endmacro()
 # This utility function updates the target output properites and points
 # them to the chosen project subdirectory in the build ditrectory tree.
 macro( _daq_set_target_output_dirs target output_dir )
-
   set_target_properties(${target}
     PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${output_dir}"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${output_dir}"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${output_dir}"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${output_dir}"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${output_dir}"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${output_dir}"
   )
 
 endmacro()
