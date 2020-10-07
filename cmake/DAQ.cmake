@@ -52,9 +52,15 @@ macro(daq_setup_environment)
  
   set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/../build ${CMAKE_SOURCE_DIR}/../install )
 
-  set(CMAKE_INSTALL_LIBDIR ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR})
-  set(CMAKE_INSTALL_BINDIR ${PROJECT_NAME}/${CMAKE_INSTALL_BINDIR})
+  set(CMAKE_INSTALL_LIBDIR     ${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR})
+  set(CMAKE_INSTALL_BINDIR     ${PROJECT_NAME}/${CMAKE_INSTALL_BINDIR})
   set(CMAKE_INSTALL_INCLUDEDIR ${PROJECT_NAME}/${CMAKE_INSTALL_INCLUDEDIR})
+
+  set(CMAKE_INSTALL_CMAKEDIR   ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake ) # Not defined in GNUInstallDirs
+
+  # JCF, Oct-7-2020, TODO when it becomes standard for us to use a CMake version 3.7 or newer:
+  # Replace this ad-hoc DAQ_PROJECT_HAS_TARGETS logic by checking the BUILDSYSTM_TARGETS variable instead
+  set(DAQ_PROJECT_HAS_TARGETS false)
 
   add_compile_options( -g -pedantic -Wall -Wextra -fdiagnostics-color=always )
 
@@ -106,6 +112,8 @@ endmacro()
 
 function(daq_add_library)
 
+  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
+
   cmake_parse_arguments(LIBOPTS "" "" "LINK_LIBRARIES" ${ARGN})
 
   set(libname ${PROJECT_NAME})
@@ -147,6 +155,8 @@ endfunction()
 
 function(daq_add_plugin pluginname plugintype)
 
+  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
+
   cmake_parse_arguments(PLUGOPTS "TEST" "" "LINK_LIBRARIES" ${ARGN})
 
   set(pluginlibname "${PROJECT_NAME}_${pluginname}_${plugintype}")
@@ -174,6 +184,8 @@ function(daq_add_plugin pluginname plugintype)
 # daq_add_app:
 function(daq_add_application appname)
   
+  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
+
   cmake_parse_arguments(APPOPTS "TEST" "" "LINK_LIBRARIES" ${ARGN})
 
   set(APP_PATH "apps")
@@ -226,6 +238,8 @@ endfunction()
 
 function(daq_add_unit_test testname)
 
+  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
+
   cmake_parse_arguments(UTEST "" "" "LINK_LIBRARIES" ${ARGN})
 
   set(UTEST_PATH "unittest")
@@ -254,12 +268,10 @@ endfunction()
 
 function(daq_install) 
 
-  # set(exportset ${PROJECT_NAME}Targets)
-  set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake)
-
-  # install(TARGETS ${DAQ_INSTALL_TARGETS} EXPORT ${exportset} )
-  _daq_define_exportname()
-  install(EXPORT ${DAQ_PROJECT_EXPORTNAME} FILE ${DAQ_PROJECT_EXPORTNAME}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
+  if (${DAQ_PROJECT_HAS_TARGETS})
+    _daq_define_exportname()
+    install(EXPORT ${DAQ_PROJECT_EXPORTNAME} FILE ${DAQ_PROJECT_EXPORTNAME}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${CMAKE_INSTALL_CMAKEDIR} )
+  endif()
 
   install(DIRECTORY include/${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h??")
 
@@ -274,12 +286,12 @@ function(daq_install)
   endif()
 
   if (EXISTS ${configfiletemplate})
-    configure_package_config_file(${configfiletemplate} ${configfile} INSTALL_DESTINATION ${cmakedestination})
+    configure_package_config_file(${configfiletemplate} ${configfile} INSTALL_DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
   else()
      message(FATAL_ERROR "Error: unable to find needed file ${configfiletemplate} for ${PROJECT_NAME} installation")
   endif()
 
-  install(FILES ${versionfile} ${configfile} DESTINATION ${cmakedestination})
+  install(FILES ${versionfile} ${configfile} DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 endfunction()
 
