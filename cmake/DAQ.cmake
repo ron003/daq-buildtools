@@ -62,28 +62,12 @@ macro(daq_setup_environment)
 
 endmacro()
 
-####################################################################################################
-# daq_point_build_to:
-# This function should be called before building the targets
-# associated with a given subdirectory in your code tree, and given
-# that subdirectory as argument. The consequence of this is that it
-# avoids dumping all executable, shared object libraries, etc. from
-# across the tree into the same build directory when you compile. 
-
-function( daq_point_build_to output_dir )
-
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${output_dir} PARENT_SCOPE)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${output_dir} PARENT_SCOPE)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${output_dir} PARENT_SCOPE)
-
-endfunction()
-
 
 ####################################################################################################
-# _daq_set_target_output
+# _daq_set_target_output_dirs
 # This utility function updates the target output properites and points
-# them to the chosen project subdirectory
-macro( _daq_set_target_output target output_dir )
+# them to the chosen project subdirectory in the build ditrectory tree.
+macro( _daq_set_target_output_dirs target output_dir )
 
   set_target_properties(${target}
     PROPERTIES
@@ -97,7 +81,6 @@ endmacro()
 ####################################################################################################
 macro( _daq_define_exportname )
   set( DAQ_PROJECT_EXPORTNAME ${PROJECT_NAME}Targets )
-  # message(">>>>>>> " ${DAQ_PROJECT_EXPORTNAME})
 endmacro()
 
 
@@ -135,7 +118,7 @@ function(daq_add_library)
   target_link_libraries(${libname} PUBLIC ${LIBOPTS_LINK_LIBRARIES}) 
   target_include_directories(${libname} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 
-  _daq_set_target_output( ${libname} ${LIB_PATH} )
+  _daq_set_target_output_dirs( ${libname} ${LIB_PATH} )
 
   _daq_define_exportname()
   install(TARGETS ${libname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
@@ -160,11 +143,11 @@ function(daq_add_plugin pluginname plugintype)
   add_library( ${pluginlibname} MODULE ${PLUGIN_PATH}/${pluginname}.cpp )
   target_link_libraries(${pluginlibname} ${PLUGOPTS_LINK_LIBRARIES}) 
 
-  _daq_set_target_output( ${pluginlibname} ${PLUGIN_PATH} )
+  _daq_set_target_output_dirs( ${pluginlibname} ${PLUGIN_PATH} )
+
 
   if ( NOT ${PLUGOPTS_TEST} )
     _daq_define_exportname()
-    message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
     install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
   endif()
 
@@ -204,7 +187,7 @@ function(daq_add_application appname)
   add_executable(${appname} ${appsrcs})
   target_link_libraries(${appname} PUBLIC ${APPOPTS_LINK_LIBRARIES}) 
 
-  _daq_set_target_output( ${appname} ${APP_PATH} )
+  _daq_set_target_output_dirs( ${appname} ${APP_PATH} )
 
   if( NOT ${APPOPTS_TEST} )
     _daq_define_exportname()
@@ -235,7 +218,7 @@ function(daq_add_unit_test testname)
   target_compile_definitions(${testname} PRIVATE "BOOST_TEST_DYN_LINK=1")
   add_test(NAME ${testname} COMMAND ${testname})
 
-  _daq_set_target_output( ${testname} ${UTEST_PATH} )
+  _daq_set_target_output_dirs( ${testname} ${UTEST_PATH} )
 
 endfunction()
 
@@ -254,10 +237,8 @@ endfunction()
 
 function(daq_install) 
 
-  # set(exportset ${PROJECT_NAME}Targets)
   set(cmakedestination ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake)
 
-  # install(TARGETS ${DAQ_INSTALL_TARGETS} EXPORT ${exportset} )
   _daq_define_exportname()
   install(EXPORT ${DAQ_PROJECT_EXPORTNAME} FILE ${DAQ_PROJECT_EXPORTNAME}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${cmakedestination} )
 
