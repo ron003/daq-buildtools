@@ -3,6 +3,7 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 ####################################################################################################
+# Experimental Color Support
 if(NOT WIN32)
   string(ASCII 27 Esc)
   set(ColourReset "${Esc}[m")
