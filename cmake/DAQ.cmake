@@ -21,7 +21,7 @@ macro(daq_setup_environment)
   set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 
   # All code for the project should be able to see the project's public include directory
-  include_directories( ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/include )
+  include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
   # Needed for clang-tidy (called by our linters) to work
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
