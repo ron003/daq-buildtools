@@ -24,7 +24,7 @@ source ${BASEDIR}/.dunedaq_area
 echo "Product directories ${dune_products_dirs}"
 echo "Products ${dune_products[@]}"
 
-prodDirArr=(${dune_products_dirs//|/ })
+prodDirArr=(${dune_products_dirs//:/})
 for proddir in ${prodDirArr[@]}; do
     source ${proddir}/setup
 done
