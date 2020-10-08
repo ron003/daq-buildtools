@@ -112,8 +112,6 @@ endmacro()
 
 function(daq_add_library)
 
-  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
-
   cmake_parse_arguments(LIBOPTS "" "" "LINK_LIBRARIES" ${ARGN})
 
   set(libname ${PROJECT_NAME})
@@ -147,6 +145,7 @@ function(daq_add_library)
 
   _daq_define_exportname()
   install(TARGETS ${libname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
+  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
 
 endfunction()
 
@@ -154,8 +153,6 @@ endfunction()
 # daq_add_plugin:
 
 function(daq_add_plugin pluginname plugintype)
-
-  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
 
   cmake_parse_arguments(PLUGOPTS "TEST" "" "LINK_LIBRARIES" ${ARGN})
 
@@ -176,6 +173,7 @@ function(daq_add_plugin pluginname plugintype)
     _daq_define_exportname()
     message("<<<<<< " ${DAQ_PROJECT_EXPORTNAME})
     install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
   endif()
 
   endfunction()
@@ -183,8 +181,6 @@ function(daq_add_plugin pluginname plugintype)
 ####################################################################################################
 # daq_add_app:
 function(daq_add_application appname)
-  
-  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
 
   cmake_parse_arguments(APPOPTS "TEST" "" "LINK_LIBRARIES" ${ARGN})
 
@@ -221,6 +217,7 @@ function(daq_add_application appname)
   if( NOT ${APPOPTS_TEST} )
     _daq_define_exportname()
     install(TARGETS ${appname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
+    set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
   endif()
 
 endfunction()
@@ -237,8 +234,6 @@ endfunction()
 # daq_add_unit_test(FooLibrary_test Foo)
 
 function(daq_add_unit_test testname)
-
-  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
 
   cmake_parse_arguments(UTEST "" "" "LINK_LIBRARIES" ${ARGN})
 
