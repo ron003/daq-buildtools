@@ -1,3 +1,4 @@
+#!/usr/bin/bash
 
 WORKAREA_ROOT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 BUILD_DIR="${WORKAREA_ROOT}/build"
