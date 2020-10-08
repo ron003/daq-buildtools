@@ -1,33 +1,19 @@
 #!/bin/bash
 
-HERE=$(cd $(dirname ${BASH_SOURCE}) && pwd)
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
-WORK_AREA_FILE='.dunedaq_area'
+# Import find_work_area function
+source ${HERE}/setup_tools.sh
 
-echo "hello"
-slashes=${PWD//[^\/]/}
-echo "slashes ${slashes} ${#slashes}"
+BASEDIR=$(find_work_area)
+if [[ -z $BASEDIR ]]; then
+    echo "Expected work aread directory $BASEDIR not found; exiting..." >&2
+    exit 1
+fi
 
-
-SEARCH_PATH=${PWD}
-WAF_PATH=""
-for(( i=${#slashes}; i>0; i--)); do
-  WAF_SEARCH_PATH="${SEARCH_PATH}/${WORK_AREA_FILE}"
-  echo "Looking for $WAF_SEARCH_PATH"
-  if [ -f "${WAF_SEARCH_PATH}" ]; then
-    WAF_PATH="${WAF_SEARCH_PATH}"
-    break
-  fi
-  SEARCH_PATH=$(dirname ${SEARCH_PATH})
-done
-
-BASEDIR=${SEARCH_PATH}
 BUILDDIR=${BASEDIR}/build
 LOGDIR=${BASEDIR}/log
 SRCDIR=${BASEDIR}/sourcecode
-
-unset SEARCH_PATH
-unset WAF_PATH
 #########################################################################################
 
 run_tests=false

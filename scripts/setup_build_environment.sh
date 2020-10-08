@@ -7,25 +7,20 @@ echo "This script hasn't yet been sourced (successfully) in this shell; setting 
 export DUNE_INSTALL_DIR=$(cd $(dirname ${BASH_SOURCE}) && pwd)/install
 
 #############################################################
-WORK_AREA_FILE='.dunedaq_area'
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
-slashes=${PWD//[^\/]/}
+# Import find_work_area function
+source ${HERE}/setup_tools.sh
 
-SEARCH_PATH=${PWD}
-WAF_PATH=""
-for(( i=${#slashes}; i>0; i--)); do
-  WAF_SEARCH_PATH="${SEARCH_PATH}/${WORK_AREA_FILE}"
-  echo "Looking for $WAF_SEARCH_PATH"
-  if [ -f "${WAF_SEARCH_PATH}" ]; then
-    WAF_PATH="${WAF_SEARCH_PATH}"
-    break
-  fi
-  SEARCH_PATH=$(dirname ${SEARCH_PATH})
-done
+BASEDIR=$(find_work_area)
+echo BASEDIR=${BASEDIR}
+if [[ -z $BASEDIR ]]; then
+    echo "Expected work aread directory $BASEDIR not found; exiting..." >&2
+    return 1
+fi
 
-BASEDIR=${SEARCH_PATH}
-
-source ${SEARCH_PATH}/.dunedaq_area
+# Source the area settings
+source ${BASEDIR}/.dunedaq_area
 echo "Product directories ${dune_products_dirs}"
 echo "Products ${dune_products[@]}"
 
@@ -36,8 +31,8 @@ done
 
 setup_returns=""
 
-for prod in ${dune_products[@]}; do
-    prodArr=(${prod//|/ })
+for prod in "${dune_products[@]}"; do
+    prodArr=(${prod})
 
     setup_cmd="setup ${prodArr[0]} ${prodArr[1]}"
     if [[ ${#prodArr[@]} -eq 3 ]]; then
