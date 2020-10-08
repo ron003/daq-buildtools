@@ -72,15 +72,17 @@ function add_many_paths() {
 }
 #------------------------------------------------------------------------------
 
-DAQ_APPS_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'apps')
-DAQ_LIB_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'src')
-DAQ_TEST_PATHS=$(find $BUILD_DIR -type d -not -path '*CMakeFiles*' -name 'test')
+DAQ_APPS_PATHS=$(find $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
+DAQ_LIB_PATHS=$(find $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')
+DAQ_PLUGS_PATHS=$(find $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '/*plugins')
+DAQ_TEST_APPS_PATHS=$(find $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/apps')
+DAQ_TEST_PLUGS_PATHS=$(find $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/plugins')
 
-add_many_paths PATH $DAQ_APPS_PATHS $DAQ_TEST_PATHS
-add_many_paths LD_LIBRARY_PATH $DAQ_LIB_PATHS $DAQ_TEST_PATHS
-add_many_paths CET_PLUGIN_PATH $DAQ_LIB_PATHS $DAQ_TEST_PATHS
+add_many_paths PATH $DAQ_APPS_PATHS $DAQ_TEST_APPS_PATHS
+add_many_paths LD_LIBRARY_PATH $DAQ_LIB_PATHS
+add_many_paths CET_PLUGIN_PATH $DAQ_PLUGS_PATHS $DAQ_TEST_PLUGS_PATHS
 
-unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_TEST_PATHS
+unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_PLUGS_PATHS DAQ_TEST_APPS_PATHS DAQ_TEST_PLUGS_PATHS
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
 echo
