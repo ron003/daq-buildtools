@@ -42,10 +42,9 @@ endif()
 
 
 ####################################################################################################
-# daq_list_subdirs
-# This macro lists all the subdirectories of curdir
-# Note to self: add only add a directory if it contains a CMakeList.txt
-macro(daq_list_subdirs result curdir)
+# daq_list_proj_subdirs
+# This macro lists all the subdirectories of curdir which contain a CMakeLists.txt file
+macro(daq_list_proj_subdirs result curdir)
   file(GLOB children RELATIVE ${curdir} CONFIGURE_DEPENDS ${curdir}/*)
   set(dirlist "")
   foreach (child ${children})
@@ -104,7 +103,17 @@ macro(daq_add_subpackages)
 
   daq_topproj_save_gnudirs()
   
-  daq_list_subdirs(pkgs ${CMAKE_CURRENT_LIST_DIR})
+  daq_list_proj_subdirs(pkgs ${CMAKE_CURRENT_LIST_DIR})
+
+  # JCF, Oct-9-2020
+  # CMake needs to deal with daq-buildtools first, otherwise the other
+  # package's calls to find_package(daq-builtools) will fail
+
+  list(FIND pkgs "daq-buildtools" contains_dbt)
+  if (${contains_dbt})
+    list(REMOVE_ITEM pkgs "daq-buildtools")
+    set(pkgs "daq-buildtools" ${pkgs})
+  endif()
 
   foreach (pkg ${pkgs})
 
