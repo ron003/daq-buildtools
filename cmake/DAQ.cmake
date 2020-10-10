@@ -26,7 +26,7 @@ macro(daq_setup_environment)
   # Needed for clang-tidy (called by our linters) to work
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-  set(CMAKE_INSTALL_CMAKEDIR   ${CMAKE_INSTALL_LIBDIR}/cmake ) # Not defined in GNUInstallDirs
+  set(CMAKE_INSTALL_CMAKEDIR   ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake ) # Not defined in GNUInstallDirs
 
   add_compile_options( -g -pedantic -Wall -Wextra -fdiagnostics-color=always )
 
