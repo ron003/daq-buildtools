@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=true
+edits_check=false
 
 setup_script=setup_build_environment
 build_script=build_daq_software.sh
@@ -36,7 +36,7 @@ logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
 
-precloned_packages="daq-buildtools:develop"
+precloned_packages="daq-buildtools:thea/i35-paths"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
