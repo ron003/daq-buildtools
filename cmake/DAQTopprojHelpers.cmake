@@ -109,8 +109,7 @@ macro(daq_add_subpackages)
   # CMake needs to deal with daq-buildtools first, otherwise the other
   # package's calls to find_package(daq-builtools) will fail
 
-  list(FIND pkgs "daq-buildtools" contains_dbt)
-  if (${contains_dbt})
+  if ("daq-buildtools" IN_LIST pkgs)
     list(REMOVE_ITEM pkgs "daq-buildtools")
     set(pkgs "daq-buildtools" ${pkgs})
   endif()
