@@ -9,7 +9,7 @@ if [ ! -d "$BUILD_DIR" ]; then
 
 fi
 
-if [[ -z $DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
       if [[ -e $WORKAREA_ROOT/setup_build_environment ]]; then
           echo "Lines between the ='s are the output of the sourcing of $WORKAREA_ROOT/setup_build_environment"
 	  echo "======================================================================"

@@ -117,14 +117,14 @@ fi # if $edits_check
 
 cat<<EOF > $setup_script
 
-if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+if [[ -z \$DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
-if [[ -z \$DUNE_INSTALL_DIR ]]; then
-  export DUNE_INSTALL_DIR=\$(cd \$(dirname \${BASH_SOURCE}) && pwd)/install
+if [[ -z \$DBT_INSTALL_DIR ]]; then
+  export DBT_INSTALL_DIR=\$(cd \$(dirname \${BASH_SOURCE}) && pwd)/install
 fi
-export CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH:\$DUNE_INSTALL_DIR/lib64:\$DUNE_INSTALL_DIR/lib
+export CMAKE_PREFIX_PATH=\$CMAKE_PREFIX_PATH:\$DBT_INSTALL_DIR/lib64:\$DBT_INSTALL_DIR/lib
 
 EOF
 
@@ -176,7 +176,7 @@ else
   return 1
 fi
 
-export DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
+export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
 echo
 
@@ -185,7 +185,7 @@ else
 echo "This script appears to have already been sourced successfully; returning..." >&2
 return 10
 
-fi    # if DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
+fi    # if DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
 
 
 EOF
@@ -235,7 +235,7 @@ for arg in "\$@" ; do
   fi
 done
 
-if [[ -z \$DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+if [[ -z \$DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 echo
 echo "It appears you haven't yet sourced \"./setup_build_environment\" yet; please source it before running this script. Exiting..."
 echo
@@ -291,9 +291,9 @@ starttime_cfggen_d=\$( date )
 starttime_cfggen_s=\$( date +%s )
 
 if \$can_unbuffer ; then
-unbuffer cmake -DCMAKE_INSTALL_PREFIX=\$DUNE_INSTALL_DIR \${generator_arg} $srcdir |& tee \$build_log
+unbuffer cmake -DCMAKE_INSTALL_PREFIX=\$DBT_INSTALL_DIR \${generator_arg} $srcdir |& tee \$build_log
 else
-cmake -DCMAKE_INSTALL_PREFIX=\$DUNE_INSTALL_DIR \${generator_arg} $srcdir |& tee \$build_log
+cmake -DCMAKE_INSTALL_PREFIX=\$DBT_INSTALL_DIR \${generator_arg} $srcdir |& tee \$build_log
 fi
 
 retval=\${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
