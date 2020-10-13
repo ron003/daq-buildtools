@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(toylibrary VERSION 1.1.0)
 
-include(DAQ)
+find_package(daq-buildtools REQUIRED)
 
 daq_setup_environment()
 
