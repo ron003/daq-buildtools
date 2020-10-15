@@ -148,7 +148,9 @@ function(daq_add_plugin pluginname plugintype)
   _daq_set_target_output_dirs( ${pluginlibname} ${PLUGIN_PATH} )
 
 
-  if ( NOT ${PLUGOPTS_TEST} )
+  if ( ${PLUGOPTS_TEST} )
+    target_include_directories(${pluginlibname} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include> )
+  else()
     _daq_define_exportname()
     install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
   endif()
@@ -205,7 +207,9 @@ function(daq_add_application appname)
 
   _daq_set_target_output_dirs( ${appname} ${APP_PATH} )
 
-  if( NOT ${APPOPTS_TEST} )
+  if( ${APPOPTS_TEST} )
+    target_include_directories(${appname} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include> )
+  else()
     _daq_define_exportname()
     install(TARGETS ${appname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
   endif()
