@@ -105,14 +105,26 @@ macro(daq_add_subpackages)
   
   daq_list_proj_subdirs(pkgs ${CMAKE_CURRENT_LIST_DIR})
 
-  # JCF, Oct-9-2020
-  # CMake needs to deal with daq-buildtools first, otherwise the other
-  # package's calls to find_package(daq-builtools) will fail
+  # JCF, Oct-15-2020
 
-  if ("daq-buildtools" IN_LIST pkgs)
-    list(REMOVE_ITEM pkgs "daq-buildtools")
-    set(pkgs "daq-buildtools" ${pkgs})
-  endif()
+  # "reverse_build_order" lists packages built via CMake currently
+  # found in https://github.com/DUNE-DAQ in the opposite order you'd
+  # want CMake to see them (via "add_subdirectory") during a
+  # simultaneous build. This is due to their dependencies: e.g., you'd
+  # want CMake to see daq-buildtools first in order to create
+  # daq-buildtoolsConfig.cmake so "find_package(daq-builtools)" will
+  # work for all the other packages, and so on. If a new package is
+  # introduced, however, it will be up to the developer to *first*
+  # build its dependencies before trying to build it.
+
+  set(reverse_build_order "listrev" "ddpdemo" "udaq-readout" "driver" "ipm" "appfwk" "restcmd" "cmdlib" "daq-buildtools")
+
+  foreach(pkg ${reverse_build_order})
+    if (${pkg} IN_LIST pkgs)
+      list(REMOVE_ITEM pkgs ${pkg})
+      set(pkgs ${pkg} ${pkgs})
+    endif()
+  endforeach()
 
   foreach (pkg ${pkgs})
 
