@@ -509,9 +509,9 @@ for package in $precloned_packages; do
 
     if [[ "$?" != "0" ]]; then
 	echo >&2
-	echo "WARNING: unable to check out $packagebranch branch of ${packagename}. Among other consequences, your build may fail..." >&2
+	echo "Error: unable to check out $packagebranch branch of ${packagename}. Exiting..." >&2
 	echo >&2
-	sleep 5
+	exit 55
     fi
     cd ..
 done
