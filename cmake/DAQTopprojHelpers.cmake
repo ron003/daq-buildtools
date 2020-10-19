@@ -118,19 +118,16 @@ macro(daq_add_subpackages build_order)
 
   # Warn the user that the build order of some package is not known
   foreach(pkg ${found_pkgs})
-    message(WARNING "Build order of ${pkg} in sourcecode not knonw. It will be build last.")
+    message(WARNING "Package \"${pkg}\" not provided to the daq_add_subpackages function in ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt. ${pkg} will only be built after the provided packages are built. There's no guarantee this is the correct order; if you know where ${pkg} should be in the dependency hierarchy add it to its appropriate place in the list of packages provided to daq_add_subpackages.")
   endforeach()
   
   set(pkgs ${known_pkgs} ${found_pkgs})
-  message(WARNING "Package build order: ${pkgs}")
+  message(STATUS "Package build order: ${pkgs}")
 
   foreach (pkg ${pkgs})
-
     daq_topproj_setpkg_gnudirs(${pkg})
-  
     add_subdirectory(${pkg})
-  
-    endforeach()
+  endforeach()
 
   daq_topproj_restore_gnudirs()
 
