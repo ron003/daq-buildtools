@@ -103,17 +103,26 @@ macro(daq_add_subpackages build_order)
 
   daq_topproj_save_gnudirs()
   
-  daq_list_proj_subdirs(pkgs ${CMAKE_CURRENT_LIST_DIR})
+  daq_list_proj_subdirs(found_pkgs ${CMAKE_CURRENT_LIST_DIR})
 
   set(reverse_build_order ${build_order})
   list(REVERSE reverse_build_order)
 
+  set(known_pkgs "")
   foreach(pkg ${reverse_build_order})
-    if (${pkg} IN_LIST pkgs)
-      list(REMOVE_ITEM pkgs ${pkg})
-      set(pkgs ${pkg} ${pkgs})
+    if (${pkg} IN_LIST found_pkgs)
+      list(REMOVE_ITEM found_pkgs ${pkg})
+      set(known_pkgs ${pkg} ${known_pkgs})
     endif()
   endforeach()
+
+  # Warn the user that the build order of some package is not known
+  foreach(pkg ${found_pkgs})
+    message(WARNING "Build order of ${pkg} in sourcecode not knonw. It will be build last.")
+  endforeach()
+  
+  set(pkgs ${known_pkgs} ${found_pkgs})
+  message(WARNING "Package build order: ${pkgs}")
 
   foreach (pkg ${pkgs})
 
