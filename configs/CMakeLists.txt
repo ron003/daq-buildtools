@@ -24,5 +24,6 @@ include(DAQTopprojHelpers)
 # build its dependencies before trying to build it.
 set(build_order "daq-buildtools" "cmdlib" "restcmd" "appfwk" "ipm" "driver" "udaq-readout" "ddpdemo" "listrev")
 
-daq_add_subpackages(${build_order}) 
+# Beware, quotes are important here
+daq_add_subpackages("${build_order}") 
 
