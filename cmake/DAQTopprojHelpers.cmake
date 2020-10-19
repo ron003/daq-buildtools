@@ -99,40 +99,35 @@ endmacro(daq_topproj_setpkg_gnudirs)
 
 
 ####################################################################################################
-macro(daq_add_subpackages)
+macro(daq_add_subpackages build_order)
 
   daq_topproj_save_gnudirs()
   
-  daq_list_proj_subdirs(pkgs ${CMAKE_CURRENT_LIST_DIR})
+  daq_list_proj_subdirs(found_pkgs ${CMAKE_CURRENT_LIST_DIR})
 
-  # JCF, Oct-15-2020
+  set(reverse_build_order ${build_order})
+  list(REVERSE reverse_build_order)
 
-  # "reverse_build_order" lists packages built via CMake currently
-  # found in https://github.com/DUNE-DAQ in the opposite order you'd
-  # want CMake to see them (via "add_subdirectory") during a
-  # simultaneous build. This is due to their dependencies: e.g., you'd
-  # want CMake to see daq-buildtools first in order to create
-  # daq-buildtoolsConfig.cmake so "find_package(daq-builtools)" will
-  # work for all the other packages, and so on. If a new package is
-  # introduced, however, it will be up to the developer to *first*
-  # build its dependencies before trying to build it.
-
-  set(reverse_build_order "listrev" "ddpdemo" "udaq-readout" "driver" "ipm" "appfwk" "restcmd" "cmdlib" "daq-buildtools")
-
+  set(known_pkgs "")
   foreach(pkg ${reverse_build_order})
-    if (${pkg} IN_LIST pkgs)
-      list(REMOVE_ITEM pkgs ${pkg})
-      set(pkgs ${pkg} ${pkgs})
+    if (${pkg} IN_LIST found_pkgs)
+      list(REMOVE_ITEM found_pkgs ${pkg})
+      set(known_pkgs ${pkg} ${known_pkgs})
     endif()
   endforeach()
 
-  foreach (pkg ${pkgs})
+  # Warn the user that the build order of some package is not known
+  foreach(pkg ${found_pkgs})
+    message(WARNING "Package \"${pkg}\" not provided to the daq_add_subpackages function in ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt. ${pkg} will only be built after the provided packages are built. There's no guarantee this is the correct order; if you know where ${pkg} should be in the dependency hierarchy add it to its appropriate place in the list of packages provided to daq_add_subpackages.")
+  endforeach()
+  
+  set(pkgs ${known_pkgs} ${found_pkgs})
+  message(STATUS "Package build order: ${pkgs}")
 
+  foreach (pkg ${pkgs})
     daq_topproj_setpkg_gnudirs(${pkg})
-  
     add_subdirectory(${pkg})
-  
-    endforeach()
+  endforeach()
 
   daq_topproj_restore_gnudirs()
 
