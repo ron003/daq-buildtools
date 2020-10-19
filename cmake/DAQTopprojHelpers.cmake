@@ -99,25 +99,14 @@ endmacro(daq_topproj_setpkg_gnudirs)
 
 
 ####################################################################################################
-macro(daq_add_subpackages)
+macro(daq_add_subpackages build_order)
 
   daq_topproj_save_gnudirs()
   
   daq_list_proj_subdirs(pkgs ${CMAKE_CURRENT_LIST_DIR})
 
-  # JCF, Oct-15-2020
-
-  # "reverse_build_order" lists packages built via CMake currently
-  # found in https://github.com/DUNE-DAQ in the opposite order you'd
-  # want CMake to see them (via "add_subdirectory") during a
-  # simultaneous build. This is due to their dependencies: e.g., you'd
-  # want CMake to see daq-buildtools first in order to create
-  # daq-buildtoolsConfig.cmake so "find_package(daq-builtools)" will
-  # work for all the other packages, and so on. If a new package is
-  # introduced, however, it will be up to the developer to *first*
-  # build its dependencies before trying to build it.
-
-  set(reverse_build_order "listrev" "ddpdemo" "udaq-readout" "driver" "ipm" "appfwk" "restcmd" "cmdlib" "daq-buildtools")
+  set(reverse_build_order ${build_order})
+  list(REVERSE reverse_build_order)
 
   foreach(pkg ${reverse_build_order})
     if (${pkg} IN_LIST pkgs)
