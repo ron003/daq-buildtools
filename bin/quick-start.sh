@@ -36,7 +36,7 @@ logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
 
-precloned_packages="daq-buildtools:develop"
+precloned_packages="daq-buildtools:v1.2.1"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -77,7 +77,7 @@ if $edits_check ; then
 
     cd $qs_tmpdir
     rm -f quick-start.sh
-    repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/bin/quick-start.sh
+    repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/v1.2.1/bin/quick-start.sh
     curl -O $repoloc
 
     potential_edits=$( diff $basedir/quick-start.sh $qs_tmpdir/quick-start.sh )
