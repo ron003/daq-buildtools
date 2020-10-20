@@ -207,7 +207,7 @@ for arg in "\$@" ; do
     echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
     echo " --unittest means that unit test executables found in ./build/*/unittest are all run"
     echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
-    echo " --install means that you want the code from your package(s) installed in the directory which was pointed to by \$DBT_INSTALL_DIR before the most recent clean build"
+    echo " --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build"
     echo " --verbose means that you want verbose output from the compiler"
 
     echo
