@@ -1,10 +1,10 @@
 #!/usr/bin/bash
 
-if [[ -z $DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
-export DUNE_INSTALL_DIR=$(cd $(dirname ${BASH_SOURCE}) && pwd)/install
+export DBT_INSTALL_DIR=$(cd $(dirname ${BASH_SOURCE}) && pwd)/install
 
 #############################################################
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
@@ -52,7 +52,7 @@ else
   return 1
 fi
 
-export DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
+export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
 echo
 
@@ -61,7 +61,7 @@ else
 echo "This script appears to have already been sourced successfully; returning..." >&2
 return 10
 
-fi    # if DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
+fi    # if DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
 
 
 

@@ -58,7 +58,7 @@ for arg in "$@" ; do
   fi
 done
 
-if [[ -z $DUNE_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 echo
 echo "It appears you haven't yet sourced \"./setup_build_environment\" yet; please source it before running this script. Exiting..."
 echo
@@ -114,9 +114,9 @@ starttime_cfggen_d=$( date )
 starttime_cfggen_s=$( date +%s )
 
 if $can_unbuffer ; then
-unbuffer cmake -DCMAKE_INSTALL_PREFIX=$DUNE_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
+unbuffer cmake -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 else
-cmake -DCMAKE_INSTALL_PREFIX=$DUNE_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
+cmake -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 fi
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
