@@ -32,9 +32,7 @@ macro(daq_setup_environment)
 
   set(CMAKE_INSTALL_CMAKEDIR   ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake ) # Not defined in GNUInstallDirs
 
-  # JCF, Oct-7-2020, TODO when it becomes standard for us to use a CMake version 3.7 or newer:
-  # Replace this ad-hoc DAQ_PROJECT_HAS_TARGETS logic by checking the BUILDSYSTM_TARGETS variable instead
-  set(DAQ_PROJECT_HAS_TARGETS false)
+  set(DAQ_PROJECT_INSTALLS_TARGETS false)
 
   add_compile_options( -g -pedantic -Wall -Wextra -fdiagnostics-color=always )
 
@@ -116,7 +114,7 @@ function(daq_add_library)
 
   _daq_define_exportname()
   install(TARGETS ${libname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
-  set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
+  set(DAQ_PROJECT_INSTALLS_TARGETS true PARENT_SCOPE)
 
 endfunction()
 
@@ -158,7 +156,7 @@ function(daq_add_plugin pluginname plugintype)
   else()
     _daq_define_exportname()
     install(TARGETS ${pluginlibname} EXPORT ${DAQ_PROJECT_EXPORTNAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
+    set(DAQ_PROJECT_INSTALLS_TARGETS true PARENT_SCOPE)
   endif()
 
   endfunction()
@@ -218,7 +216,7 @@ function(daq_add_application appname)
   else()
     _daq_define_exportname()
     install(TARGETS ${appname} EXPORT ${DAQ_PROJECT_EXPORTNAME} )
-    set(DAQ_PROJECT_HAS_TARGETS true PARENT_SCOPE)
+    set(DAQ_PROJECT_INSTALLS_TARGETS true PARENT_SCOPE)
   endif()
 
 endfunction()
@@ -264,7 +262,7 @@ endfunction()
 
 function(daq_install) 
 
-  if (${DAQ_PROJECT_HAS_TARGETS})
+  if (${DAQ_PROJECT_INSTALLS_TARGETS})
     _daq_define_exportname()
     install(EXPORT ${DAQ_PROJECT_EXPORTNAME} FILE ${DAQ_PROJECT_EXPORTNAME}.cmake NAMESPACE ${PROJECT_NAME}:: DESTINATION ${CMAKE_INSTALL_CMAKEDIR} )
   endif()
