@@ -3,6 +3,8 @@
 WORK_DIR=$PWD
 timenow="date \"+%D %T\""
 
+requirements_edit_overwrite=true
+
 ###
 # Default virtual env name
 ###
@@ -52,7 +54,23 @@ source $WORK_DIR/$VENV_NAME/bin/activate
 ###
 # Install required modules except moo
 ###
-curl -O https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/python-venv/scripts/pyvenv_requirements.txt
+if [ -f "$WORK_DIR/pyvenv_requirements.txt" ]; then
+    echo "INFO [`eval $timenow`]: found existing requirements file: $WORK_DIR/pyvenv_requirements.txt"
+    if [ $requirements_edit_overwrite ]; then
+        curl -o $WORK_DIR/.tmp_python_setup https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/python-venv/scripts/pyvenv_requirements.txt
+        diff_req=$(diff $WORK_DIR/.tmp_python_setup $WORK_DIR/pyvenv_requirements.txt)
+        if [[ -n $diff_req ]]; then
+	    echo "INFO [`eval $timenow`]: Overwriting is turned on. The exisiting file will be moved to: $moved_req"
+	    moved_req=$WORK_DIR/pyvenv_requirements.txt.`date "+%y%m%d%H%M%S"`
+	    mv $WORK_DIR/pyvenv_requirements.txt $moved_req
+            mv $WORK_DIR/.tmp_python_setup $WORK_DIR/pyvenv_requirements.txt
+        else
+            rm -f $WORK_DIR/.tmp_python_setup
+        fi
+    fi
+else
+    curl -O https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/python-venv/scripts/pyvenv_requirements.txt
+fi
 echo "INFO [`eval $timenow`]: checking/installing required modules for virtual_env $VENV_NAME. "
 python -m pip install -r pyvenv_requirements.txt
 if [[ $? != "0" ]]; then
