@@ -537,7 +537,7 @@ else
 fi
 
 setup_python_venv=$srcdir/daq-buildtools/scripts/setup_python_venv
-source $setup_python_venv
+cp $setup_python_venv $base_dir
 
 endtime_d=$( date )
 endtime_s=$( date +%s )
