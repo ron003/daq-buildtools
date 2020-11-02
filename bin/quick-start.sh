@@ -536,8 +536,8 @@ else
     exit 70
 fi
 
-setup_python_venv=$srcdir/daq-buildtools/scripts/setup_python_venv
-cp $setup_python_venv $base_dir
+setup_python_script="setup_python_venv"
+ln -s "$srcdir/daq-buildtools/scripts/$setup_python_script" $basedir/$setup_python_script
 
 endtime_d=$( date )
 endtime_s=$( date +%s )
