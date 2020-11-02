@@ -39,18 +39,21 @@ if [ -f "$WORK_DIR/$VENV_NAME/pyvenv.cfg" ]; then
     echo "INFO [`eval $timenow`]: virtual_env $VENV_NAME already exists. "
     cat "$WORK_DIR/$VENV_NAME/pyvenv.cfg"
 else
+    echo "INFO [`eval $timenow`]: creating virtual_env $VENV_NAME. "
     python -m venv $VENV_NAME
 fi
 
 ###
 # Activate the venv
 ###
+echo "INFO [`eval $timenow`]: activating virtual_env $VENV_NAME. "
 source $WORK_DIR/$VENV_NAME/bin/activate
  
 ###
 # Install required modules except moo
 ###
 curl -O https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/python-venv/scripts/pyvenv_requirements.txt
+echo "INFO [`eval $timenow`]: checking/installing required modules for virtual_env $VENV_NAME. "
 python -m pip install -r pyvenv_requirements.txt
 if [[ $? != "0" ]]; then
     echo "ERROR [`eval $timenow`]: Installing required modules failed."
@@ -73,4 +76,4 @@ else
 fi
 
 
-echo "$VEVN_NAME has been activated, use \"deactivate\" to exit the venv."
+echo "INFO [`eval $timenow`]: $VEVN_NAME has been activated, use \"deactivate\" to exit the venv."
