@@ -36,7 +36,7 @@ builddir=$basedir/build
 logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
-dbt_version="develop"
+dbt_version="dingpf/python-venv"
 
 precloned_packages="daq-buildtools:${dbt_version}"
 
