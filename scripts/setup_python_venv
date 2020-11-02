@@ -1,0 +1,64 @@
+#!/bin/bash
+
+WORK_DIR=$PWD
+timenow="date \"+%D %T\""
+
+###
+# Default virtual env name
+###
+VENV_NAME="moo_venv"
+
+###
+# Check if inside a virtualenv already
+###
+if [[ "$VIRTUAL_ENV" != "" ]]
+then
+  echo "ERROR: [`eval $timenow`]: You are already in a virtual env. Please deactivate first."
+  exit 11
+fi
+
+###
+# Check if python from cvmfs has been set up.
+# Add version check in the future.
+###
+if [ -z "$SETUP_PYTHON" ]; then
+    echo "INFO [`eval $timenow`]: Python UPS product is not set, setting it from cvmfs now."
+    setup python
+    if [[ $? != "0" ]]; then
+        echo "ERROR [`eval $timenow`]: setup python failed, please check if you have sourced the \"setup_build_environment\" script and run this script again."
+        exit 10
+    fi
+else
+    echo "INFO [`eval $timenow`]: Python UPS product $PYTHON_VERSION has been set up."
+fi
+
+###
+# Check existance/create the default virtual_env
+###
+if [ -f "$WORK_DIR/$VENV_NAME/pyvenv.cfg" ]; then
+    echo "INFO [`eval $timenow`]: virtual_env $VENV_NAME already exists. "
+    cat "$WORK_DIR/$VENV_NAME/pyvenv.cfg"
+else
+    python -m venv $VENV_NAME
+fi
+
+###
+# Activate the venv
+###
+source $WORK_DIR/$VENV_NAME/bin/activate
+ 
+###
+# Install required modules except moo
+###
+curl -O ... requirements_moo.txt
+python -m pip install -r requirements.txt
+
+# check success.
+
+ 
+###
+# special handling of the moo module since PyPI has a module with same name.
+###
+# check if moo exists..
+# install if not..
+pip install git+git://github.com/brettviren/moo.git
