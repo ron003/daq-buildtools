@@ -80,7 +80,7 @@ fi
 
 ###
 # special handling of the moo module since PyPI has a module with same name.
-###
+##
 if python -c "import moo" &> /dev/null; then
     echo "INFO [`eval $timenow`]: moo is installed."
     pip list|grep moo
