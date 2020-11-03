@@ -29,6 +29,7 @@ TRACE_version=v3_15_09
 folly_version=v2020_05_25
 ers_version=v0_26_00c
 ninja_version=v1_10_0
+python_version=v3_8_3b
 
 basedir=$PWD
 builddir=$basedir/build
@@ -162,6 +163,8 @@ setup_returns=\$setup_returns"\$? "
 setup ers $ers_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
 setup nlohmann_json $nlohmann_json_version -q ${gcc_version_qualifier}:prof
+setup_returns=\$setup_returns"\$? "
+setup python $python_version
 setup_returns=\$setup_returns"\$? "
 
 setup ninja $ninja_version 2>/dev/null # Don't care if it fails
@@ -532,6 +535,9 @@ else
     echo "Error: expected file \"$setup_runtime\" doesn't appear to exist. Exiting..." >&2
     exit 70
 fi
+
+setup_python_script="setup_python_venv"
+ln -s "$srcdir/daq-buildtools/scripts/$setup_python_script" $basedir/$setup_python_script
 
 endtime_d=$( date )
 endtime_s=$( date +%s )
