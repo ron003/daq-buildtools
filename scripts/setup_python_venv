@@ -16,7 +16,7 @@ VENV_NAME="moo_venv"
 if [[ "$VIRTUAL_ENV" != "" ]]
 then
   echo "ERROR: [`eval $timenow`]: You are already in a virtual env. Please deactivate first."
-  exit 11
+  return 11
 fi
 
 ###
@@ -28,7 +28,7 @@ if [ -z "$SETUP_PYTHON" ]; then
     setup python
     if [[ $? != "0" ]]; then
         echo "ERROR [`eval $timenow`]: setup python failed, please check if you have sourced the \"setup_build_environment\" script and run this script again."
-        exit 10
+        return 10
     fi
 else
     echo "INFO [`eval $timenow`]: Python UPS product $PYTHON_VERSION has been set up."
@@ -75,7 +75,7 @@ echo "INFO [`eval $timenow`]: checking/installing required modules for virtual_e
 python -m pip install -r pyvenv_requirements.txt
 if [[ $? != "0" ]]; then
     echo "ERROR [`eval $timenow`]: Installing required modules failed."
-    exit 12
+    return 12
 fi
 
 ###
@@ -89,7 +89,7 @@ else
     pip install git+git://github.com/brettviren/moo.git
     if [[ $? != "0" ]]; then
         echo "ERROR [`eval $timenow`]: Installing moo failed."
-        exit 13
+        return 13
     fi
 fi
 
