@@ -56,7 +56,7 @@ source $WORK_DIR/$VENV_NAME/bin/activate
 ###
 if [ -f "$WORK_DIR/pyvenv_requirements.txt" ]; then
     echo "INFO [`eval $timenow`]: found existing requirements file: $WORK_DIR/pyvenv_requirements.txt"
-    if [ $requirements_edit_overwrite ]; then
+    if $requirements_edit_overwrite; then
         curl -o $WORK_DIR/.tmp_python_setup https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dingpf/python-venv/scripts/pyvenv_requirements.txt
         diff_req=$(diff $WORK_DIR/.tmp_python_setup $WORK_DIR/pyvenv_requirements.txt)
         if [[ -n $diff_req ]]; then
