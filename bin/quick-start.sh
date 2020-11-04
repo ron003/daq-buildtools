@@ -273,6 +273,11 @@ fi
 
 build_log=$logdir/build_attempt_\$( date | sed -r 's/[: ]+/_/g' ).log
 
+can_unbuffer=false
+if [[ -n \$( which unbuffer ) ]]; then
+  can_unbuffer=true
+fi
+
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
 # otherwise we can skip to the compilation. We use the existence of
@@ -284,11 +289,6 @@ if ! [ -e CMakeCache.txt ];then
 generator_arg=
 if [ "x\${SETUP_NINJA}" != "x" ]; then
   generator_arg="-G Ninja"
-fi
-
-can_unbuffer=false
-if [[ -n \$( which unbuffer ) ]]; then
-  can_unbuffer=true
 fi
 
 starttime_cfggen_d=\$( date )
