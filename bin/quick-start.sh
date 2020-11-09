@@ -30,6 +30,7 @@ folly_version=v2020_05_25
 ers_version=v0_26_00c
 ninja_version=v1_10_0
 python_version=v3_8_3b
+pistache_version=v2020_10_07
 
 basedir=$PWD
 builddir=$basedir/build
@@ -166,6 +167,8 @@ setup nlohmann_json $nlohmann_json_version -q ${gcc_version_qualifier}:prof
 setup_returns=\$setup_returns"\$? "
 setup python $python_version
 setup_returns=\$setup_returns"\$? "
+setup pistache $pistache_version -q ${gcc_version_qualifier}:prof   
+setup_returns=\$setup_returns"\$? " 
 
 setup ninja $ninja_version 2>/dev/null # Don't care if it fails
 if [[ "\$?" != "0" ]]; then
