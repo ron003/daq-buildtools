@@ -1,10 +1,10 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=true
+edits_check=false
 
 #####################################################################
-WORK_AREA_FILE='.dunedaq_area'
+DBT_AREA_FILE='.dunedaq_area'
 #####################################################################
 
 starttime_d=$( date )
@@ -23,7 +23,8 @@ logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
 # precloned_packages="daq-buildtools:develop"
-precloned_packages="daq-buildtools:thea/i30-quickstart-split"
+# precloned_packages="daq-buildtools:thea/i30-quickstart-split"
+precloned_packages=""
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -59,15 +60,16 @@ fi
 
 if $edits_check ; then
 
-    qs_tmpdir=/tmp/${USER}_for_quick-start
-    mkdir -p $qs_tmpdir
+    # qs_tmpdir=/tmp/${USER}_for_quick-start
+    # mkdir -p $qs_tmpdir
 
-    cd $qs_tmpdir
-    rm -f quick-start.sh
-    repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/bin/quick-start.sh
-    curl -O $repoloc
+    # cd $qs_tmpdir
+    # rm -f quick-start.sh
+    # repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/bin/quick-start.sh
+    # curl -O $repoloc
 
-    potential_edits=$( diff $basedir/quick-start.sh $qs_tmpdir/quick-start.sh )
+    # potential_edits=$( diff $basedir/quick-start.sh $qs_tmpdir/quick-start.sh )
+    potential_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
 
     if [[ -n $potential_edits ]]; then
 
@@ -102,7 +104,7 @@ sleep 5
 
 fi # if $edits_check
 
-cat<<EOF > $WORK_AREA_FILE
+cat<<EOF > $DBT_AREA_FILE
 dune_products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
 dune_products=(
     "cmake v3_17_2"
@@ -139,37 +141,37 @@ for package in $precloned_packages; do
     cd ..
 done
 
-superproject_cmakeliststxt=$srcdir/daq-buildtools/configs/CMakeLists.txt
+superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 if [[ -e $superproject_cmakeliststxt ]]; then
-    ln -s ${superproject_cmakeliststxt#$srcdir/} $srcdir
+    cp ${superproject_cmakeliststxt#$srcdir/} $srcdir
 else
     echo "Error: expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..." >&2
     exit 60
 fi
 
-setup_runtime=$srcdir/daq-buildtools/scripts/setup_runtime_environment.sh
-if [[ -e $setup_runtime ]]; then
-    ln -s ${setup_runtime#$basedir/} $basedir
-else
-    echo "Error: expected file \"$setup_runtime\" doesn't appear to exist. Exiting..." >&2
-    exit 70
-fi
+# setup_runtime=$srcdir/daq-buildtools/scripts/setup_runtime_environment.sh
+# if [[ -e $setup_runtime ]]; then
+#     ln -s ${setup_runtime#$basedir/} $basedir
+# else
+#     echo "Error: expected file \"$setup_runtime\" doesn't appear to exist. Exiting..." >&2
+#     exit 70
+# fi
 
-setup_build=$srcdir/daq-buildtools/scripts/setup_build_environment.sh
-if [[ -e $setup_build ]]; then
-    ln -s ${setup_build#$basedir/} $basedir
-else
-    echo "Error: expected file \"$setup_build\" doesn't appear to exist. Exiting..." >&2
-    exit 70
-fi
+# setup_build=$srcdir/daq-buildtools/scripts/setup_build_environment.sh
+# if [[ -e $setup_build ]]; then
+#     ln -s ${setup_build#$basedir/} $basedir
+# else
+#     echo "Error: expected file \"$setup_build\" doesn't appear to exist. Exiting..." >&2
+#     exit 70
+# fi
 
-build_daq_sw=$srcdir/daq-buildtools/scripts/build_daq_software.sh
-if [[ -e $build_daq_sw ]]; then
-    ln -s ${build_daq_sw#$basedir/} $basedir
-else
-    echo "Error: expected file \"$build_daq_sw\" doesn't appear to exist. Exiting..." >&2
-    exit 70
-fi
+# build_daq_sw=$srcdir/daq-buildtools/scripts/build_daq_software.sh
+# if [[ -e $build_daq_sw ]]; then
+#     ln -s ${build_daq_sw#$basedir/} $basedir
+# else
+#     echo "Error: expected file \"$build_daq_sw\" doesn't appear to exist. Exiting..." >&2
+#     exit 70
+# fi
 
 endtime_d=$( date )
 endtime_s=$( date +%s )

@@ -7,7 +7,7 @@ source ${HERE}/setup_tools.sh
 
 BASEDIR=$(find_work_area)
 if [[ -z $BASEDIR ]]; then
-    echo "Expected work aread directory $BASEDIR not found; exiting..." >&2
+    echo -e "${COL_RED} DBT Work aread directory not found; exiting...${COL_NULL}" >&2
     exit 1
 fi
 
@@ -114,9 +114,9 @@ starttime_cfggen_d=$( date )
 starttime_cfggen_s=$( date +%s )
 
 if $can_unbuffer ; then
-unbuffer cmake -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
+unbuffer cmake -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 else
-cmake -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
+cmake -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 fi
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee

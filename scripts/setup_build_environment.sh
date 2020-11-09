@@ -4,23 +4,23 @@ if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
-export DBT_INSTALL_DIR=$(cd $(dirname ${BASH_SOURCE}) && pwd)/install
-
 #############################################################
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
 source ${HERE}/setup_tools.sh
 
-BASEDIR=$(find_work_area)
-echo BASEDIR=${BASEDIR}
-if [[ -z $BASEDIR ]]; then
-    echo "Expected work aread directory $BASEDIR not found; exiting..." >&2
+DBT_AREA_ROOT=$(find_work_area)
+echo "DBT_AREA_ROOT=${DBT_AREA_ROOT}"
+if [[ -z $DBT_AREA_ROOT ]]; then
+    echo "Expected work aread directory $DBT_AREA_ROOT not found; exiting..." >&2
     return 1
 fi
 
+export DBT_INSTALL_DIR=$(cd $(dirname ${DBT_AREA_ROOT}) && pwd)/install
+
 # Source the area settings
-source ${BASEDIR}/.dunedaq_area
+source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
 echo "Product directories ${dune_products_dirs}"
 echo "Products ${dune_products[@]}"
 

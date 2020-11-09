@@ -125,6 +125,7 @@ macro(daq_add_subpackages build_order)
   message(STATUS "Package build order: ${pkgs}")
 
   foreach (pkg ${pkgs})
+    message(STATUS "Building ${pkg}")
     daq_topproj_setpkg_gnudirs(${pkg})
     add_subdirectory(${pkg})
   endforeach()
