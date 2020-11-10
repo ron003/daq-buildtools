@@ -60,15 +60,6 @@ fi
 
 if $edits_check ; then
 
-    # qs_tmpdir=/tmp/${USER}_for_quick-start
-    # mkdir -p $qs_tmpdir
-
-    # cd $qs_tmpdir
-    # rm -f quick-start.sh
-    # repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/bin/quick-start.sh
-    # curl -O $repoloc
-
-    # potential_edits=$( diff $basedir/quick-start.sh $qs_tmpdir/quick-start.sh )
     potential_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
 
     if [[ -n $potential_edits ]]; then
@@ -172,6 +163,9 @@ fi
 #     echo "Error: expected file \"$build_daq_sw\" doesn't appear to exist. Exiting..." >&2
 #     exit 70
 # fi
+
+setup_python_script="setup_python_venv"
+ln -s "$srcdir/daq-buildtools/scripts/$setup_python_script" $basedir/$setup_python_script
 
 endtime_d=$( date )
 endtime_s=$( date +%s )
