@@ -8,7 +8,7 @@ requirements_edit_overwrite=true
 ###
 # Default virtual env name
 ###
-VENV_NAME="moo_venv"
+VENV_NAME="dbt_venv"
 
 ###
 # Check if inside a virtualenv already

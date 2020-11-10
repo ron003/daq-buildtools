@@ -92,6 +92,12 @@ fi
 
 build_log=$LOGDIR/build_attempt_$( date | sed -r 's/[: ]+/_/g' ).log
 
+if [[ -n $( which unbuffer ) ]]; then
+  UB_CMAKE="unbuffer cmake"
+else
+  UB_CMAKE="cmake"
+fi
+
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
 # otherwise we can skip to the compilation. We use the existence of
@@ -105,19 +111,11 @@ if [ "x${SETUP_NINJA}" != "x" ]; then
   generator_arg="-G Ninja"
 fi
 
-can_unbuffer=false
-if [[ -n $( which unbuffer ) ]]; then
-  can_unbuffer=true
-fi
 
 starttime_cfggen_d=$( date )
 starttime_cfggen_s=$( date +%s )
 
-if $can_unbuffer ; then
-unbuffer cmake -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
-else
-cmake -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
-fi
+${UB_CMAKE} -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=$( date )
@@ -173,11 +171,7 @@ if $verbose; then
   build_options=" --verbose"
 fi
 
-if $can_unbuffer ; then
-unbuffer cmake --build . $build_options -- $nprocs_argument |& tee -a $build_log
-else
-cmake --build . $build_options -- $nprocs_argument |& tee -a $build_log
-fi
+${UB_CMAKE} --build . $build_options -- $nprocs_argument |& tee -a $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
