@@ -1,11 +1,27 @@
 # Getting started
 
-## Setting up `daq-buildtools`
+## Clone `daq-buildtools`
+
+This step doesn't have to be run more than once per daq-buildtools version. Each "installation" serves multiple work area, as many as needed.
+
 ```bash
 git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b thea/i30-quickstart-split
 ```
 
-## Creating a development area (work area)
+## Load the dbt (daq-buildtools) environment
+
+The `dbt` setup script has to be sourced to make the `dbt` scripts available in the commandline regardless of the current work directory.
+
+```bash
+source daq-buildtools/setup_dbt.sh
+
+DBT setuptools loaded
+Added /your/path/to/daq-buildtools/bin to PATH
+Added /your/path/to/daq-buildtools/scripts to PATH
+```
+
+## Creating a development area (AKA work area)
+
 To get set up, you'll need access to the ups product area `/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products`, as is the case, e.g., on the lxplus machines at CERN. If you're on a system which has access to this product area, simply do the following after you've logged in to your system and created an empty directory (we'll refer to it as "MyTopDir" on this wiki):
 ```sh
 quick-start.sh
@@ -83,12 +99,12 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 ## Running
 
-In order to run the applications built during the above procedure, the system needs to be instructed on where to look for the libraries that can be used to instantiate objects. This is handled by the `setup_runtime_environment` script which was placed in MyTopDir when you ran quick-start.sh; all you need to do is source it:
+In order to run the applications built during the above procedure, the system needs to be instructed on where to look for the libraries that can be used to instantiate objects. This is handled by the `setup_runtime_environment` script which was placed in MyTopDir when you ran quick-start.sh; all you need to do is the following:
 ```
 setup_runtime_environment
 ```
 
-Note that if you add a new repo to your development area, after building your new code you'll need to source the script again. 
+Note that if you add a new repo to your development area, after building your new code you'll need to run the script again. 
 
 Once the runtime environment is set, just run the application you need.  
 
@@ -102,6 +118,7 @@ For a more realistic use-case, where you can send commands to the application fr
 cd sourcecode
 git clone https://github.com/DUNE-DAQ/restcmd.git
 cd ..
+find -mindepth 2 -name CMakeLists.txt -exec sed -i 's/\(find_package(\s*\)daq-buildtools/\1daq-cmake/' \{\} \;
 build_daq_software.sh --install
 ```
 And now let's start up daq_application:
