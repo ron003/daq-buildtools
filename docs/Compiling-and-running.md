@@ -93,11 +93,6 @@ daq_application -c stdin://sourcecode/appfwk/schema/fdpc-job.json
 
 For a more realistic use-case, where you can send commands to the application from other services and applications, the [restcmd](https://github.com/DUNE-DAQ/restcmd) library provides a command handling implementation through HTTP. To use this plugin, we'll want to obtain and build it. Since restcmd relies on the pistache package which isn't automatically set up in `setup_build_environment`, we'll want to first set up pistache:
 ```sh
-source /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products_dev/setup
-setup pistache v2020_10_07 -q e19:prof
-```
-You may want to add these two commands to your copy of `setup_build_environment` so you don't need to worry about them in the future. Now let's clone and build restcmd the way we would any other package. Assuming we're in the base of the development area:
-```sh
 cd sourcecode
 git clone https://github.com/DUNE-DAQ/restcmd.git
 cd ..

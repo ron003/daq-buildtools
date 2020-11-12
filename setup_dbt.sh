@@ -1,3 +1,4 @@
+#------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 export DBT_ROOT=${HERE}

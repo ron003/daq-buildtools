@@ -1,3 +1,5 @@
+#------------------------------------------------------------------------------
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 #------------------------------------------------------------------------------
 # Constants
@@ -9,7 +11,47 @@ COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
 COL_NULL="\e[0m"
 
-DBT_AREA_FILE='.dunedaq_area'
+source ${HERE}/setup_constants.sh
+
+#------------------------------------------------------------------------------
+function setup_ups_product_areas() {
+  
+  if [ -z "${dune_products_dirs}" ]; then
+    echo "UPS product directories variable (dune_products_dirs) undefined";
+  fi
+
+  prodDirArr=(${dune_products_dirs//:/})
+  for proddir in ${prodDirArr[@]}; do
+      source ${proddir}/setup
+  done
+
+}
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+function setup_ups_products() {
+
+  if [ -z "${dune_products}" ]; then
+    echo "UPS products variable (dune_products_dirs) undefined";
+  fi
+
+  # And another function here?
+  setup_returns=""
+
+  for prod in "${dune_products[@]}"; do
+      prodArr=(${prod})
+
+      setup_cmd="setup ${prodArr[0]} ${prodArr[1]}"
+      if [[ ${#prodArr[@]} -eq 3 ]]; then
+          setup_cmd="${setup_cmd} -q ${prodArr[2]}"
+      fi
+      echo $setup_cmd
+      ${setup_cmd}
+      setup_returns=$setup_returns"$? "
+  done
+}
+#------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------

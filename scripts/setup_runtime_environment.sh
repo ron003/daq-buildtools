@@ -1,13 +1,10 @@
-#!/usr/bin/bash
-
-
+#------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
 source ${HERE}/setup_tools.sh
 
 DBT_AREA_ROOT=$(find_work_area)
-echo DBT_AREA_ROOT=${DBT_AREA_ROOT}
 
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then

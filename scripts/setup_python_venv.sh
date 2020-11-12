@@ -50,9 +50,9 @@ fi
 ###
 # Check existance/create the default virtual_env
 ###
-if [ -f "$DBT_AREA_ROOT/$VENV_NAME/pyvenv.cfg" ]; then
+if [ -f "$WORK_DIR/$VENV_NAME/pyvenv.cfg" ]; then
     echo "INFO [`eval $timenow`]: virtual_env $VENV_NAME already exists. "
-    cat "$DBT_AREA_ROOT/$VENV_NAME/pyvenv.cfg"
+    cat "$WORK_DIR/$VENV_NAME/pyvenv.cfg"
 else
     echo "INFO [`eval $timenow`]: creating virtual_env $VENV_NAME. "
     python -m venv $VENV_NAME
@@ -62,23 +62,23 @@ fi
 # Activate the venv
 ###
 echo "INFO [`eval $timenow`]: activating virtual_env $VENV_NAME. "
-source $DBT_AREA_ROOT/$VENV_NAME/bin/activate
+source $WORK_DIR/$VENV_NAME/bin/activate
  
 ###
 # Install required modules except moo
 ###
-if [ -f "$DBT_AREA_ROOT/pyvenv_requirements.txt" ]; then
-    echo "INFO [`eval $timenow`]: found existing requirements file: $DBT_AREA_ROOT/pyvenv_requirements.txt"
+if [ -f "$WORK_DIR/pyvenv_requirements.txt" ]; then
+    echo "INFO [`eval $timenow`]: found existing requirements file: $WORK_DIR/pyvenv_requirements.txt"
     if $requirements_edit_overwrite; then
-        curl -o $DBT_AREA_ROOT/.tmp_python_setup https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/pyvenv_requirements.txt
-        diff_req=$(diff $DBT_AREA_ROOT/.tmp_python_setup $DBT_AREA_ROOT/pyvenv_requirements.txt)
+        curl -o $WORK_DIR/.tmp_python_setup https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/scripts/pyvenv_requirements.txt
+        diff_req=$(diff $WORK_DIR/.tmp_python_setup $WORK_DIR/pyvenv_requirements.txt)
         if [[ -n $diff_req ]]; then
 	    echo "INFO [`eval $timenow`]: Overwriting is turned on. The exisiting file will be moved to: $moved_req"
-	    moved_req=$DBT_AREA_ROOT/pyvenv_requirements.txt.`date "+%y%m%d%H%M%S"`
-	    mv $DBT_AREA_ROOT/pyvenv_requirements.txt $moved_req
-            mv $DBT_AREA_ROOT/.tmp_python_setup $DBT_AREA_ROOT/pyvenv_requirements.txt
+	    moved_req=$WORK_DIR/pyvenv_requirements.txt.`date "+%y%m%d%H%M%S"`
+	    mv $WORK_DIR/pyvenv_requirements.txt $moved_req
+            mv $WORK_DIR/.tmp_python_setup $WORK_DIR/pyvenv_requirements.txt
         else
-            rm -f $DBT_AREA_ROOT/.tmp_python_setup
+            rm -f $WORK_DIR/.tmp_python_setup
         fi
     fi
 else

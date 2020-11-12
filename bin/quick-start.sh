@@ -6,7 +6,6 @@ edits_check=false
 #####################################################################
 # common constants - to be moved to a separate, common file
 DBT_AREA_FILE='.dunedaq_area'
-DBT_PYREQ_FILE='.pyvenv_requirements.txt'
 #####################################################################
 
 starttime_d=$( date )
@@ -121,11 +120,9 @@ fi
 # Create the daq area signature file
 cp ${DBT_ROOT}/configs/dunedaq_area.sh $basedir/${DBT_AREA_FILE}
 
-# Copy python requirement file into the newly created area
-cp ${DBT_ROOT}/configs/pyvenv_requirements.txt $basedir/${DBT_PYREQ_FILE}
 
-# 
-dbt-create-pyvenv.sh
+echo "Setting up Python subsystem"
+create_pyvenv.sh
 
 endtime_d=$( date )
 endtime_s=$( date +%s )

@@ -3,7 +3,7 @@
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
-source ${HERE}/setup_tools.sh
+source ${DBT_ROOT}/scripts/setup_tools.sh
 
 BASEDIR=$(find_work_area)
 if [[ -z $BASEDIR ]]; then
