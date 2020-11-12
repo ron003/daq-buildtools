@@ -31,6 +31,12 @@ cd ..
 ```
 Note that in those commands we not only downloaded the `appfwk` repo but also the `cmdlib` repo; this is because `appfwk` depends on `cmdlib`, and this package isn't (yet, Oct-15-2020) available via ups. 
 
+**Warning**: For these packages to build correctly,  `find_package(daq-buildtools)` must be replaced by `find_package(daq-cmake)`, for instance using `find` and `sed`:
+
+```
+find -mindepth 2 -name CMakeLists.txt -exec sed -i 's/\(find_package(\s*\)daq-buildtools/\1daq-cmake/' \{\} \;
+```
+
 ## Compiling
 We're about to build and install `daq-cmake`, the `cmdlib` package which depends on it, and the `appfwk` package which in turn depends on `cmdlib`. By default, the scripts will create a subdirectory of MyTopDir called `./install `and install the packages there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before taking any further action.
 

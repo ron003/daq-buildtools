@@ -102,7 +102,7 @@ git clone https://github.com/DUNE-DAQ/listrev.git
 **Note**: For these packages to build correctly,  `find_package(daq-buildtools)` must be replaced by `find_package(daq-cmake)`, for instance using `find` and `sed`:
 
 ```
-find -mindepth 2 -name CMakeLists.txt -exec echo sed -i 's/\(find_package(\s*\)daq-buildtools/\1daq-cmake/' \{\} \;
+find -mindepth 2 -name CMakeLists.txt -exec sed -i 's/\(find_package(\s*\)daq-buildtools/\1daq-cmake/' \{\} \;
 ```
 
 Finally, run once more
