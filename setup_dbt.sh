@@ -12,3 +12,5 @@ alias setup_runtime_environment="source ${DBT_ROOT}/scripts/setup_runtime_enviro
 alias setup_python_venv="source ${DBT_ROOT}/scripts/setup_python_venv.sh"
 echo -e "${COL_GREEN}DBT setuptools loaded${COL_NULL}"
 
+export PATH
+

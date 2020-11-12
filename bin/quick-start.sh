@@ -4,27 +4,20 @@ empty_dir_check=true
 edits_check=false
 
 #####################################################################
+# common constants - to be moved to a separate, common file
 DBT_AREA_FILE='.dunedaq_area'
+DBT_PYREQ_FILE='.pyvenv_requirements.txt'
 #####################################################################
 
 starttime_d=$( date )
 starttime_s=$( date +%s )
-
-for pd in $( echo $products_dirs | tr ":" " " ) ; do
-    if [[ ! -e $pd ]]; then
-	echo "Unable to find needed products area \"$pd\"; exiting..." >&2
-	exit 1
-    fi
-done
 
 basedir=$PWD
 builddir=$basedir/build
 logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
-# precloned_packages="daq-buildtools:develop"
-# precloned_packages="daq-buildtools:thea/i30-quickstart-split"
-precloned_packages=""
+precloned_packages="daq-cmake:develop"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -34,7 +27,7 @@ if [[ -z $USER || -z $HOSTNAME ]]; then
     exit 10
 fi
 
-if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^quick-start.*" | grep -E -v "^\.\.?$" ) ]]; then
+if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
     cat<<EOF >&2                                                                               
 
@@ -95,21 +88,6 @@ sleep 5
 
 fi # if $edits_check
 
-cat<<EOF > $DBT_AREA_FILE
-dune_products_dirs="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products" 
-dune_products=(
-    "cmake v3_17_2"
-    "gcc v8_2_0 e19:prof"
-    "boost v1_70_0 e19:prof"
-    "cetlib v3_10_00 e19:prof"
-    "TRACE v3_15_09"
-    "folly v2020_05_25 e19:prof"
-    "ers v0_26_00c e19:prof"
-    "nlohmann_json v3_9_0b e19:prof"
-    "ninja v1_10_0"
-)
-EOF
-
 mkdir -p $builddir
 mkdir -p $logdir
 mkdir -p $srcdir
@@ -140,32 +118,14 @@ else
     exit 60
 fi
 
-# setup_runtime=$srcdir/daq-buildtools/scripts/setup_runtime_environment.sh
-# if [[ -e $setup_runtime ]]; then
-#     ln -s ${setup_runtime#$basedir/} $basedir
-# else
-#     echo "Error: expected file \"$setup_runtime\" doesn't appear to exist. Exiting..." >&2
-#     exit 70
-# fi
+# Create the daq area signature file
+cp ${DBT_ROOT}/configs/dunedaq_area.sh $basedir/${DBT_AREA_FILE}
 
-# setup_build=$srcdir/daq-buildtools/scripts/setup_build_environment.sh
-# if [[ -e $setup_build ]]; then
-#     ln -s ${setup_build#$basedir/} $basedir
-# else
-#     echo "Error: expected file \"$setup_build\" doesn't appear to exist. Exiting..." >&2
-#     exit 70
-# fi
+# Copy python requirement file into the newly created area
+cp ${DBT_ROOT}/configs/pyvenv_requirements.txt $basedir/${DBT_PYREQ_FILE}
 
-# build_daq_sw=$srcdir/daq-buildtools/scripts/build_daq_software.sh
-# if [[ -e $build_daq_sw ]]; then
-#     ln -s ${build_daq_sw#$basedir/} $basedir
-# else
-#     echo "Error: expected file \"$build_daq_sw\" doesn't appear to exist. Exiting..." >&2
-#     exit 70
-# fi
-
-setup_python_script="setup_python_venv"
-ln -s "$srcdir/daq-buildtools/scripts/$setup_python_script" $basedir/$setup_python_script
+# 
+dbt-create-pyvenv.sh
 
 endtime_d=$( date )
 endtime_s=$( date +%s )

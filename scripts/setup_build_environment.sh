@@ -1,6 +1,10 @@
 #!/usr/bin/bash
 
-if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+
+if [[ -n "${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED}" ]]; then
+  echo "This script appears to have already been sourced successfully; returning..." >&2
+  return 10
+fi
 
 echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 
@@ -13,11 +17,10 @@ source ${HERE}/setup_tools.sh
 DBT_AREA_ROOT=$(find_work_area)
 echo "DBT_AREA_ROOT=${DBT_AREA_ROOT}"
 if [[ -z $DBT_AREA_ROOT ]]; then
-    echo "Expected work aread directory $DBT_AREA_ROOT not found; exiting..." >&2
+    echo "Expected work area directory $DBT_AREA_ROOT not found; exiting..." >&2
     return 1
 fi
 
-export DBT_INSTALL_DIR=$(cd $(dirname ${DBT_AREA_ROOT}) && pwd)/install
 
 # Source the area settings
 source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
@@ -44,6 +47,7 @@ for prod in "${dune_products[@]}"; do
 done
 #############################################################
 
+export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
 
 if ! [[ "$setup_returns" =~ [1-9] ]]; then
   echo "All setup calls on the packages returned 0, indicative of success"
@@ -55,13 +59,6 @@ fi
 export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
 echo
-
-else
-
-echo "This script appears to have already been sourced successfully; returning..." >&2
-return 10
-
-fi    # if DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED wasn't defined
 
 
 

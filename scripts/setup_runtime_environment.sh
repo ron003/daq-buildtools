@@ -6,10 +6,9 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 # Import find_work_area function
 source ${HERE}/setup_tools.sh
 
-BASEDIR=$(find_work_area)
+DBT_AREA_ROOT=$(find_work_area)
+echo DBT_AREA_ROOT=${DBT_AREA_ROOT}
 
-
-DBT_AREA_ROOT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
    echo "There doesn't appear to be a ./build subdirectory in this script's directory." >&2
