@@ -1,6 +1,12 @@
+#------------------------------------------------------------------------------
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
-WORKAREA_ROOT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
-BUILD_DIR="${WORKAREA_ROOT}/build"
+# Import find_work_area function
+source ${HERE}/setup_tools.sh
+
+DBT_AREA_ROOT=$(find_work_area)
+
+BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
    echo "There doesn't appear to be a ./build subdirectory in this script's directory." >&2
    echo "Please run a copy of this script from the base directory of a development area installed with quick-start.sh" >&2
@@ -10,14 +16,14 @@ if [ ! -d "$BUILD_DIR" ]; then
 fi
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
-      if [[ -e $WORKAREA_ROOT/setup_build_environment ]]; then
-          echo "Lines between the ='s are the output of the sourcing of $WORKAREA_ROOT/setup_build_environment"
+      if [[ -e $DBT_AREA_ROOT/setup_build_environment ]]; then
+          echo "Lines between the ='s are the output of the sourcing of $DBT_AREA_ROOT/setup_build_environment"
 	  echo "======================================================================"
-          . $WORKAREA_ROOT/setup_build_environment 
+          . $DBT_AREA_ROOT/setup_build_environment 
 	  echo "======================================================================"
       else 
           echo "Error: the build environment setup script doesn't appear to have been sourced, " >&2
-          echo "but this script can't find $WORKAREA_ROOT/setup_build_environment. You can try " >&2
+          echo "but this script can't find $DBT_AREA_ROOT/setup_build_environment. You can try " >&2
 	  echo "finding it and sourcing it yourself before sourcing this script, but an assumption " >&2
 	  echo "is being broken somewhere" >&2
 	  return 20
@@ -27,50 +33,6 @@ else
       echo "script won't try to source it"
 fi
 
-# Colors
-COL_RED="\e[31m"
-COL_GREEN="\e[32m"
-COL_YELLOW="\e[33m"
-COL_BLUE="\e[34m"
-COL_NULL="\e[0m"
-
-#------------------------------------------------------------------------------
-function add_path() {
-  # Assert that we got enough arguments
-  if [[ $# -ne 2 ]]; then
-    echo "path add: needs 2 arguments"
-    return 1
-  fi
-  PATH_NAME=$1
-  PATH_VAL=${!1}
-  PATH_ADD=$2
-
-  # Add the new path only if it is not already there
-  if [[ ":$PATH_VAL:" != *":$PATH_ADD:"* ]]; then
-    # Note
-    # ${PARAMETER:+WORD}
-    #   This form expands to nothing if the parameter is unset or empty. If it
-    #   is set, it does not expand to the parameter's value, but to some text
-    #   you can specify
-    PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
-
-    echo -e "${COL_BLUE}Added ${PATH_ADD} to ${PATH_NAME}${COL_NULL}"
-
-    # use eval to reset the target
-    eval "${PATH_NAME}=${PATH_VAL}"
-  fi
-}
-#------------------------------------------------------------------------------
-
-
-#------------------------------------------------------------------------------
-function add_many_paths() {
-  for d in "${@:2}"
-  do
-    add_path $1 $d
-  done
-}
-#------------------------------------------------------------------------------
 
 DAQ_APPS_PATHS=$(find $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
 DAQ_LIB_PATHS=$(find $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')

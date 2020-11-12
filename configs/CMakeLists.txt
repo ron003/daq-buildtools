@@ -5,11 +5,10 @@ project(dunedaq)
 
 include(GNUInstallDirs)
 
-if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/cmake)
-  set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/daq-buildtools/cmake ${CMAKE_MODULE_PATH})
-else()
-  find_package(daq-buildtools REQUIRED)  
-endif()
+set(CMAKE_MODULE_PATH ${DBT_ROOT}/cmake ${CMAKE_MODULE_PATH})
+set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_PREFIX_PATH})
+
+message(STATUS "CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
 
 include(DAQTopprojHelpers)
 
@@ -22,7 +21,7 @@ include(DAQTopprojHelpers)
 # development area, the developer is encouraged to add it to its
 # appropriate place in this list
 
-set(build_order "daq-buildtools" "cmdlib" "restcmd" "appfwk" "ipm" "driver" "udaq-readout" "ddpdemo" "listrev")
+set(build_order "daq-cmake" "cmdlib" "restcmd" "appfwk" "ipm" "driver" "udaq-readout" "ddpdemo" "listrev")
 
 daq_add_subpackages("${build_order}") 
 

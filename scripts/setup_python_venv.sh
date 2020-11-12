@@ -1,6 +1,19 @@
 #!/bin/bash
 
-WORK_DIR=$PWD
+#############################################################
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+
+# Import find_work_area function
+source ${HERE}/setup_tools.sh
+
+DBT_AREA_ROOT=$(find_work_area)
+echo "DBT_AREA_ROOT=${DBT_AREA_ROOT}"
+if [[ -z $DBT_AREA_ROOT ]]; then
+    echo "Expected work area directory $DBT_AREA_ROOT not found; exiting..." >&2
+    return 1
+fi
+#############################################################
+
 timenow="date \"+%D %T\""
 
 requirements_edit_overwrite=true
@@ -8,7 +21,7 @@ requirements_edit_overwrite=true
 ###
 # Default virtual env name
 ###
-VENV_NAME="moo_venv"
+VENV_NAME="dbt_venv"
 
 ###
 # Check if inside a virtualenv already
