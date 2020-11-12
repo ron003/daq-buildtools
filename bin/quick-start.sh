@@ -183,6 +183,8 @@ else
   return 1
 fi
 
+export PATH=.:\${PATH}
+
 export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
 echo
