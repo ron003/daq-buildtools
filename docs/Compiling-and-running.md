@@ -2,7 +2,7 @@
 
 ## Clone `daq-buildtools`
 
-This step doesn't have to be run more than once per daq-buildtools version. Each "installation" serves multiple work area, as many as needed.
+This step doesn't have to be run more than once per daq-buildtools version. Each cloned daq-buildtools can serve as many work areas as the developer wishes.
 
 ```bash
 git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b thea/i30-quickstart-split
@@ -10,11 +10,13 @@ git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b thea/i30-quickstart-
 
 ## Load the dbt (daq-buildtools) environment
 
-The `dbt` setup script has to be sourced to make the `dbt` scripts available in the commandline regardless of the current work directory.
+The `dbt` setup script has to be sourced to make the `dbt` scripts available in the commandline regardless of the current work directory. Run:
 
 ```bash
 source daq-buildtools/setup_dbt.sh
-
+```
+..and you'll see something like:
+```
 DBT setuptools loaded
 Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
