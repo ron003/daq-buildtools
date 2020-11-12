@@ -5,7 +5,7 @@
 This step doesn't have to be run more than once per daq-buildtools version. Each cloned daq-buildtools can serve as many work areas as the developer wishes.
 
 ```bash
-git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b thea/i30-quickstart-split
+git clone https://github.com/DUNE-DAQ/daq-buildtools.git
 ```
 
 ## Load the dbt (daq-buildtools) environment
@@ -17,9 +17,9 @@ source daq-buildtools/setup_dbt.sh
 ```
 ..and you'll see something like:
 ```
-DBT setuptools loaded
 Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
+DBT setuptools loaded
 ```
 
 ## Creating a development area (AKA work area)
