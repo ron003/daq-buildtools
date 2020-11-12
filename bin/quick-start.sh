@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=false
+edits_check=true
 
 #####################################################################
 # common constants - to be moved to a separate, common file
@@ -16,7 +16,8 @@ builddir=$basedir/build
 logdir=$basedir/log
 srcdir=$basedir/sourcecode
 
-precloned_packages="daq-cmake:develop"
+dbt_version="develop"
+precloned_packages="daq-cmake:${dbt_version}"
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -30,8 +31,9 @@ if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
     cat<<EOF >&2                                                                               
 
-There appear to be files in $basedir besides this script; this script
-should only be run in a clean directory. Exiting...
+There appear to be files in $basedir besides this script (run "ls -a1"
+to see this); this script should only be run in a clean
+directory. Exiting...
 
 EOF
     exit 20
@@ -52,7 +54,15 @@ fi
 
 if $edits_check ; then
 
-    potential_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
+    qs_tmpdir=/tmp/${USER}_for_quick-start
+    mkdir -p $qs_tmpdir
+
+    cd $qs_tmpdir
+    rm -f quick-start.sh
+    repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/${dbt_version}/bin/quick-start.sh
+    curl -O $repoloc
+
+    potential_edits=$( diff ${BASH_SOURCE} $qs_tmpdir/quick-start.sh )
 
     if [[ -n $potential_edits ]]; then
 
