@@ -52,17 +52,10 @@ EOF
 
 fi
 
+
 if $edits_check ; then
 
-    qs_tmpdir=/tmp/${USER}_for_quick-start
-    mkdir -p $qs_tmpdir
-
-    cd $qs_tmpdir
-    rm -f quick-start.sh
-    repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/${dbt_version}/bin/quick-start.sh
-    curl -O $repoloc
-
-    potential_edits=$( diff ${BASH_SOURCE} $qs_tmpdir/quick-start.sh )
+    potential_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
 
     if [[ -n $potential_edits ]]; then
 
