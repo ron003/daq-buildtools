@@ -68,20 +68,5 @@ if [[ $? != "0" ]]; then
     return 12
 fi
 
-###
-# special handling of the moo module since PyPI has a module with same name.
-##
-if python -c "import moo" &> /dev/null; then
-    echo "INFO [`eval $timenow`]: moo is installed."
-    pip list|grep moo
-else
-    echo "INFO [`eval $timenow`]: moo is not installed. Install it now."
-    pip install git+git://github.com/brettviren/moo.git
-    if [[ $? != "0" ]]; then
-        echo "ERROR [`eval $timenow`]: Installing moo failed."
-        return 13
-    fi
-fi
-
 deactivate
 
