@@ -34,7 +34,7 @@ if [ -z "$SETUP_PYTHON" ]; then
 
     setup_ups_product_areas
 
-    setup python
+    setup python ${dune_python_version}
     if [[ $? != "0" ]]; then
         echo "ERROR [`eval $timenow`]: setup python failed, please check if you have sourced the \"setup_build_environment\" script and run this script again."
         return 10
