@@ -13,6 +13,6 @@ numpy==1.19.4
 openpyxl==3.0.5
 pyrsistent==0.17.3
 six==1.15.0
-# Comment out moo, as by default PyPI's moo will be picked up.
-# moo==0.2.0
-# moo==git+git://github.com/brettviren/moo.git@0.3.0#egg=moo
+# PyPI already has another package named "moo";
+# Picking up moo from github repo:
+-e git://github.com/brettviren/moo.git@0.4.0#egg=moo
