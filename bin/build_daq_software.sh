@@ -60,7 +60,7 @@ done
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 echo
-echo "It appears you haven't yet sourced \"./setup_build_environment\" yet; please source it before running this script. Exiting..."
+echo "It appears you haven't yet executed \"setup_build_environment\"; please source it before running this script. Exiting..."
 echo
 exit 2
 fi
