@@ -15,4 +15,4 @@ pyrsistent==0.17.3
 six==1.15.0
 # PyPI already has another package named "moo";
 # Picking up moo from github repo:
--e git://github.com/brettviren/moo.git@0.4.0#egg=moo
+-e git://github.com/brettviren/moo.git@0.4.1#egg=moo
