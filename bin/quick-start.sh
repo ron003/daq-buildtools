@@ -11,10 +11,10 @@ DBT_AREA_FILE='.dunedaq_area'
 starttime_d=$( date )
 starttime_s=$( date +%s )
 
-basedir=$PWD
-builddir=$basedir/build
-logdir=$basedir/log
-srcdir=$basedir/sourcecode
+BASEDIR=$PWD
+BUILDDIR=$BASEDIR/build
+LOGDIR=$BASEDIR/log
+SRCDIR=$BASEDIR/sourcecode
 
 dbt_version="develop"
 precloned_packages="daq-cmake:${dbt_version}"
@@ -31,7 +31,7 @@ if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
     cat<<EOF >&2                                                                               
 
-There appear to be files in $basedir besides this script (run "ls -a1"
+There appear to be files in $BASEDIR besides this script (run "ls -a1"
 to see this); this script should only be run in a clean
 directory. Exiting...
 
@@ -55,16 +55,20 @@ fi
 
 if $edits_check ; then
 
+    DBT_GIT="git -C ${DBT_ROOT}"
+    DBT_LOCAL_REF=$(${DBT_GIT} rev-parse HEAD)
+    DBT_REMOTE_REF=$(${DBT_GIT} ls-remote $({DBT_GIT} rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+
     potential_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
 
     if [[ -n $potential_edits ]]; then
 
 	cat<<EOF >&2                                                                                                             
 Error: this script you're trying to run doesn't match with the version
-of the script at the head of the develop branch in the daq-buildtool's
-central repository. This may mean that this script makes obsolete
+of the script at the head of the corresponding branch in the daq-buildtool's
+central repository. This may mean that this script makes obsolete 
 assumptions, etc., which could compromise your working
-environment. Please delete this script and install your daq-buildtools
+environment. Please update the daq-buildtools version and create your 
 area according to the instructions at https://github.com/DUNE-DAQ/app-framework/wiki/Compiling-and-running
 
 EOF
@@ -73,7 +77,7 @@ EOF
 
     fi
 
-    cd $basedir
+    cd $BASEDIR
 
 else 
 
@@ -90,11 +94,11 @@ sleep 5
 
 fi # if $edits_check
 
-mkdir -p $builddir
-mkdir -p $logdir
-mkdir -p $srcdir
+mkdir -p $BUILDDIR
+mkdir -p $LOGDIR
+mkdir -p $SRCDIR
 
-cd $srcdir
+cd $SRCDIR
 for package in $precloned_packages; do
     packagename=$( echo $package | sed -r 's/:.*//g' )
     packagebranch=$( echo $package | sed -r 's/.*://g' )
@@ -114,14 +118,14 @@ done
 
 superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 if [[ -e $superproject_cmakeliststxt ]]; then
-    cp ${superproject_cmakeliststxt#$srcdir/} $srcdir
+    cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
 else
     echo "Error: expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..." >&2
     exit 60
 fi
 
 # Create the daq area signature file
-cp ${DBT_ROOT}/configs/dunedaq_area.sh $basedir/${DBT_AREA_FILE}
+cp ${DBT_ROOT}/configs/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
 
 
 echo "Setting up the Python subsystem"
