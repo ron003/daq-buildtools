@@ -54,10 +54,24 @@ fi
 
 
 if $edits_check ; then
-
+    # [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ] && echo up to date || echo not up to date
+    # git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1
     DBT_GIT="git -C ${DBT_ROOT}"
+
+    # 1. Get the local repo git ref
     DBT_LOCAL_REF=$(${DBT_GIT} rev-parse HEAD)
-    DBT_REMOTE_REF=$(${DBT_GIT} ls-remote $({DBT_GIT} rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+
+    # 2. Get the name of the upstream branch (if any)
+    DBT_UPSTR_BRANCH=$(${DBT_GIT} rev-parse --abbrev-ref @{u} | sed 's/\// /g' 2> /dev/null )
+    if [ $? -ne 0 ]; then
+        echo "Screw it"
+    fi
+
+    # 3. Get the remote ref for the upstream branch
+    DBT_REMOTE_REF=$(${DBT_GIT} ls-remote ${DBT_UPSTR_BRANCH} | cut -f1)
+
+    echo $DBT_LOCAL_REF
+    echo $DBT_REMOTE_REF
 
     potential_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
 
