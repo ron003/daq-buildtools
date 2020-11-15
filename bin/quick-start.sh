@@ -54,36 +54,59 @@ fi
 
 
 if $edits_check ; then
+    # Original one-liner
     # [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ] && echo up to date || echo not up to date
     # git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1
-    DBT_GIT="git -C ${DBT_ROOT}"
+    # 
+    cd ${DBT_ROOT}
 
     # 1. Get the local repo git ref
-    DBT_LOCAL_REF=$(${DBT_GIT} rev-parse HEAD)
+    local_ref=$(git rev-parse HEAD)
 
     # 2. Get the name of the upstream branch (if any)
-    DBT_UPSTR_BRANCH=$(${DBT_GIT} rev-parse --abbrev-ref @{u} | sed 's/\// /g' 2> /dev/null )
-    if [ $? -ne 0 ]; then
-        echo "Screw it"
+    upstr_branch=$(git rev-parse --abbrev-ref @{u} 2> /dev/null )
+    if [[ $? -eq 0 ]]; then
+        # 3. Get the remote ref for the upstream branch
+        remote_ref=$(git ls-remote $(echo ${upstr_branch} | sed 's/\// /g') 2> /dev/null | cut -f1)
+    else
+        remote_ref="<undefined>"
     fi
 
-    # 3. Get the remote ref for the upstream branch
-    DBT_REMOTE_REF=$(${DBT_GIT} ls-remote ${DBT_UPSTR_BRANCH} | cut -f1)
 
-    echo $DBT_LOCAL_REF
-    echo $DBT_REMOTE_REF
+    if [[ "$local_ref" != "$remote_ref" ]]; then
 
-    potential_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
+    cat<<EOF >&2                                                                                                             
+ERROR: The version of daq-buildtools you're trying to run doesn't match with 
+       the version at the head of the corresponding branch in the daq-buildtool's
+       central repository.
 
-    if [[ -n $potential_edits ]]; then
+       Local hash: $local_ref
+       Remote hash: $remote_ref
+
+EOF
+
+    fi
+
+    local_edits=$( git -C ${DBT_ROOT} diff --exit-code ${BASH_SOURCE} )
+
+    if [[ -n $local_edits ]]; then
 
 	cat<<EOF >&2                                                                                                             
-Error: this script you're trying to run doesn't match with the version
-of the script at the head of the corresponding branch in the daq-buildtool's
-central repository. This may mean that this script makes obsolete 
-assumptions, etc., which could compromise your working
-environment. Please update the daq-buildtools version and create your 
-area according to the instructions at https://github.com/DUNE-DAQ/app-framework/wiki/Compiling-and-running
+ERROR: the version of daq-buildtools you're trying to run contains local edits.
+
+EOF
+
+    fi
+
+if [[ -n $local_edits || "$local_ref" != "$remote_ref" ]]; then
+    cat<<EOF >&2                                                                                                             
+This may mean that this script makes obsolete assumptions, etc., which 
+could compromise your working environment. 
+
+Please update the daq-buildtools version and create your area according to 
+the instructions at 
+
+https://github.com/DUNE-DAQ/appfwk/wiki/Compiling-and-running
 
 EOF
 
