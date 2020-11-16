@@ -115,7 +115,7 @@ fi
 starttime_cfggen_d=$( date )
 starttime_cfggen_s=$( date +%s )
 
-${UB_CMAKE} -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
+${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=$( date )
