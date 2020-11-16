@@ -51,14 +51,14 @@ if [ -f "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg" ]; then
     cat "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg"
 else
     echo "INFO [`eval $timenow`]: creating virtual_env ${DBT_VENV}. "
-    python -m venv ${DBT_VENV} ${DBT_AREA_ROOT}/${DBT_VENV}
+    python -m venv ${DBT_AREA_ROOT}/${DBT_VENV}
 fi
 
 source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
 
 if [[ "$VIRTUAL_ENV" == "" ]]
 then
-  echo "ERROR: [`eval $timenow`]: You are already in a virtual env. Please deactivate first."
+  echo "ERROR: [`eval $timenow`]: Failed to load the virtual env."
   return 11
 fi
 
