@@ -131,7 +131,7 @@ fi
 cp ${DBT_ROOT}/configs/dunedaq_area.sh $basedir/${DBT_AREA_FILE}
 
 
-echo "Setting up Python subsystem"
+echo "Setting up the Python subsystem"
 create_pyvenv.sh
 
 endtime_d=$( date )

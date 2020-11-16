@@ -19,7 +19,7 @@ fi
 
 # 1. Load the UPS area information from the local area file
 source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
-echo "Product directories ${dune_products_dirs}"
+echo "Product directories ${dune_products_dirs[@]}"
 echo "Products ${dune_products[@]}"
 
 setup_ups_product_areas
