@@ -20,7 +20,7 @@ function setup_ups_product_areas() {
     echo "UPS product directories variable (dune_products_dirs) undefined";
   fi
 
-  prodDirArr=(${dune_products_dirs//:/})
+  prodDirArr=(${dune_products_dirs//:/ })
   for proddir in ${prodDirArr[@]}; do
       source ${proddir}/setup
   done
