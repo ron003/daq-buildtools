@@ -16,16 +16,23 @@ if [ ! -d "$BUILD_DIR" ]; then
 fi
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
-      if [[ -e $DBT_AREA_ROOT/setup_build_environment ]]; then
-          echo "Lines between the ='s are the output of the sourcing of $DBT_AREA_ROOT/setup_build_environment"
+      type setup_build_environment > /dev/null
+      retval="$?"
+
+      if [[ "$retval" == "0" ]]; then
+          echo "Lines between the ='s are the output of running setup_build_environment"
 	  echo "======================================================================"
-          . $DBT_AREA_ROOT/setup_build_environment 
+          setup_build_environment 
 	  echo "======================================================================"
-      else 
-          echo "Error: the build environment setup script doesn't appear to have been sourced, " >&2
-          echo "but this script can't find $DBT_AREA_ROOT/setup_build_environment. You can try " >&2
-	  echo "finding it and sourcing it yourself before sourcing this script, but an assumption " >&2
-	  echo "is being broken somewhere" >&2
+      else
+
+	  cat<<EOF >&2
+
+Error: this script tried to execute "setup_build_environment" but was unable 
+to find it. Either the daq-buildtools environment hasn't yet been set up, or 
+an assumption in the daq-buildtools framework is being broken somewhere.
+
+EOF
 	  return 20
       fi    
 else
