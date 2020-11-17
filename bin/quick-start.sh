@@ -11,10 +11,10 @@ DBT_AREA_FILE='.dunedaq_area'
 starttime_d=$( date )
 starttime_s=$( date +%s )
 
-basedir=$PWD
-builddir=$basedir/build
-logdir=$basedir/log
-srcdir=$basedir/sourcecode
+BASEDIR=$PWD
+BUILDDIR=$BASEDIR/build
+LOGDIR=$BASEDIR/log
+SRCDIR=$BASEDIR/sourcecode
 
 dbt_version="develop"
 precloned_packages="daq-cmake:${dbt_version}"
@@ -31,7 +31,7 @@ if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
     cat<<EOF >&2                                                                               
 
-There appear to be files in $basedir besides this script (run "ls -a1"
+There appear to be files in $BASEDIR besides this script (run "ls -a1"
 to see this); this script should only be run in a clean
 directory. Exiting...
 
@@ -52,27 +52,70 @@ EOF
 
 fi
 
+
 if $edits_check ; then
+    # Original one-liner
+    # [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ] && echo up to date || echo not up to date
+    cd ${DBT_ROOT}
 
-    qs_tmpdir=/tmp/${USER}_for_quick-start
-    mkdir -p $qs_tmpdir
+    # 1. Get the local repo git ref
+    local_ref=$(git rev-parse HEAD)
 
-    cd $qs_tmpdir
-    rm -f quick-start.sh
-    repoloc=https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/${dbt_version}/bin/quick-start.sh
-    curl -O $repoloc
+    # 2. Is it a tag?
+    the_tag=$(git describe --tags --exact-match HEAD 2> /dev/null )
+    if [[ $? -eq 0 ]]; then
+        echo "Looking for updates of ${the_tag}"
+        # 2.1. Yes, let's get the remote ref
+        remote_ref=$(git ls-remote --tags $(git remote) tags ${the_tag} | cut -f1 )
+    else
+        # 2.2. No, it's a branch.
+        # Get the name of the upstream branch (if any)
+        upstr_branch=$(git rev-parse --abbrev-ref @{u} 2> /dev/null )
+        if [[ $? -eq 0 ]]; then
+            echo "Looking for updates of branch ${upstr_branch}"
+            # 3. Get the remote ref for the upstream branch
+            # remote_ref=$(git ls-remote $(echo ${upstr_branch} | sed 's/\// /g') 2> /dev/null | cut -f1)
+            remote_ref=$(git ls-remote ${upstr_branch//\// /} 2> /dev/null | cut -f1)
+        else
+            remote_ref="<undefined>"
+        fi
+    fi
 
-    potential_edits=$( diff ${BASH_SOURCE} $qs_tmpdir/quick-start.sh )
 
-    if [[ -n $potential_edits ]]; then
+    if [[ "$local_ref" != "$remote_ref" ]]; then
+
+    cat<<EOF >&2                                                                                                             
+ERROR: The version of daq-buildtools you're trying to run doesn't match with 
+       the version at the head of the corresponding branch in the daq-buildtool's
+       central repository.
+
+       Local hash: $local_ref
+       Remote hash: $remote_ref
+
+EOF
+
+    fi
+
+    local_edits=$( git diff --exit-code ${BASH_SOURCE} )
+
+    if [[ -n $local_edits ]]; then
 
 	cat<<EOF >&2                                                                                                             
-Error: this script you're trying to run doesn't match with the version
-of the script at the head of the develop branch in the daq-buildtool's
-central repository. This may mean that this script makes obsolete
-assumptions, etc., which could compromise your working
-environment. Please delete this script and install your daq-buildtools
-area according to the instructions at https://github.com/DUNE-DAQ/app-framework/wiki/Compiling-and-running
+ERROR: the version of daq-buildtools you're trying to run contains local edits.
+
+EOF
+
+    fi
+
+if [[ -n $local_edits || "$local_ref" != "$remote_ref" ]]; then
+    cat<<EOF >&2                                                                                                             
+This may mean that this script makes obsolete assumptions, etc., which 
+could compromise your working environment. 
+
+Please update the daq-buildtools version and create your area according to 
+the instructions at 
+
+https://github.com/DUNE-DAQ/appfwk/wiki/Compiling-and-running
 
 EOF
 
@@ -80,7 +123,7 @@ EOF
 
     fi
 
-    cd $basedir
+    cd $BASEDIR
 
 else 
 
@@ -97,11 +140,11 @@ sleep 5
 
 fi # if $edits_check
 
-mkdir -p $builddir
-mkdir -p $logdir
-mkdir -p $srcdir
+mkdir -p $BUILDDIR
+mkdir -p $LOGDIR
+mkdir -p $SRCDIR
 
-cd $srcdir
+cd $SRCDIR
 for package in $precloned_packages; do
     packagename=$( echo $package | sed -r 's/:.*//g' )
     packagebranch=$( echo $package | sed -r 's/.*://g' )
@@ -121,14 +164,14 @@ done
 
 superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 if [[ -e $superproject_cmakeliststxt ]]; then
-    cp ${superproject_cmakeliststxt#$srcdir/} $srcdir
+    cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
 else
     echo "Error: expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..." >&2
     exit 60
 fi
 
 # Create the daq area signature file
-cp ${DBT_ROOT}/configs/dunedaq_area.sh $basedir/${DBT_AREA_FILE}
+cp ${DBT_ROOT}/configs/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
 
 
 echo "Setting up the Python subsystem"
