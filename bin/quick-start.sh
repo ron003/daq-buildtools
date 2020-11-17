@@ -16,7 +16,7 @@ BUILDDIR=$BASEDIR/build
 LOGDIR=$BASEDIR/log
 SRCDIR=$BASEDIR/sourcecode
 
-dbt_version="develop"
+dbt_version="v1.0.0"
 precloned_packages="daq-cmake:${dbt_version}"
 
 export USER=${USER:-$(whoami)}
