@@ -1,32 +1,27 @@
+
 cmake_minimum_required(VERSION 3.12)
-project(YourPackageName VERSION 1.0.0)
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../daq-buildtools/cmake ${CMAKE_MODULE_PATH})
-include(DAQ)
+project(dunedaq)
 
-daq_setup_environment()
+include(GNUInstallDirs)
 
-find_package(appfwk        REQUIRED)
-find_package(SomeExternalPackage REQUIRED)
+set(CMAKE_MODULE_PATH ${DBT_ROOT}/cmake ${CMAKE_MODULE_PATH})
+set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_PREFIX_PATH})
 
-##############################################################################
-daq_point_build_to( src )
+message(STATUS "CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
 
-add_library(           YourPackageName_AModuleName_duneDAQModule       src/AModuleName.cpp)
-target_link_libraries( YourPackageName_AModuleName_duneDAQModule       appfwk::appfwk)
+include(DAQTopprojHelpers)
 
-add_library(           YourPackageName_AnotherModuleName_duneDAQModule src/AnotherModuleName.cpp)
-target_link_libraries( YourPackageName_AnotherModuleName_duneDAQModule appfwk::appfwk)
+# "build_order" lists packages in the order you'd want CMake to see
+# them (via "add_subdirectory") during a simultaneous build. This is
+# due to their dependencies: e.g., you'd want CMake to see
+# daq-buildtools first in order to create daq-buildtoolsConfig.cmake
+# so "find_package(daq-builtools)" will work for all the other
+# packages, and so on. If a new package is introduced into the
+# development area, the developer is encouraged to add it to its
+# appropriate place in this list
 
-##############################################################################
-daq_point_build_to( unittest )
+set(build_order "daq-cmake" "cmdlib" "restcmd" "appfwk" "ipm" "driver" "udaq-readout" "ddpdemo" "listrev")
 
-daq_add_unit_test(AModuleName_test          YourPackageName_AModuleName_duneDAQModule)
-daq_add_unit_test(AnotherModuleName_test    YourPackageName_AnotherModuleName_duneDAQModule) 
-
-##############################################################################
-
-daq_install(TARGETS YourPackageName_AModuleName_duneDAQModule YourPackageName_AnotherModuleName_duneDAQModule)
-
-
+daq_add_subpackages("${build_order}") 
 
