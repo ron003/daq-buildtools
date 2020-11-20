@@ -57,7 +57,6 @@ if $edits_check ; then
     # Original one-liner
     # [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ] && echo up to date || echo not up to date
     cd ${DBT_ROOT}
-    git fetch origin # Get the latest info on the remote repo
 
     # 1. Get the local repo git ref
     local_ref=$(git rev-parse HEAD)
@@ -76,7 +75,7 @@ if $edits_check ; then
             echo "Looking for updates of branch ${upstr_branch}"
             # 3. Get the remote ref for the upstream branch
             # remote_ref=$(git ls-remote $(echo ${upstr_branch} | sed 's/\// /g') 2> /dev/null | cut -f1)
-            remote_ref=$(git rev-parse $upstr_branch)
+            remote_ref=$(git ls-remote ${upstr_branch//\// } 2> /dev/null | cut -f1)
         else
             remote_ref="<undefined>"
         fi
