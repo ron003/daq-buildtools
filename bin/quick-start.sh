@@ -75,7 +75,7 @@ if $edits_check ; then
             echo "Looking for updates of branch ${upstr_branch}"
             # 3. Get the remote ref for the upstream branch
             # remote_ref=$(git ls-remote $(echo ${upstr_branch} | sed 's/\// /g') 2> /dev/null | cut -f1)
-            remote_ref=$(git ls-remote ${upstr_branch//\// } 2> /dev/null | cut -f1)
+            remote_ref=$(git ls-remote ${upstr_branch/\// } 2> /dev/null | cut -f1)
         else
             remote_ref="<undefined>"
         fi
