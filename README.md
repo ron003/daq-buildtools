@@ -1,3 +1,6 @@
+_JCF, Nov-20-2020: for full instructions on how to use daq-buildtools, please take a look at https://github.com/DUNE-DAQ/appfwk/wiki/Compiling-and-running, which covers the head of the develop branch_
+
+
 # DAQ Build Tools
 
 `daq-buildtools` or `dbt` is a collection of documentation, scripts and CMake modules designed to make it as easy as possible for developers to create new packages and control their builds.
