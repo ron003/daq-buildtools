@@ -8,7 +8,7 @@ dune_products=(
     "gcc v8_2_0 e19:prof"
     "boost v1_70_0 e19:prof"
     "cetlib v3_10_00 e19:prof"
-    "TRACE v3_15_09"
+    "TRACE v3_16_02"
     "folly v2020_05_25 e19:prof"
     "ers v0_26_00c e19:prof"
     "nlohmann_json v3_9_0b e19:prof"
