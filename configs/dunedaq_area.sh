@@ -4,7 +4,7 @@ dune_products_dirs=(
 
 dune_products=(
     "cmake v3_17_2"
-    # "gdb v9_2"
+    "gdb v9_2"
     "gcc v8_2_0 e19:prof"
     "boost v1_70_0 e19:prof"
     "cetlib v3_10_00 e19:prof"
@@ -14,7 +14,6 @@ dune_products=(
     "nlohmann_json v3_9_0b e19:prof"
     "ninja v1_10_0"
     "pistache v2020_10_07 e19:prof"
-    "zmq v4_3_1b e19:prof"
 )
 
 dune_python="v3_8_3b"
