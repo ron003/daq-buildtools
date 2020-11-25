@@ -16,8 +16,6 @@ BUILDDIR=$BASEDIR/build
 LOGDIR=$BASEDIR/log
 SRCDIR=$BASEDIR/sourcecode
 
-dc_version="dunedaq-v2.0.0"
-
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
 
@@ -65,7 +63,6 @@ if $edits_check ; then
         echo "Looking for updates of ${the_tag}"
         # 2.1. Yes, let's get the remote ref
         remote_ref=$(git ls-remote --tags $(git remote) tags ${the_tag} | cut -f1 )
-	remote_ref2=$(git ls-remote --tags $(git remote) tags ${the_tag} | cut -f1 )"^{}"
     else
         # 2.2. No, it's a branch.
         # Get the name of the upstream branch (if any)
