@@ -16,9 +16,6 @@ BUILDDIR=$BASEDIR/build
 LOGDIR=$BASEDIR/log
 SRCDIR=$BASEDIR/sourcecode
 
-dbt_version="v1.0.0"
-precloned_packages="daq-cmake:${dbt_version}"
-
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
 
@@ -54,8 +51,7 @@ fi
 
 
 if $edits_check ; then
-    # Original one-liner
-    # [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ] && echo up to date || echo not up to date
+
     cd ${DBT_ROOT}
 
     # 1. Get the local repo git ref
@@ -74,15 +70,15 @@ if $edits_check ; then
         if [[ $? -eq 0 ]]; then
             echo "Looking for updates of branch ${upstr_branch}"
             # 3. Get the remote ref for the upstream branch
-            # remote_ref=$(git ls-remote $(echo ${upstr_branch} | sed 's/\// /g') 2> /dev/null | cut -f1)
             remote_ref=$(git ls-remote ${upstr_branch/\// } 2> /dev/null | cut -f1)
         else
             remote_ref="<undefined>"
         fi
     fi
 
+    if [[ "$local_ref" != "$remote_ref" && -n $( git diff $local_ref $remote_ref ) ]]; then
 
-    if [[ "$local_ref" != "$remote_ref" ]]; then
+      meaningful_head_differences=true
 
     cat<<EOF >&2                                                                                                             
 ERROR: The version of daq-buildtools you're trying to run doesn't match with 
@@ -107,7 +103,7 @@ EOF
 
     fi
 
-if [[ -n $local_edits || "$local_ref" != "$remote_ref" ]]; then
+if [[ -n $local_edits || -n $meaningful_head_differences ]]; then
     cat<<EOF >&2                                                                                                             
 This may mean that this script makes obsolete assumptions, etc., which 
 could compromise your working environment. 
@@ -145,22 +141,6 @@ mkdir -p $LOGDIR
 mkdir -p $SRCDIR
 
 cd $SRCDIR
-for package in $precloned_packages; do
-    packagename=$( echo $package | sed -r 's/:.*//g' )
-    packagebranch=$( echo $package | sed -r 's/.*://g' )
-    echo "Cloning $packagename repo, will use $packagebranch branch..."
-    git clone https://github.com/DUNE-DAQ/${packagename}.git
-    cd ${packagename}
-    git checkout $packagebranch
-
-    if [[ "$?" != "0" ]]; then
-	echo >&2
-	echo "Error: unable to check out $packagebranch branch of ${packagename}. Exiting..." >&2
-	echo >&2
-	exit 55
-    fi
-    cd ..
-done
 
 superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 if [[ -e $superproject_cmakeliststxt ]]; then
