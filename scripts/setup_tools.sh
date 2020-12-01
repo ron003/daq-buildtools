@@ -40,7 +40,6 @@ function setup_ups_products() {
 
   for prod in "${dune_products[@]}"; do
       prodArr=(${prod})
-      prodName=$(echo ${prodArr[0]}|tr '-' '_')
 
       setup_cmd="setup ${prodArr[0]//-/_} ${prodArr[1]}"
       if [[ ${#prodArr[@]} -eq 3 ]]; then
