@@ -16,7 +16,9 @@ dune_products=(
     "pistache v2020_10_07 e19:prof"
     "cmdlib v1_0_1 e19:prof"
     "restcmd v1_0_1 e19:prof"
-    "daq_cmake v1_1_0 e19:prof"
+    # Note: "daq_cmake" with underscore is the UPS product name.
+    # One can use either "daq-cmake" or "daq_cmake" in this file.
+    "daq-cmake v1_1_0 e19:prof"
     "appfwk v2_0_0 e19:prof"
     "listrev v2_0_0 e19:prof"
 )
