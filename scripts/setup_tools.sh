@@ -42,7 +42,7 @@ function setup_ups_products() {
       prodArr=(${prod})
       prodName=$(echo ${prodArr[0]}|tr '-' '_')
 
-      setup_cmd="setup ${prodName} ${prodArr[1]}"
+      setup_cmd="setup ${prodArr[0]//-/_} ${prodArr[1]}"
       if [[ ${#prodArr[@]} -eq 3 ]]; then
           setup_cmd="${setup_cmd} -q ${prodArr[2]}"
       fi
