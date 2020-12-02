@@ -9,6 +9,11 @@ echo "This script hasn't yet been sourced (successfully) in this shell; setting 
 
 # Import find_work_area function
 source ${HERE}/setup_tools.sh
+if ! [[ $? -eq 0 ]]; then
+    echo "Error: there was a problem sourcing ${HERE}/setup_tools.sh. Exiting..." >&2
+    return 1
+fi
+
 DBT_AREA_ROOT=$(find_work_area)
 
 echo "DBT_AREA_ROOT=${DBT_AREA_ROOT}"
@@ -19,6 +24,11 @@ fi
 
 # 1. Load the UPS area information from the local area file
 source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
+if ! [[ $? -eq 0 ]]; then
+    echo "Error: there was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..." >&2
+    return 1
+fi
+
 echo "Product directories ${dune_products_dirs[@]}"
 echo "Products ${dune_products[@]}"
 
@@ -26,7 +36,19 @@ setup_ups_product_areas
 
 # 2. Setup the python environment
 setup python ${dune_python_version}
+
+if ! [[ $? -eq 0 ]]; then
+    echo "Error: the \"setup python ${dune_python_version}\" call failed. Exiting..." >&2
+    return 5
+fi
+
 source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
+
+if ! [[ $? -eq 0 ]]; then
+    echo "Error: there was a problem calling \"source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate\". Exiting..." >&2
+    return 6
+fi
+
 
 if [[ "$VIRTUAL_ENV" == "" ]]
 then
@@ -45,8 +67,6 @@ else
   echo "At least one of the required packages this script attempted to set up didn't set up correctly; returning..." >&2
   return 1
 fi
-
-#export PATH=.:${PATH}
 
 export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"

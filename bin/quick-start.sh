@@ -73,7 +73,7 @@ if $edits_check ; then
         fi
     fi
 
-    if [[ "$local_ref" != "$remote_ref" && -n $( git diff $local_ref $remote_ref ) ]]; then
+    if [[ "$remote_ref" != "<undefined>" && "$local_ref" != "$remote_ref" && -n $( git diff $local_ref $remote_ref ) ]]; then
 
       meaningful_head_differences=true
 
