@@ -4,17 +4,28 @@ empty_dir_check=true
 edits_check=true
 RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp"
 BASEDIR=$PWD
+SHOW_RELEASE_LIST=false
+
+# Define usage function here
 
 #####################################################################
 # Load DBT common constants
 source ${DBT_ROOT}/scripts/setup_tools.sh
 
+# This is a horrible lash-up and should be replaced with a proper manifest file or equivalent.
+UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
+PY_PKGLIST="pyvenv_requirements.txt"
+
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hr:d:e' -l 'help,dir:,release-base-path:,disable-edit-check' -- "$@") || exit
+options=$(getopt -o 'hlr:d:e' -l 'help,list,dir:,release-base-path:,disable-edit-check' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
     case $1 in
+        (-l|--list)
+            # List available releases
+            SHOW_RELEASE_LIST=true
+            shift;;
         (-r|--release-path)
             RELEASE_BASEPATH=$2
             shift 2;;
@@ -35,6 +46,16 @@ EOH
 done
 
 ARGS=("$@")
+
+if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
+    # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area file in it?
+    FOUND_RELEASES=($(find ${RELEASE_BASEPATH} -maxdepth 2 -type f -name ${UPS_PKGLIST} -execdir pwd \;))
+    for rel in "${FOUND_RELEASES[@]}"; do
+        echo " - $(basename ${rel})"
+    done
+    exit 0;
+fi
+
 if [[ ${#ARGS[@]} -ne 1 ]]; then
     log_error "Wrong number of arguments"
     # print usage here
@@ -207,7 +228,7 @@ test $? -eq 0 || error "There was a problem copying over the daq area signature 
 
 
 echo "Setting up the Python subsystem"
-create_pyvenv.sh ${RELEASE_PATH}/pyvenv_requirements.txt
+create_pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
 
 test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 
