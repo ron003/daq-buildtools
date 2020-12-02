@@ -17,11 +17,14 @@ source ${HERE}/setup_constants.sh
 function setup_ups_product_areas() {
   
   if [ -z "${dune_products_dirs}" ]; then
-    echo "UPS product directories variable (dune_products_dirs) undefined";
+    echo "UPS product directories variable (dune_products_dirs) undefined; no products areas will be set up" >&2
   fi
 
   for proddir in ${dune_products_dirs[@]}; do
       source ${proddir}/setup
+      if ! [[ $? -eq 0 ]]; then
+	  echo "Warning: unable to set up products area \"${proddir}\"" >&2
+      fi
   done
 
 }

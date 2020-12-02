@@ -3,10 +3,7 @@
 empty_dir_check=true
 edits_check=true
 
-#####################################################################
-# common constants - to be moved to a separate, common file
-DBT_AREA_FILE='.dunedaq_area'
-#####################################################################
+source $DBT_ROOT/bin/setup_constants.sh
 
 starttime_d=$( date )
 starttime_s=$( date +%s )
@@ -153,9 +150,18 @@ fi
 # Create the daq area signature file
 cp ${DBT_ROOT}/configs/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
 
+if ! [[ $? -eq 0 ]]; then
+    echo "There was a problem copying over the daq area signature file; exiting..." >&2
+    exit 61
+fi
 
 echo "Setting up the Python subsystem"
 create_pyvenv.sh
+
+if ! [[ $? -eq 0 ]]; then
+    echo "Error: call to create_pyvenv.sh returned nonzero. Exiting..." >&2
+    exit 70
+fi
 
 endtime_d=$( date )
 endtime_s=$( date +%s )
