@@ -3,12 +3,16 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
 source ${HERE}/setup_tools.sh
+if ! [[ $? -eq 0 ]]; then
+    echo "Error: there was a problem sourcing ${HERE}/setup_tools.sh. Exiting..." >&2
+    return 1
+fi
 
 DBT_AREA_ROOT=$(find_work_area)
 
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
-   echo "There doesn't appear to be a ./build subdirectory in this script's directory." >&2
+   echo "There doesn't appear to be a ./build subdirectory in ${DBT_AREA_ROOT}." >&2
    echo "Please run a copy of this script from the base directory of a development area installed with quick-start.sh" >&2
    echo "Returning..." >&2
    return 10
@@ -19,11 +23,16 @@ if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
       type setup_build_environment > /dev/null
       retval="$?"
 
-      if [[ "$retval" == "0" ]]; then
+      if [[ $retval -eq 0 ]]; then
           echo "Lines between the ='s are the output of running setup_build_environment"
 	  echo "======================================================================"
           setup_build_environment 
+	  retval="$?"
 	  echo "======================================================================"
+	  if ! [[ $retval -eq 0 ]]; then
+	      echo "Error: there was a problem running setup_build_environment. Exiting..." >&2
+	      return $retval
+	  fi
       else
 
 	  cat<<EOF >&2
