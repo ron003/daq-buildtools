@@ -3,7 +3,7 @@
 empty_dir_check=true
 edits_check=true
 
-source $DBT_ROOT/bin/setup_constants.sh
+source $DBT_ROOT/scripts/setup_constants.sh
 
 starttime_d=$( date )
 starttime_s=$( date +%s )
