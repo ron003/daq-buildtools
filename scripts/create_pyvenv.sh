@@ -10,6 +10,16 @@ DBT_AREA_ROOT=$(find_work_area)
 if [[ -z ${DBT_AREA_ROOT} ]]; then
     error "Expected work area directory ${DBT_AREA_ROOT} not found. Exiting..." 
 fi
+
+if [[ $# -ne 1 ]]; then
+    log_error "Wrong mumber of arguments"
+    cat << EOU
+Usage: $(basename $0) <path to requirements.txt>:
+
+EOU
+fi
+
+PYENV_REQS=$1
 #------------------------------------------------------------------------------
 timenow="date \"+%D %T\""
 

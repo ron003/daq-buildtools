@@ -2,9 +2,52 @@
 
 empty_dir_check=true
 edits_check=true
+RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp"
+BASEDIR=$PWD
 
-source $DBT_ROOT/scripts/setup_constants.sh
-source $DBT_ROOT/scripts/setup_tools.sh
+#####################################################################
+# Load DBT common constants
+source ${DBT_ROOT}/scripts/setup_tools.sh
+
+# We use "$@" instead of $* to preserve argument-boundary information
+options=$(getopt -o 'hr:d:e' -l 'help,dir:,release-base-path:,disable-edit-check' -- "$@") || exit
+eval "set -- $options"
+
+while true; do
+    case $1 in
+        (-r|--release-path)
+            RELEASE_BASEPATH=$2
+            shift 2;;
+        (-d|--dir)
+            BASEDIR=$2
+            shift 2;;
+        (-e|--disable-edit-check)
+            edits_check=false
+            shift;;
+        (-h|--help)
+            cat << EOH
+Usage $( basename $0 ) <dunedaq release> -d/--dir <installation dir> -r/--release-base-path <path to release area>
+EOH
+            exit 1;;
+        (--)  shift; break;;
+        (*)   exit 1;;           # error
+    esac
+done
+
+ARGS=("$@")
+if [[ ${#ARGS[@]} -ne 1 ]]; then
+    log_error "Wrong number of arguments"
+    # print usage here
+    exit 1
+fi
+
+RELEASE=${ARGS[0]}
+RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
+
+if [[ ! -d ${RELEASE_PATH} ]]; then
+    log_error "Release path '${RELEASE_PATH}' does not exist. Exiting..."
+    exit 1
+fi
 
 if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
     error "$( cat<<EOF
@@ -20,7 +63,6 @@ fi
 starttime_d=$( date )
 starttime_s=$( date +%s )
 
-BASEDIR=$PWD
 BUILDDIR=$BASEDIR/build
 LOGDIR=$BASEDIR/log
 SRCDIR=$BASEDIR/sourcecode
@@ -127,7 +169,7 @@ https://github.com/DUNE-DAQ/appfwk/wiki/Compiling-and-running
 
 EOF
 
-	exit 40
+    exit 40
 
     fi
 
@@ -160,12 +202,12 @@ test $? -eq 0 || error "There was a problem copying \"$superproject_cmakeliststx
 
 
 # Create the daq area signature file
-cp ${DBT_ROOT}/configs/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
+cp ${RELEASE_PATH}/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
 test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
 
 echo "Setting up the Python subsystem"
-create_pyvenv.sh
+create_pyvenv.sh ${RELEASE_PATH}/pyvenv_requirements.txt
 
 test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 
