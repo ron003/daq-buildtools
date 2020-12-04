@@ -3,10 +3,6 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
 source ${HERE}/setup_tools.sh
-if ! [[ $? -eq 0 ]]; then
-    echo "Error: there was a problem sourcing ${HERE}/setup_tools.sh. Exiting..." >&2
-    return 1
-fi
 
 DBT_AREA_ROOT=$(find_work_area)
 

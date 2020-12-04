@@ -9,10 +9,6 @@ echo "This script hasn't yet been sourced (successfully) in this shell; setting 
 
 # Import find_work_area function
 source ${HERE}/setup_tools.sh
-if ! [[ $? -eq 0 ]]; then
-    echo "Error: there was a problem sourcing ${HERE}/setup_tools.sh. Exiting..." >&2
-    return 1
-fi
 
 DBT_AREA_ROOT=$(find_work_area)
 
