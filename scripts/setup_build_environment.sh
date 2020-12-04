@@ -21,7 +21,7 @@ fi
 # 1. Load the UPS area information from the local area file
 source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
 if ! [[ $? -eq 0 ]]; then
-    echo "Error: there was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..." >&2
+    log_error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Returning..." 
     return 1
 fi
 
@@ -34,21 +34,15 @@ setup_ups_product_areas
 setup python ${dune_python_version}
 
 if ! [[ $? -eq 0 ]]; then
-    echo "Error: the \"setup python ${dune_python_version}\" call failed. Exiting..." >&2
+    log_error "The \"setup python ${dune_python_version}\" call failed. Returning..." >&2
     return 5
 fi
 
 source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
 
-if ! [[ $? -eq 0 ]]; then
-    echo "Error: there was a problem calling \"source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate\". Exiting..." >&2
-    return 6
-fi
-
-
 if [[ "$VIRTUAL_ENV" == "" ]]
 then
-  echo "ERROR: [`eval $timenow`]: You are already in a virtual env. Please deactivate first."
+  log_error "You are already in a virtual env. Please deactivate first. Returning..."
   return 11
 fi
 
@@ -60,7 +54,7 @@ export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
 if ! [[ "$setup_returns" =~ [1-9] ]]; then
   echo "All setup calls on the packages returned 0, indicative of success"
 else
-  echo "At least one of the required packages this script attempted to set up didn't set up correctly; returning..." >&2
+  log_error "At least one of the required packages this script attempted to set up didn't set up correctly. Returning..."
   return 1
 fi
 

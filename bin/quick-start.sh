@@ -1,9 +1,10 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=true
+edits_check=false
 
 source $DBT_ROOT/scripts/setup_constants.sh
+source $DBT_ROOT/scripts/setup_tools.sh
 
 starttime_d=$( date )
 starttime_s=$( date +%s )
@@ -17,12 +18,14 @@ export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
 
 if [[ -z $USER || -z $HOSTNAME ]]; then
-    echo "Problem getting one or both of the environment variables \$USER and \$HOSTNAME; exiting..." >&2
+    log_error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
     exit 10
 fi
 
 if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
+    log_error_preface
+    echo >&2
     cat<<EOF >&2                                                                               
 
 There appear to be files in $BASEDIR besides this script (run "ls -a1"
@@ -77,13 +80,14 @@ if $edits_check ; then
 
       meaningful_head_differences=true
 
-    cat<<EOF >&2                                                                                                             
-ERROR: The version of daq-buildtools you're trying to run doesn't match with 
-       the version at the head of the corresponding branch in the daq-buildtool's
-       central repository.
 
-       Local hash: $local_ref
-       Remote hash: $remote_ref
+    cat<<EOF >&2                                                                                                             
+The version of daq-buildtools you're trying to run doesn't match with 
+the version at the head of the corresponding branch in the daq-buildtool's
+central repository.
+
+Local hash: $local_ref
+Remote hash: $remote_ref
 
 EOF
 
@@ -93,14 +97,17 @@ EOF
 
     if [[ -n $local_edits ]]; then
 
+	log_error_preface
+	echo >&2
 	cat<<EOF >&2                                                                                                             
-ERROR: the version of daq-buildtools you're trying to run contains local edits.
+The version of daq-buildtools you're trying to run contains local edits.
 
 EOF
 
     fi
 
 if [[ -n $local_edits || -n $meaningful_head_differences ]]; then
+
     cat<<EOF >&2                                                                                                             
 This may mean that this script makes obsolete assumptions, etc., which 
 could compromise your working environment. 
@@ -143,7 +150,7 @@ superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 if [[ -e $superproject_cmakeliststxt ]]; then
     cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
 else
-    echo "Error: expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..." >&2
+    log_error "Expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..."
     exit 60
 fi
 
@@ -159,7 +166,7 @@ echo "Setting up the Python subsystem"
 create_pyvenv.sh
 
 if ! [[ $? -eq 0 ]]; then
-    echo "Error: call to create_pyvenv.sh returned nonzero. Exiting..." >&2
+    log_error "Call to create_pyvenv.sh returned nonzero. Exiting..."
     exit 70
 fi
 

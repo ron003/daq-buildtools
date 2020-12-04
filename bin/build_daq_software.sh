@@ -48,25 +48,25 @@ for arg in "$@" ; do
   elif [[ "$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "$arg" == "--pkgname" ]]; then
-    echo "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..." >&2
+    log_error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
     exit 1
   elif [[ "$arg" == "--install" ]]; then
     perform_install=true
   else
-    echo "Unknown argument provided; run with \" --help\" to see valid options. Exiting..." >&2
+    log_error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
     exit 1
   fi
 done
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 echo
-echo "It appears you haven't yet executed \"setup_build_environment\"; please source it before running this script. Exiting..."
+log_error "It appears you haven't yet executed \"setup_build_environment\"; please source it before running this script. Exiting..."
 echo
 exit 2
 fi
 
 if [[ ! -d $BUILDDIR ]]; then
-    echo "Expected build directory $BUILDDIR not found; exiting..." >&2
+    log_error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
     exit 1
 fi
 

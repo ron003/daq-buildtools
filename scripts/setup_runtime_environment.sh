@@ -8,9 +8,14 @@ DBT_AREA_ROOT=$(find_work_area)
 
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
-   echo "There doesn't appear to be a ./build subdirectory in ${DBT_AREA_ROOT}." >&2
-   echo "Please run a copy of this script from the base directory of a development area installed with quick-start.sh" >&2
-   echo "Returning..." >&2
+    
+    log_error_preface
+    echo >&2
+    cat <<EOF >&2
+There doesn't appear to be a "build" subdirectory in ${DBT_AREA_ROOT}.
+Please run a copy of this script from the base directory of a development area installed with quick-start.sh
+Returning...
+EOF
    return 10
 
 fi
