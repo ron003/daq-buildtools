@@ -38,6 +38,12 @@ while true; do
         (-h|--help)
             cat << EOH
 Usage $( basename $0 ) <dunedaq release> -d/--dir <installation dir> -r/--release-base-path <path to release area>
+
+    release-name: is the name of the release the new work are will be based on (e.g. dunedaq-v2.0.0)
+    -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp)
+    -d/--dir: is the path of the new area (BASEDIRvar; default \$PWD, the directory must exist)
+    -l/--list: show the list of available releases
+
 EOH
             exit 1;;
         (--)  shift; break;;
