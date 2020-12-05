@@ -6,10 +6,7 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 source ${DBT_ROOT}/scripts/setup_tools.sh
 
 BASEDIR=$(find_work_area)
-if [[ -z $BASEDIR ]]; then
-    echo -e "${COL_RED} DBT Work aread directory not found; exiting...${COL_NULL}" >&2
-    exit 1
-fi
+test -n $BASEDIR || error "DBT Work area directory not found. Exiting..." 
 
 BUILDDIR=${BASEDIR}/build
 LOGDIR=${BASEDIR}/log
@@ -48,28 +45,26 @@ for arg in "$@" ; do
   elif [[ "$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "$arg" == "--pkgname" ]]; then
-    log_error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
-    exit 1
+    error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
   elif [[ "$arg" == "--install" ]]; then
     perform_install=true
   else
-    log_error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
-    exit 1
+    error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
   fi
 done
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
-echo
-log_error "It appears you haven't yet executed \"setup_build_environment\"; please source it before running this script. Exiting..."
-echo
-exit 2
+ 
+error "$( cat<<EOF
+
+It appears you haven't yet executed "setup_build_environment"; please source it before running this 
+script. Exiting...
+
+EOF
+)"
 fi
 
-if [[ ! -d $BUILDDIR ]]; then
-    log_error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
-    exit 1
-fi
-
+test -d $BUILDDIR || error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
 cd $BUILDDIR
 
 if $clean_build; then 
@@ -82,9 +77,13 @@ if $clean_build; then
      sleep 5
      rm -rf *
    else
-     echo "SCRIPT ERROR: you requested a clean build, but this script thinks that $BUILDDIR isn't the build directory." >&2
-     echo "Please contact John Freeman at jcfree@fnal.gov and notify him of this message" >&2
-     exit 10
+       error "$( cat <<EOF
+
+You requested a clean build, but this script thinks that $BUILDDIR isn't 
+the build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
+
+EOF
+)"
    fi
 
 fi
@@ -135,13 +134,18 @@ else
 
 mv -f CMakeCache.txt CMakeCache.txt.most_recent_failure
 
-echo
-echo "There was a problem running \"cmake $SRCDIR\" from $BUILDDIR (i.e.," >&2
-echo "CMake's config+generate stages). Scroll up for" >&2
-echo "details or look at ${build_log}. Exiting..."
-echo
+error "$( cat <<EOF 
 
-    exit 30
+There was a problem running "cmake $SRCDIR" from 
+$BUILDDIR (i.e., CMake's config+generate stages). 
+Scroll up for details or look at the build log via 
+
+more ${build_log}
+
+Exiting...
+
+EOF
+)"
 fi
 
 else
@@ -183,11 +187,17 @@ buildtime=$((endtime_build_s - starttime_build_s))
 
 else
 
-echo
-echo "There was a problem running \"cmake --build .\" from $BUILDDIR (i.e.," >&2
-echo "CMake's build stage). Scroll up for" >&2
-echo "details or look at the build log via \"more ${build_log}\". Exiting..."
-echo
+error "$( cat<<EOF 
+
+There was a problem running "cmake --build ." from $BUILDDIR (i.e.,
+CMake's build stage). Scroll up for details or look at the build log via 
+
+more ${build_log}
+
+Exiting...
+
+EOF
+)"
 
    exit 40
 fi
@@ -223,17 +233,15 @@ fi
 if $perform_install ; then
   cd $BUILDDIR
 
-  cmake --build . --target install -- -j $nprocs
+  cmake --build . --target install -- $nprocs_argument
  
   if [[ "$?" == "0" ]]; then
     echo 
     echo "Installation complete."
     echo "This implies your code successfully compiled before installation; you can either scroll up or run \"more $build_log\" to see build results"
   else
-    echo
-    echo "Installation failed. There was a problem running \"cmake --build . --target install -- -j $nprocs\"" >&2
-    echo "Exiting..." >&2
-    exit 50
+      error "Installation failed. There was a problem running \"cmake --build . --target install -- $nprocs_argument\". Exiting.."
+
   fi
  
 fi

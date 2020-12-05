@@ -1,10 +1,21 @@
 #!/bin/env bash
 
 empty_dir_check=true
-edits_check=false
+edits_check=true
 
 source $DBT_ROOT/scripts/setup_constants.sh
 source $DBT_ROOT/scripts/setup_tools.sh
+
+if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+    error "$( cat<<EOF
+
+It appears you're trying to run quick-start.sh from an environment
+where another development area's been set up.  You'll want to run this
+from a clean shell. Exiting...     
+
+EOF
+)"
+fi
 
 starttime_d=$( date )
 starttime_s=$( date +%s )
@@ -18,22 +29,19 @@ export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
 
 if [[ -z $USER || -z $HOSTNAME ]]; then
-    log_error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
-    exit 10
+    error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
 fi
 
 if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
-    log_error_preface
-    echo >&2
-    cat<<EOF >&2                                                                               
+error "$( cat <<EOF
 
-There appear to be files in $BASEDIR besides this script (run "ls -a1"
-to see this); this script should only be run in a clean
+There appear to be files in $BASEDIR besides this script 
+(run "ls -a1" to see this); this script should only be run in a clean
 directory. Exiting...
 
 EOF
-    exit 20
+)"
 
 elif ! $empty_dir_check ; then
 
@@ -97,7 +105,7 @@ EOF
 
     if [[ -n $local_edits ]]; then
 
-	log_error_preface
+	error_preface
 	echo >&2
 	cat<<EOF >&2                                                                                                             
 The version of daq-buildtools you're trying to run contains local edits.
@@ -147,28 +155,19 @@ mkdir -p $SRCDIR
 cd $SRCDIR
 
 superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
-if [[ -e $superproject_cmakeliststxt ]]; then
-    cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
-else
-    log_error "Expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..."
-    exit 60
-fi
+cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
+test $? -eq 0 || error "There was a problem copying \"$superproject_cmakeliststxt\" to $SRCDIR. Exiting..."
+
 
 # Create the daq area signature file
 cp ${DBT_ROOT}/configs/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
+test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
-if ! [[ $? -eq 0 ]]; then
-    echo "There was a problem copying over the daq area signature file; exiting..." >&2
-    exit 61
-fi
 
 echo "Setting up the Python subsystem"
 create_pyvenv.sh
 
-if ! [[ $? -eq 0 ]]; then
-    log_error "Call to create_pyvenv.sh returned nonzero. Exiting..."
-    exit 70
-fi
+test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 
 endtime_d=$( date )
 endtime_s=$( date +%s )

@@ -9,14 +9,14 @@ DBT_AREA_ROOT=$(find_work_area)
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
     
-    log_error_preface
-    echo >&2
-    cat <<EOF >&2
+    error "$( cat <<EOF 
+
 There doesn't appear to be a "build" subdirectory in ${DBT_AREA_ROOT}.
 Please run a copy of this script from the base directory of a development area installed with quick-start.sh
 Returning...
 EOF
-   return 10
+)"
+    return 1
 
 fi
 
@@ -31,23 +31,27 @@ if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 	  retval="$?"
 	  echo "======================================================================"
 	  if ! [[ $retval -eq 0 ]]; then
-	      echo "Error: there was a problem running setup_build_environment. Exiting..." >&2
+	      error "There was a problem running setup_build_environment. Exiting..." 
 	      return $retval
 	  fi
       else
 
-	  cat<<EOF >&2
+	  error "$( cat<<EOF 
 
 Error: this script tried to execute "setup_build_environment" but was unable 
 to find it. Either the daq-buildtools environment hasn't yet been set up, or 
-an assumption in the daq-buildtools framework is being broken somewhere.
+an assumption in the daq-buildtools framework is being broken somewhere. Returning...
 
 EOF
+)"
 	  return 20
       fi    
 else
-      echo "The build environment setup script already appears to have been sourced, so this " 
-      echo "script won't try to source it"
+    cat <<EOF
+The build environment setup script already appears to have been sourced, so this 
+script won't try to source it
+
+EOF
 fi
 
 

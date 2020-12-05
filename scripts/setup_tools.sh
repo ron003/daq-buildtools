@@ -115,7 +115,8 @@ function add_many_paths() {
 }
 #------------------------------------------------------------------------------
 
-function log_error_preface() {
+#------------------------------------------------------------------------------
+function error_preface() {
 
     for dbt_file in "${BASH_SOURCE[@]}"; do
 	if ! [[ "${BASH_SOURCE[0]}" =~ "$dbt_file" ]]; then
@@ -128,11 +129,18 @@ function log_error_preface() {
     timenow="date \"+%D %T\""
     echo -n "ERROR: [`eval $timenow`] [${dbt_file}]:" >&2
 }
-
-function log_error() {
-
-    log_error_preface
-    echo " ${1}" >&2
-}
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+function error() {
+
+    error_preface
+    echo -e " ${COL_RED} ${1} ${COL_NULL} " >&2
+
+    if [[ -x ${BASH_SOURCE[-1]} ]]; then
+	exit 100
+    fi
+}
+#------------------------------------------------------------------------------
+
+  
