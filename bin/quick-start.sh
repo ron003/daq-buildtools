@@ -3,10 +3,19 @@
 empty_dir_check=true
 edits_check=true
 
-#####################################################################
-# common constants - to be moved to a separate, common file
-DBT_AREA_FILE='.dunedaq_area'
-#####################################################################
+source $DBT_ROOT/scripts/setup_constants.sh
+source $DBT_ROOT/scripts/setup_tools.sh
+
+if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+    error "$( cat<<EOF
+
+It appears you're trying to run quick-start.sh from an environment
+where another development area's been set up.  You'll want to run this
+from a clean shell. Exiting...     
+
+EOF
+)"
+fi
 
 starttime_d=$( date )
 starttime_s=$( date +%s )
@@ -20,20 +29,19 @@ export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
 
 if [[ -z $USER || -z $HOSTNAME ]]; then
-    echo "Problem getting one or both of the environment variables \$USER and \$HOSTNAME; exiting..." >&2
-    exit 10
+    error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
 fi
 
 if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
-    cat<<EOF >&2                                                                               
+error "$( cat <<EOF
 
-There appear to be files in $BASEDIR besides this script (run "ls -a1"
-to see this); this script should only be run in a clean
+There appear to be files in $BASEDIR besides this script 
+(run "ls -a1" to see this); this script should only be run in a clean
 directory. Exiting...
 
 EOF
-    exit 20
+)"
 
 elif ! $empty_dir_check ; then
 
@@ -76,17 +84,18 @@ if $edits_check ; then
         fi
     fi
 
-    if [[ "$local_ref" != "$remote_ref" && -n $( git diff $local_ref $remote_ref ) ]]; then
+    if [[ "$remote_ref" != "<undefined>" && "$local_ref" != "$remote_ref" && -n $( git diff $local_ref $remote_ref ) ]]; then
 
       meaningful_head_differences=true
 
-    cat<<EOF >&2                                                                                                             
-ERROR: The version of daq-buildtools you're trying to run doesn't match with 
-       the version at the head of the corresponding branch in the daq-buildtool's
-       central repository.
 
-       Local hash: $local_ref
-       Remote hash: $remote_ref
+    cat<<EOF >&2                                                                                                             
+The version of daq-buildtools you're trying to run doesn't match with 
+the version at the head of the corresponding branch in the daq-buildtool's
+central repository.
+
+Local hash: $local_ref
+Remote hash: $remote_ref
 
 EOF
 
@@ -96,14 +105,17 @@ EOF
 
     if [[ -n $local_edits ]]; then
 
+	error_preface
+	echo >&2
 	cat<<EOF >&2                                                                                                             
-ERROR: the version of daq-buildtools you're trying to run contains local edits.
+The version of daq-buildtools you're trying to run contains local edits.
 
 EOF
 
     fi
 
 if [[ -n $local_edits || -n $meaningful_head_differences ]]; then
+
     cat<<EOF >&2                                                                                                             
 This may mean that this script makes obsolete assumptions, etc., which 
 could compromise your working environment. 
@@ -143,19 +155,19 @@ mkdir -p $SRCDIR
 cd $SRCDIR
 
 superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
-if [[ -e $superproject_cmakeliststxt ]]; then
-    cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
-else
-    echo "Error: expected file \"$superproject_cmakeliststxt\" doesn't appear to exist. Exiting..." >&2
-    exit 60
-fi
+cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
+test $? -eq 0 || error "There was a problem copying \"$superproject_cmakeliststxt\" to $SRCDIR. Exiting..."
+
 
 # Create the daq area signature file
 cp ${DBT_ROOT}/configs/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
+test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
 
 echo "Setting up the Python subsystem"
 create_pyvenv.sh
+
+test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 
 endtime_d=$( date )
 endtime_s=$( date +%s )

@@ -7,11 +7,11 @@ export DBT_ROOT=${HERE}
 source ${DBT_ROOT}/scripts/setup_tools.sh
 
 add_many_paths PATH ${DBT_ROOT}/bin ${DBT_ROOT}/scripts
+export PATH
 
 alias setup_build_environment="source ${DBT_ROOT}/scripts/setup_build_environment.sh"
 alias setup_runtime_environment="source ${DBT_ROOT}/scripts/setup_runtime_environment.sh"
 alias setup_python_venv="source ${DBT_ROOT}/scripts/setup_python_venv.sh"
 echo -e "${COL_GREEN}DBT setuptools loaded${COL_NULL}"
 
-export PATH
 

@@ -8,8 +8,7 @@ source ${HERE}/setup_tools.sh
 
 DBT_AREA_ROOT=$(find_work_area)
 if [[ -z ${DBT_AREA_ROOT} ]]; then
-    echo "Expected work area directory ${DBT_AREA_ROOT} not found; exiting..." >&2
-    return 1
+    error "Expected work area directory ${DBT_AREA_ROOT} not found. Exiting..." 
 fi
 #------------------------------------------------------------------------------
 timenow="date \"+%D %T\""
@@ -19,8 +18,7 @@ timenow="date \"+%D %T\""
 ###
 if [[ "$VIRTUAL_ENV" != "" ]]
 then
-  echo "ERROR: [`eval $timenow`]: You are already in a virtual env. Please deactivate first."
-  return 11
+  error "You are already in a virtual env. Please deactivate first. Exiting..."
 fi
 
 ###
@@ -31,14 +29,14 @@ if [ -z "$SETUP_PYTHON" ]; then
     echo "INFO [`eval $timenow`]: Python UPS product is not set, setting it from cvmfs now."
     # Source the area settings to determine what area where to get python from
     source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
+    
+    test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
     setup_ups_product_areas
 
     setup python ${dune_python_version}
-    if [[ $? != "0" ]]; then
-        echo "ERROR [`eval $timenow`]: setup python failed, please check if you have sourced the \"setup_build_environment\" script and run this script again."
-        return 10
-    fi
+    test $? -eq 0 || error "The \"setup python ${dune_python_version}\" call failed. Exiting..." 
+
 else
     echo "INFO [`eval $timenow`]: Python UPS product $PYTHON_VERSION has been set up."
 fi
@@ -52,21 +50,21 @@ if [ -f "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg" ]; then
 else
     echo "INFO [`eval $timenow`]: creating virtual_env ${DBT_VENV}. "
     python -m venv ${DBT_AREA_ROOT}/${DBT_VENV}
+
+    test $? -eq 0 || error "Problem creating virtual_env ${DBT_VENV}. Exiting..." 
 fi
 
 source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
 
 if [[ "$VIRTUAL_ENV" == "" ]]
 then
-  echo "ERROR: [`eval $timenow`]: Failed to load the virtual env."
-  return 11
+  error "Failed to load the virtual env. Exiting..." 
 fi
 
 python -m pip install -r ${DBT_ROOT}/configs/pyvenv_requirements.txt
-if [[ $? != "0" ]]; then
-    echo "ERROR [`eval $timenow`]: Installing required modules failed."
-    return 12
-fi
+test $? -eq 0 || error "Installing required modules failed. Exiting..." 
 
 deactivate
+test $? -eq 0 || error "Call to \"deactivate\" returned nonzero. Exiting..." 
+
 
