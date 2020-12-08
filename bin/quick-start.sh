@@ -1,10 +1,84 @@
 #!/bin/env bash
 
-empty_dir_check=true
-edits_check=true
+function print_usage() {
+                cat << EOU
+Usage
+-----
 
-source $DBT_ROOT/scripts/setup_constants.sh
-source $DBT_ROOT/scripts/setup_tools.sh
+To create a new DUNE DAQ development area:
+      
+    $( basename $0 ) <dunedaq release>  -r/--release-base-path <path to release area> <installation dir>
+
+To list the available DUNE DAQ:
+
+    $( basename $0 ) --list
+
+Arguments and options:
+    release-name: is the name of the release the new work are will be based on (e.g. dunedaq-v2.0.0)
+    -l/--list: show the list of available releases
+    -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp)
+
+EOU
+}
+
+
+EMPTY_DIR_CHECK=true
+EDITS_CHECK=true
+RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp"
+BASEDIR=$PWD
+SHOW_RELEASE_LIST=false
+
+# Define usage function here
+
+#####################################################################
+# Load DBT common constants
+source ${DBT_ROOT}/scripts/setup_tools.sh
+
+# This is a horrible lash-up and should be replaced with a proper manifest file or equivalent.
+UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
+PY_PKGLIST="pyvenv_requirements.txt"
+
+# We use "$@" instead of $* to preserve argument-boundary information
+options=$(getopt -o 'hlr:e' -l 'help,list:,release-base-path:,disable-edit-check' -- "$@") || exit
+eval "set -- $options"
+
+while true; do
+    case $1 in
+        (-l|--list)
+            # List available releases
+            SHOW_RELEASE_LIST=true
+            shift;;
+        (-r|--release-path)
+            RELEASE_BASEPATH=$2
+            shift 2;;
+        (-e|--disable-edit-check)
+            EDITS_CHECK=false
+            shift;;
+        (-h|--help)
+            print_usage
+            exit 0;;
+        (--)  shift; break;;
+        (*)   exit 1;;           # error
+    esac
+done
+
+ARGS=("$@")
+
+if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
+    # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
+    FOUND_RELEASES=($(find ${RELEASE_BASEPATH} -maxdepth 2 -type f -name ${UPS_PKGLIST} -execdir pwd \;))
+    for rel in "${FOUND_RELEASES[@]}"; do
+        echo " - $(basename ${rel})"
+    done
+    exit 0;
+fi
+
+test $? -eq 0 || "Wrong number of arguments" 
+
+RELEASE=${ARGS[0]}
+RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
+
+test $? -eq 0 || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
 
 if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
     error "$( cat<<EOF
@@ -20,7 +94,6 @@ fi
 starttime_d=$( date )
 starttime_s=$( date +%s )
 
-BASEDIR=$PWD
 BUILDDIR=$BASEDIR/build
 LOGDIR=$BASEDIR/log
 SRCDIR=$BASEDIR/sourcecode
@@ -32,7 +105,7 @@ if [[ -z $USER || -z $HOSTNAME ]]; then
     error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
 fi
 
-if $empty_dir_check && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
+if $EMPTY_DIR_CHECK && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
 
 error "$( cat <<EOF
 
@@ -43,7 +116,7 @@ directory. Exiting...
 EOF
 )"
 
-elif ! $empty_dir_check ; then
+elif ! $EMPTY_DIR_CHECK ; then
 
     cat<<EOF >&2
 
@@ -58,7 +131,7 @@ EOF
 fi
 
 
-if $edits_check ; then
+if $EDITS_CHECK ; then
 
     cd ${DBT_ROOT}
 
@@ -127,7 +200,7 @@ https://github.com/DUNE-DAQ/appfwk/wiki/Compiling-and-running
 
 EOF
 
-	exit 40
+    exit 40
 
     fi
 
@@ -146,7 +219,7 @@ EOF
 
 sleep 5
 
-fi # if $edits_check
+fi # if $EDITS_CHECK
 
 mkdir -p $BUILDDIR
 mkdir -p $LOGDIR
@@ -160,12 +233,12 @@ test $? -eq 0 || error "There was a problem copying \"$superproject_cmakeliststx
 
 
 # Create the daq area signature file
-cp ${DBT_ROOT}/configs/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
+cp ${RELEASE_PATH}/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
 test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
 
 echo "Setting up the Python subsystem"
-create_pyvenv.sh
+create_pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
 
 test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 
