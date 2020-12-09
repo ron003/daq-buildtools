@@ -71,7 +71,7 @@ then
   error "Failed to load the virtual env. Exiting..." 
 fi
 
-python -m pip install -r ${DBT_ROOT}/configs/pyvenv_requirements.txt
+python -m pip install -r ${PYENV_REQS}
 test $? -eq 0 || error "Installing required modules failed. Exiting..." 
 
 deactivate

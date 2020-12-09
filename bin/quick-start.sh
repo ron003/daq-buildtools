@@ -37,6 +37,7 @@ source ${DBT_ROOT}/scripts/setup_tools.sh
 # This is a horrible lash-up and should be replaced with a proper manifest file or equivalent.
 UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
 PY_PKGLIST="pyvenv_requirements.txt"
+DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
 options=$(getopt -o 'hlr:e' -l 'help,list:,release-base-path:,disable-edit-check' -- "$@") || exit
@@ -231,6 +232,10 @@ superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
 test $? -eq 0 || error "There was a problem copying \"$superproject_cmakeliststxt\" to $SRCDIR. Exiting..."
 
+# Temporarily taker the build-order file from config/. Will be moved to 
+superproject_buildorder=${DBT_ROOT}/configs/${DAQ_BUILDORDER_PKGLIST}
+cp ${superproject_buildorder#$SRCDIR/} $SRCDIR
+test $? -eq 0 || error "There was a problem copying \"$superproject_buildorder\" to $SRCDIR. Exiting..."
 
 # Create the daq area signature file
 cp ${RELEASE_PATH}/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
