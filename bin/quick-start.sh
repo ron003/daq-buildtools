@@ -133,10 +133,13 @@ fi
 
 if $EDITS_CHECK ; then
 
+    echo "Comparing local daq-buildtools code with code in the central repository..."
+
     cd ${DBT_ROOT}
 
     # 1. Get the local repo git ref
     local_ref=$(git rev-parse HEAD)
+    code_desc=""
 
     # 2. Is it a tag?
     the_tag=$(git describe --tags --exact-match HEAD 2> /dev/null )
@@ -144,6 +147,7 @@ if $EDITS_CHECK ; then
         echo "Looking for updates of ${the_tag}"
         # 2.1. Yes, let's get the remote ref
         remote_ref=$(git ls-remote --tags $(git remote) tags ${the_tag} | cut -f1 )
+	code_desc="${the_tag} tag "
     else
         # 2.2. No, it's a branch.
         # Get the name of the upstream branch (if any)
@@ -155,6 +159,7 @@ if $EDITS_CHECK ; then
         else
             remote_ref="<undefined>"
         fi
+	code_desc="${upstr_branch/origin\//} branch "
     fi
 
     if [[ "$remote_ref" != "<undefined>" && "$local_ref" != "$remote_ref" && -n $( git diff $local_ref $remote_ref ) ]]; then
@@ -163,9 +168,9 @@ if $EDITS_CHECK ; then
 
 
     cat<<EOF >&2                                                                                                             
-The version of daq-buildtools you're trying to run doesn't match with 
-the version at the head of the corresponding branch in the daq-buildtool's
-central repository.
+Error: The local ${code_desc}daq-buildtools you're trying to use
+(${DBT_ROOT}) contains code which doesn't match up with the
+corresponding ${code_desc}in the daq-buildtool's central repository.
 
 Local hash: $local_ref
 Remote hash: $remote_ref
@@ -193,10 +198,9 @@ if [[ -n $local_edits || -n $meaningful_head_differences ]]; then
 This may mean that this script makes obsolete assumptions, etc., which 
 could compromise your working environment. 
 
-Please update the daq-buildtools version and create your area according to 
-the instructions at 
-
-https://github.com/DUNE-DAQ/appfwk/wiki/Compiling-and-running
+Please ensure that there's no difference in the ${code_desc}git diff
+between your local repo and the central repo, and then run this script
+again.
 
 EOF
 
