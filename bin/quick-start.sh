@@ -232,13 +232,11 @@ superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
 test $? -eq 0 || error "There was a problem copying \"$superproject_cmakeliststxt\" to $SRCDIR. Exiting..."
 
-# Temporarily taker the build-order file from config/. Will be moved to 
-superproject_buildorder=${DBT_ROOT}/configs/${DAQ_BUILDORDER_PKGLIST}
-cp ${superproject_buildorder#$SRCDIR/} $SRCDIR
+cp ${RELEASE_PATH}/${DAQ_BUILDORDER_PKGLIST} $SRCDIR
 test $? -eq 0 || error "There was a problem copying \"$superproject_buildorder\" to $SRCDIR. Exiting..."
 
 # Create the daq area signature file
-cp ${RELEASE_PATH}/dunedaq_area.sh $BASEDIR/${DBT_AREA_FILE}
+cp ${RELEASE_PATH}/${UPS_PKGLIST} $BASEDIR/${DBT_AREA_FILE}
 test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
 
