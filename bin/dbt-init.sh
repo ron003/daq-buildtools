@@ -246,7 +246,7 @@ test $? -eq 0 || error "There was a problem copying over the daq area signature 
 
 
 echo "Setting up the Python subsystem"
-create_pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
+dbt-create-pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
 
 test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 

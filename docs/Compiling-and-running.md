@@ -24,7 +24,7 @@ Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
 DBT setuptools loaded
 ```
-After this step `daq-buildtools` scripts and aliases will be accessible from your commandline regardless of the current working directory. They include `dbt-init.sh`, `build_daq_software.sh` and the aliases `dbt-setup-build-environment` and `dbt-setup-runtime-environment` which are used in the following sections.
+After this step `daq-buildtools` scripts and aliases will be accessible from your commandline regardless of the current working directory. They include `dbt-init.sh`, `dbt-build.sh` and the aliases `dbt-setup-build-environment` and `dbt-setup-runtime-environment` which are used in the following sections.
 
 ## Creating a development area (AKA work area)
 
@@ -89,7 +89,7 @@ We're about to build and install `daq-cmake`, the `cmdlib` package which depends
 Now, do the following:
 ```sh
 dbt-setup-build-environment  # Only needs to be done once in a given shell
-build_daq_software.sh --install
+dbt-build.sh --install
 ```
 ...and this will build `daq-cmake`, cmdlib and appfwk in the local `./build` subdirectory and then install them as packages either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
@@ -98,30 +98,30 @@ To work with more repos, add them to the `./sourcecode` subdirectory as we did w
 * (Recommended) Add the names of your new packages to the `build_order` list found near the bottom of `./sourcecode/CMakeLists.txt`, placing them in the list in the relative order in which you want them to be built. 
 * First clone, build and install your new base repo, and THEN clone, build and install your other new repo which depends on your new base repo. 
 
-`build_daq_software.sh` will by default skip CMake's config+generate stages and go straight to the build stage _unless_ either the `CMakeCache.txt` file isn't found in `./build` or you've just added a new repo to `./sourcecode`. If you want to remove all the contents of `./build` and run config+generate+build, all you need to do is add the `--clean` option, i.e.
+`dbt-build.sh` will by default skip CMake's config+generate stages and go straight to the build stage _unless_ either the `CMakeCache.txt` file isn't found in `./build` or you've just added a new repo to `./sourcecode`. If you want to remove all the contents of `./build` and run config+generate+build, all you need to do is add the `--clean` option, i.e.
 ```
-build_daq_software.sh --clean --install
+dbt-build.sh --clean --install
 ```
 And if, after the build, you want to run the unit tests, just add the `--unittest` option. Note that it can be used with or without `--clean`, so, e.g.:
 ```
-build_daq_software.sh --clean --install --unittest  # Blow away the contents of ./build, run config+generate+build, and then run the unit tests
+dbt-build.sh --clean --install --unittest  # Blow away the contents of ./build, run config+generate+build, and then run the unit tests
 ```
 ..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `./install` and then run the unit tests.
 
 To check for deviations from the coding rules described in the [DUNE C++ Style Guide](https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md), run with the `--lint` option:
 ```
-build_daq_software.sh --lint
+dbt-build.sh --lint
 ```
 ...though be aware that some guideline violations (e.g., having a function which tries to do unrelated things) can't be picked up by the automated linter. 
 
 If you want to see verbose output from the compiler, all you need to do is add the `--verbose` option:
 ```
-build_daq_software.sh --verbose 
+dbt-build.sh --verbose 
 ```
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
-build_daq_software.sh --help
+dbt-build.sh --help
 ```
 Finally, note that both the output of your builds and your unit tests are logged to files in the `./log` subdirectory. These files may have ASCII color codes which make them difficult to read with some tools; `more` or `cat`, however, will display the colors and not the codes themselves. 
 
@@ -148,7 +148,7 @@ For a more realistic use-case, where you can send commands to the application fr
 cd sourcecode
 git clone https://github.com/DUNE-DAQ/restcmd.git -b develop
 cd ..
-build_daq_software.sh --install
+dbt-build.sh --install
 ```
 And now let's start up daq_application:
 ```sh
