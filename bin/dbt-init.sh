@@ -32,10 +32,11 @@ SHOW_RELEASE_LIST=false
 
 #####################################################################
 # Load DBT common constants
-source ${DBT_ROOT}/scripts/setup_tools.sh
+source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
 
 # This is a horrible lash-up and should be replaced with a proper manifest file or equivalent.
-UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
+# UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
+UPS_PKGLIST="${DBT_AREA_FILE}.sh"
 PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
@@ -84,7 +85,7 @@ test $? -eq 0 || error  "Release path '${RELEASE_PATH}' does not exist. Exiting.
 if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
     error "$( cat<<EOF
 
-It appears you're trying to run quick-start.sh from an environment
+It appears you're trying to run dbt-init.sh from an environment
 where another development area's been set up.  You'll want to run this
 from a clean shell. Exiting...     
 

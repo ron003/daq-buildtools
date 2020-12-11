@@ -4,7 +4,7 @@
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
-source ${HERE}/setup_tools.sh
+source ${HERE}/dbt-setup-tools.sh
 
 DBT_AREA_ROOT=$(find_work_area)
 if [[ -z ${DBT_AREA_ROOT} ]]; then

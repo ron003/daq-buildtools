@@ -2,7 +2,7 @@
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
-source ${HERE}/setup_tools.sh
+source ${HERE}/dbt-setup-tools.sh
 
 DBT_AREA_ROOT=$(find_work_area)
 
@@ -12,7 +12,7 @@ if [ ! -d "$BUILD_DIR" ]; then
     error "$( cat <<EOF 
 
 There doesn't appear to be a "build" subdirectory in ${DBT_AREA_ROOT}.
-Please run a copy of this script from the base directory of a development area installed with quick-start.sh
+Please run a copy of this script from the base directory of a development area installed with dbt-init.sh
 Returning...
 EOF
 )"
@@ -21,24 +21,24 @@ EOF
 fi
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
-      type setup_build_environment > /dev/null
+      type dbt-setup-build-environment > /dev/null
       retval="$?"
 
       if [[ $retval -eq 0 ]]; then
-          echo "Lines between the ='s are the output of running setup_build_environment"
+          echo "Lines between the ='s are the output of running dbt-setup-build-environment"
 	  echo "======================================================================"
-          setup_build_environment 
+          dbt-setup-build-environment 
 	  retval="$?"
 	  echo "======================================================================"
 	  if ! [[ $retval -eq 0 ]]; then
-	      error "There was a problem running setup_build_environment. Exiting..." 
+	      error "There was a problem running dbt-setup-build-environment. Exiting..." 
 	      return $retval
 	  fi
       else
 
 	  error "$( cat<<EOF 
 
-Error: this script tried to execute "setup_build_environment" but was unable 
+Error: this script tried to execute "dbt-setup-build-environment" but was unable 
 to find it. Either the daq-buildtools environment hasn't yet been set up, or 
 an assumption in the daq-buildtools framework is being broken somewhere. Returning...
 
