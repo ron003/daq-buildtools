@@ -42,7 +42,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hlr:e' -l 'help,list:,release-base-path:,disable-edit-check' -- "$@") || exit
+options=$(getopt -o 'hlr:e' -l 'help,list,release-base-path:,disable-edit-check' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -69,19 +69,19 @@ ARGS=("$@")
 
 if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
-    FOUND_RELEASES=($(find ${RELEASE_BASEPATH} -maxdepth 2 -type f -name ${UPS_PKGLIST} -execdir pwd \;))
+    FOUND_RELEASES=($(find ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -execdir pwd \;))
     for rel in "${FOUND_RELEASES[@]}"; do
         echo " - $(basename ${rel})"
     done
     exit 0;
 fi
 
-test $? -ne 0 || error "Wrong number of arguments. Try '$( basename $0 )-h' for more information." 
+test ${#ARGS[@]} -eq 1 || error "Wrong number of arguments. Try '$( basename $0 )-h' for more information." 
 
 RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 
-test $? -eq 0 || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
+test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
 
 if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
     error "$( cat<<EOF
