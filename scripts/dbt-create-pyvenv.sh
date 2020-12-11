@@ -12,11 +12,12 @@ if [[ -z ${DBT_AREA_ROOT} ]]; then
 fi
 
 if [[ $# -ne 1 ]]; then
-    log_error "Wrong mumber of arguments"
+    error_preface "Wrong mumber of arguments"
     cat << EOU
 Usage: $(basename $0) <path to requirements.txt>:
 
 EOU
+    exit 1
 fi
 
 PYENV_REQS=$1
