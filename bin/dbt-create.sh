@@ -14,6 +14,7 @@ To list the available DUNE DAQ:
     $( basename $0 ) --list
 
 Arguments and options:
+
     release-name: is the name of the release the new work are will be based on (e.g. dunedaq-v2.0.0)
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp)
@@ -32,15 +33,16 @@ SHOW_RELEASE_LIST=false
 
 #####################################################################
 # Load DBT common constants
-source ${DBT_ROOT}/scripts/setup_tools.sh
+source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
 
 # This is a horrible lash-up and should be replaced with a proper manifest file or equivalent.
-UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
+# UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
+UPS_PKGLIST="${DBT_AREA_FILE}.sh"
 PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hlr:e' -l 'help,list:,release-base-path:,disable-edit-check' -- "$@") || exit
+options=$(getopt -o 'hlr:e' -l 'help,list,release-base-path:,disable-edit-check' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -67,24 +69,24 @@ ARGS=("$@")
 
 if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
-    FOUND_RELEASES=($(find ${RELEASE_BASEPATH} -maxdepth 2 -type f -name ${UPS_PKGLIST} -execdir pwd \;))
+    FOUND_RELEASES=($(find ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -execdir pwd \;))
     for rel in "${FOUND_RELEASES[@]}"; do
         echo " - $(basename ${rel})"
     done
     exit 0;
 fi
 
-test $? -eq 0 || "Wrong number of arguments" 
+test ${#ARGS[@]} -eq 1 || error "Wrong number of arguments. Try '$( basename $0 )-h' for more information." 
 
 RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 
-test $? -eq 0 || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
+test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
 
 if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
     error "$( cat<<EOF
 
-It appears you're trying to run quick-start.sh from an environment
+It appears you're trying to run dbt-init.sh from an environment
 where another development area's been set up.  You'll want to run this
 from a clean shell. Exiting...     
 
@@ -245,7 +247,7 @@ test $? -eq 0 || error "There was a problem copying over the daq area signature 
 
 
 echo "Setting up the Python subsystem"
-create_pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
+bash dbt-create-pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
 
 test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 

@@ -4,7 +4,7 @@
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
-source ${HERE}/setup_tools.sh
+source ${HERE}/dbt-setup-tools.sh
 
 DBT_AREA_ROOT=$(find_work_area)
 if [[ -z ${DBT_AREA_ROOT} ]]; then
@@ -12,11 +12,12 @@ if [[ -z ${DBT_AREA_ROOT} ]]; then
 fi
 
 if [[ $# -ne 1 ]]; then
-    log_error "Wrong mumber of arguments"
+    error_preface "Wrong mumber of arguments"
     cat << EOU
 Usage: $(basename $0) <path to requirements.txt>:
 
 EOU
+    exit 1
 fi
 
 PYENV_REQS=$1

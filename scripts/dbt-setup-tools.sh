@@ -11,7 +11,7 @@ COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
 COL_NULL="\e[0m"
 
-source ${HERE}/setup_constants.sh
+source ${HERE}/dbt-setup-constants.sh
 
 #------------------------------------------------------------------------------
 function setup_ups_product_areas() {

@@ -3,7 +3,7 @@
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
-source ${DBT_ROOT}/scripts/setup_tools.sh
+source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
 
 BASEDIR=$(find_work_area)
 test -n $BASEDIR || error "DBT Work area directory not found. Exiting..." 
@@ -57,7 +57,7 @@ if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
  
 error "$( cat<<EOF
 
-It appears you haven't yet executed "setup_build_environment"; please source it before running this 
+It appears you haven't yet executed "dbt-setup-build-environment"; please source it before running this 
 script. Exiting...
 
 EOF
