@@ -58,6 +58,9 @@ fi
 DAQ_SCRIPT_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/scripts')
 DAQ_TEST_SCRIPT_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
 DAQ_PYTHON_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/python')
+# For when configuration files will be introduces
+# DAQ_SHARE_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -exec dirname \{\} \;)
+DAQ_SHARE_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/schema' -exec dirname \{\} \;)
 
 DAQ_APPS_PATHS=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
 DAQ_LIB_PATHS=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')
@@ -69,11 +72,12 @@ add_many_paths PATH ${DAQ_APPS_PATHS} ${DAQ_SCRIPT_PATHS} ${DAQ_TEST_APPS_PATHS}
 add_many_paths PYTHONPATH ${DAQ_PYTHON_PATHS}
 add_many_paths LD_LIBRARY_PATH ${DAQ_LIB_PATHS}
 add_many_paths CET_PLUGIN_PATH ${DAQ_PLUGS_PATHS} ${DAQ_TEST_PLUGS_PATHS}
+add_many_paths DAQ_SHARE_PATH ${DAQ_SHARE_PATHS}
 
-unset DAQ_SCRIPT_PATHS DAQ_TEST_SCRIPT_PATHS DAQ_PYTHON_PATHS
+unset DAQ_SCRIPT_PATHS DAQ_TEST_SCRIPT_PATHS DAQ_PYTHON_PATHS DAQ_SHARE_PATHS
 unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_PLUGS_PATHS DAQ_TEST_APPS_PATHS DAQ_TEST_PLUGS_PATHS
 
-export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH
+export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DAQ_SHARE_PATH
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
 echo
