@@ -76,7 +76,7 @@ if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     exit 0;
 fi
 
-test ${#ARGS[@]} -eq 1 || error "Wrong number of arguments. Try '$( basename $0 )-h' for more information." 
+test ${#ARGS[@]} -eq 1 || error "Wrong number of arguments. Try '$( basename $0 ) -h' for more information." 
 
 RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
