@@ -14,19 +14,30 @@ SRCDIR=${BASEDIR}/sourcecode
 #########################################################################################
 
 run_tests=false
+package_to_test=
 clean_build=false 
 verbose=false
-pkgname_specified=false
 perform_install=false
 lint=false
+package_to_lint=
 
-for arg in "$@" ; do
+args=("$@")
+
+while ((i_arg < $#)); do
+
+  arg=${args[$i_arg]}
+  nextarg=
+  if ((i_arg + 1 < $#)); then
+      nextarg=${args[$((i_arg+1))]}
+  fi
+  i_arg=$((i_arg + 1))
+
   if [[ "$arg" == "--help" ]]; then
-    echo "Usage: "./$( basename $0 )" --clean --unittest --lint --install --verbose --help "
+    echo "Usage: "./$( basename $0 )" --clean --unittest <optional package name> --lint <optional package name> --install --verbose --help "
     echo
     echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
-    echo " --unittest means that unit test executables found in ./build/*/unittest are all run"
-    echo " --lint means you check for deviations from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md" 
+    echo " --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided"
+    echo " --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided"
     echo " --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build"
     echo " --verbose means that you want verbose output from the compiler"
 
@@ -40,8 +51,16 @@ for arg in "$@" ; do
     clean_build=true
   elif [[ "$arg" == "--unittest" ]]; then
     run_tests=true
+    if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
+	package_to_test=$nextarg
+	i_arg=$((i_arg + 1))
+    fi
   elif [[ "$arg" == "--lint" ]]; then
     lint=true
+    if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
+	package_to_lint=$nextarg
+	i_arg=$((i_arg + 1))
+    fi
   elif [[ "$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "$arg" == "--pkgname" ]]; then
@@ -51,6 +70,7 @@ for arg in "$@" ; do
   else
     error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
   fi
+
 done
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
@@ -260,7 +280,13 @@ if $run_tests ; then
 
      cd $BUILDDIR
 
-     for pkgname in $( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
+     if [[ -z $package_to_test ]]; then
+	 package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
+     else
+	 package_list=$package_to_test
+     fi
+
+     for pkgname in $package_list ; do
 
        unittestdirs=$( find $BUILDDIR/$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
 
@@ -307,7 +333,13 @@ if $lint; then
       git clone https://github.com/DUNE-DAQ/styleguide.git
     fi
 
-    for pkgdir in $( find build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles ); do
+    if [[ -z $package_to_lint ]]; then
+	package_list=$( find build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
+    else
+	package_list=$package_to_lint
+    fi
+
+    for pkgdir in $package_list; do
         pkgname=$( echo $pkgdir | sed -r 's!.*/(.*)!\1!' )
         ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/$pkgname
     done
