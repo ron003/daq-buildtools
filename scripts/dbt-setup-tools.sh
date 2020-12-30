@@ -78,6 +78,17 @@ function find_work_area() {
 
 
 #------------------------------------------------------------------------------
+function list_releases() {
+    # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
+    FOUND_RELEASES=($(PATH=/usr/bin find ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -execdir pwd \;))
+    for rel in "${FOUND_RELEASES[@]}"; do
+        echo " - $(basename ${rel})"
+    done 
+}
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
 function add_path() {
   # Assert that we got enough arguments
   if [[ $# -ne 2 ]]; then
