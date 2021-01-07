@@ -77,7 +77,7 @@ if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
  
 error "$( cat<<EOF
 
-It appears you haven't yet executed "dbt-setup-build-environment"; please source it before running this 
+It appears you haven't yet executed "dbt-setup-build-environment"; please do so before running this 
 script. Exiting...
 
 EOF
@@ -134,7 +134,9 @@ fi
 starttime_cfggen_d=$( date )
 starttime_cfggen_s=$( date +%s )
 
-${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
+# Will use $cmd if needed for error message
+cmd="${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
+     ${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
 endtime_cfggen_d=$( date )
@@ -156,8 +158,11 @@ mv -f CMakeCache.txt CMakeCache.txt.most_recent_failure
 
 error "$( cat <<EOF 
 
-There was a problem running "cmake $SRCDIR" from 
-$BUILDDIR (i.e., CMake's config+generate stages). 
+This script ran into a problem running 
+
+$cmd 
+
+from $BUILDDIR (i.e., CMake's config+generate stages). 
 Scroll up for details or look at the build log via 
 
 more ${build_log}
@@ -195,7 +200,9 @@ if $verbose; then
   build_options=" --verbose"
 fi
 
-${UB_CMAKE} --build . $build_options -- $nprocs_argument |& tee -a $build_log
+# Will use $cmd if needed for error message
+cmd="${UB_CMAKE} --build . $build_options -- $nprocs_argument"
+     ${UB_CMAKE} --build . $build_options -- $nprocs_argument |& tee -a $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
@@ -209,7 +216,11 @@ else
 
 error "$( cat<<EOF 
 
-There was a problem running "cmake --build ." from $BUILDDIR (i.e.,
+This script ran into a problem running 
+
+$cmd 
+
+from $BUILDDIR (i.e.,
 CMake's build stage). Scroll up for details or look at the build log via 
 
 more ${build_log}
@@ -253,14 +264,16 @@ fi
 if $perform_install ; then
   cd $BUILDDIR
 
-  cmake --build . --target install -- $nprocs_argument
+# Will use $cmd if needed for error message
+cmd="cmake --build . --target install -- $nprocs_argument"
+     cmake --build . --target install -- $nprocs_argument
  
   if [[ "$?" == "0" ]]; then
     echo 
     echo "Installation complete."
     echo "This implies your code successfully compiled before installation; you can either scroll up or run \"more $build_log\" to see build results"
   else
-      error "Installation failed. There was a problem running \"cmake --build . --target install -- $nprocs_argument\". Exiting.."
+      error "Installation failed. There was a problem running \"$cmd\". Exiting.."
 
   fi
  

@@ -7,15 +7,15 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    $( basename $0 ) <dunedaq release>  -r/--release-base-path <path to release area> <installation dir>
+    $( basename $0 ) <dunedaq-release>  -r/--release-path <path to release area>
 
-To list the available DUNE DAQ:
+To list the available DUNE DAQ releases:
 
     $( basename $0 ) --list
 
 Arguments and options:
 
-    release-name: is the name of the release the new work are will be based on (e.g. dunedaq-v2.0.0)
+    dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.0.0)
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp)
 
@@ -82,7 +82,7 @@ test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist
 if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
     error "$( cat<<EOF
 
-It appears you're trying to run dbt-init.sh from an environment
+It appears you're trying to run this script from an environment
 where another development area's been set up.  You'll want to run this
 from a clean shell. Exiting...     
 
