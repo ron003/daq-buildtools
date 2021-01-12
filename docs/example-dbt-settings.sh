@@ -1,5 +1,8 @@
 dune_products_dirs=(
-    "/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products"
+    "/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp/dunedaq-v2.0.0/externals"
+    "/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp/dunedaq-v2.0.0/packages"
+    #"/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products_dev"
+    #"/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/products"
 )
 
 dune_products=(
@@ -23,4 +26,4 @@ dune_products=(
     "listrev v2_0_0 e19:prof"
 )
 
-dune_python="v3_8_3b"
+dune_python_version="v3_8_3b"
