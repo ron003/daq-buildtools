@@ -16,6 +16,7 @@ SRCDIR=${BASEDIR}/sourcecode
 run_tests=false
 package_to_test=
 clean_build=false 
+debug_build=false
 verbose=false
 perform_install=false
 lint=false
@@ -33,9 +34,10 @@ while ((i_arg < $#)); do
   i_arg=$((i_arg + 1))
 
   if [[ "$arg" == "--help" ]]; then
-    echo "Usage: "./$( basename $0 )" --clean --unittest <optional package name> --lint <optional package name> --install --verbose --help "
+    echo "Usage: "./$( basename $0 )" --clean --debug --unittest <optional package name> --lint <optional package name> --install --verbose --help "
     echo
     echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
+    echo " --debug means you want to build your software with optimizations off and debugging info on"
     echo " --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided"
     echo " --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided"
     echo " --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build"
@@ -49,6 +51,8 @@ while ((i_arg < $#)); do
 
   elif [[ "$arg" == "--clean" ]]; then
     clean_build=true
+  elif [[ "$arg" == "--debug" ]]; then
+    debug_build=true
   elif [[ "$arg" == "--unittest" ]]; then
     run_tests=true
     if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
@@ -82,6 +86,10 @@ script. Exiting...
 
 EOF
 )"
+fi
+
+if $debug_build ; then
+    export DBT_DEBUG=true
 fi
 
 test -d $BUILDDIR || error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
@@ -135,7 +143,7 @@ if ! [ -e CMakeCache.txt ]; then
   starttime_cfggen_s=$( date +%s )
 
 # Will use $cmd if needed for error message
-cmd="${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
+cmd="${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${DBT_DEBUG} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
 ${cmd} |& sed -e 's/\r/\n/g'|& tee $build_log
 
