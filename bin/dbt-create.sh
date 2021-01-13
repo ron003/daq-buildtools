@@ -17,7 +17,7 @@ Arguments and options:
 
     dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.0.0)
     -l/--list: show the list of available releases
-    -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp)
+    -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases)
 
 EOU
 }
@@ -25,7 +25,7 @@ EOU
 
 EMPTY_DIR_CHECK=true
 EDITS_CHECK=true
-RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases-tmp"
+RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases"
 BASEDIR=$PWD
 SHOW_RELEASE_LIST=false
 
