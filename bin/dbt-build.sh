@@ -123,40 +123,41 @@ fi
 # CMakeCache.txt to tell us whether this has happened; notice that it
 # gets renamed if it's produced but there's a failure.
 
-if ! [ -e CMakeCache.txt ];then
+if ! [ -e CMakeCache.txt ]; then
 
-generator_arg=
-if [ "x${SETUP_NINJA}" != "x" ]; then
-  generator_arg="-G Ninja"
-fi
+  generator_arg=
+  if [ "x${SETUP_NINJA}" != "x" ]; then
+    generator_arg="-G Ninja"
+  fi
 
 
-starttime_cfggen_d=$( date )
-starttime_cfggen_s=$( date +%s )
+  starttime_cfggen_d=$( date )
+  starttime_cfggen_s=$( date +%s )
 
 # Will use $cmd if needed for error message
 cmd="${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
-     ${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR |& tee $build_log
 
-retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
-endtime_cfggen_d=$( date )
-endtime_cfggen_s=$( date +%s )
+${cmd} |& sed -e 's/\r/\n/g'|& tee $build_log
 
-if [[ "$retval" == "0" ]]; then
+  retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
+  endtime_cfggen_d=$( date )
+  endtime_cfggen_s=$( date +%s )
 
-sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config+generate stage is skipped in $build_script if this file exists' $BUILDDIR/CMakeCache.txt
-sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' $BUILDDIR/CMakeCache.txt
+  if [[ "$retval" == "0" ]]; then
 
-cfggentime=$(( endtime_cfggen_s - starttime_cfggen_s ))
-echo "CMake's config+generate stages took $cfggentime seconds"
-echo "Start time: $starttime_cfggen_d"
-echo "End time:   $endtime_cfggen_d"
+    sed -i -r '1 i\# If you want to add or edit a variable, be aware that the config+generate stage is skipped in $build_script if this file exists' $BUILDDIR/CMakeCache.txt
+    sed -i -r '2 i\# Consider setting variables you want cached with the CACHE option in the relevant CMakeLists.txt file instead' $BUILDDIR/CMakeCache.txt
 
-else
+    cfggentime=$(( endtime_cfggen_s - starttime_cfggen_s ))
+    echo "CMake's config+generate stages took $cfggentime seconds"
+    echo "Start time: $starttime_cfggen_d"
+    echo "End time:   $endtime_cfggen_d"
 
-mv -f CMakeCache.txt CMakeCache.txt.most_recent_failure
+  else
 
-error "$( cat <<EOF 
+    mv -f CMakeCache.txt CMakeCache.txt.most_recent_failure
+
+    error "$( cat <<EOF 
 
 This script ran into a problem running 
 
@@ -170,12 +171,12 @@ more ${build_log}
 Exiting...
 
 EOF
-)"
-fi
+    )"
+  fi
 
 else
 
-echo "The config+generate stage was skipped as CMakeCache.txt was already found in $BUILDDIR"
+  echo "The config+generate stage was skipped as CMakeCache.txt was already found in $BUILDDIR"
 
 fi # !-e CMakeCache.txt
 
@@ -183,10 +184,10 @@ nprocs=$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
 nprocs_argument=""
  
 if [[ -n $nprocs && $nprocs =~ ^[0-9]+$ ]]; then
-    echo "This script believes you have $nprocs processors available on this system, and will use as many of them as it can"
-    nprocs_argument=" -j $nprocs"
+  echo "This script believes you have $nprocs processors available on this system, and will use as many of them as it can"
+  nprocs_argument=" -j $nprocs"
 else
-    echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
+  echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
 fi
 
 
@@ -202,7 +203,8 @@ fi
 
 # Will use $cmd if needed for error message
 cmd="${UB_CMAKE} --build . $build_options -- $nprocs_argument"
-     ${UB_CMAKE} --build . $build_options -- $nprocs_argument |& tee -a $build_log
+
+${cmd} |& sed -e 's/\r/\n/g' |& tee -a $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
@@ -210,11 +212,11 @@ endtime_build_s=$( date +%s )
 
 if [[ "$retval" == "0" ]]; then
 
-buildtime=$((endtime_build_s - starttime_build_s))
+  buildtime=$((endtime_build_s - starttime_build_s))
 
 else
 
-error "$( cat<<EOF 
+  error "$( cat<<EOF 
 
 This script ran into a problem running 
 
@@ -228,9 +230,9 @@ more ${build_log}
 Exiting...
 
 EOF
-)"
+  )"
 
-   exit 40
+  exit 40
 fi
 
 num_estimated_warnings=$( grep "warning: " ${build_log} | wc -l )
@@ -251,7 +253,8 @@ echo "Start time: $starttime_build_d"
 echo "End time:   $endtime_build_d"
 echo
 echo "Output of build contains an estimated $num_estimated_warnings warnings, and can be viewed later via: "
-echo "\"more ${build_log}\""
+echo 
+echo "   more ${build_log}"
 echo
 
 if [[ -n $cfggentime ]]; then
@@ -282,56 +285,56 @@ fi
 
 
 if $run_tests ; then
-     COL_YELLOW="\e[33m"
-     COL_NULL="\e[0m"
-     COL_RED="\e[31m"
-     echo 
-     echo
-     echo
-     echo 
-     test_log=$LOGDIR/unit_tests_$( date | sed -r 's/[: ]+/_/g' ).log
+  COL_YELLOW="\e[33m"
+  COL_NULL="\e[0m"
+  COL_RED="\e[31m"
+  echo 
+  echo
+  echo
+  echo 
+  test_log=$LOGDIR/unit_tests_$( date | sed -r 's/[: ]+/_/g' ).log
 
-     cd $BUILDDIR
+  cd $BUILDDIR
 
-     if [[ -z $package_to_test ]]; then
-	 package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
-     else
-	 package_list=$package_to_test
-     fi
+  if [[ -z $package_to_test ]]; then
+    package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
+  else
+	  package_list=$package_to_test
+  fi
 
-     for pkgname in $package_list ; do
+  for pkgname in $package_list ; do
 
-       unittestdirs=$( find $BUILDDIR/$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
+    unittestdirs=$( find $BUILDDIR/$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
 
-       if [[ -z $unittestdirs ]]; then
-             echo
-             echo -e "${COL_RED}No unit tests have been written for $pkgname${COL_NULL}"
-             echo
-             continue
-       fi
+    if [[ -z $unittestdirs ]]; then
+      echo
+      echo -e "${COL_RED}No unit tests have been written for $pkgname${COL_NULL}"
+      echo
+      continue
+    fi
 
-       num_unit_tests=0
+    num_unit_tests=0
 
-       for unittestdir in $unittestdirs; do
-           echo
-           echo
-           echo "RUNNING UNIT TESTS IN $unittestdir"
-           echo "======================================================================"
-           for unittest in $unittestdir/* ; do
-               if [[ -x $unittest ]]; then
-                   echo
-                   echo -e "${COL_YELLOW}Start of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
-                   $unittest -l all |& tee -a $test_log
-                   echo -e "${COL_YELLOW}End of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
-                   num_unit_tests=$((num_unit_tests + 1))
-               fi
-           done
- 
-       done
- 
-       echo 
-       echo -e "${COL_YELLOW}Testing complete for package \"$pkgname\". Ran $num_unit_tests unit test suites.${COL_NULL}"
-     done
+    for unittestdir in $unittestdirs; do
+      echo
+      echo
+      echo "RUNNING UNIT TESTS IN $unittestdir"
+      echo "======================================================================"
+      for unittest in $unittestdir/* ; do
+        if [[ -x $unittest ]]; then
+          echo
+          echo -e "${COL_YELLOW}Start of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
+          $unittest -l all |& tee -a $test_log
+          echo -e "${COL_YELLOW}End of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
+          num_unit_tests=$((num_unit_tests + 1))
+        fi
+      done
+
+    done
+
+    echo 
+    echo -e "${COL_YELLOW}Testing complete for package \"$pkgname\". Ran $num_unit_tests unit test suites.${COL_NULL}"
+  done
      
      echo
      echo "Test results are saved in $test_log"
@@ -339,23 +342,23 @@ if $run_tests ; then
 fi
 
 if $lint; then
-    cd $BASEDIR
+  cd $BASEDIR
 
-    if [[ ! -d ./styleguide ]]; then
-      echo "Cloning styleguide into $BASEDIR so linting can be applied"
-      git clone https://github.com/DUNE-DAQ/styleguide.git
-    fi
+  if [[ ! -d ./styleguide ]]; then
+    echo "Cloning styleguide into $BASEDIR so linting can be applied"
+    git clone https://github.com/DUNE-DAQ/styleguide.git
+  fi
 
-    if [[ -z $package_to_lint ]]; then
-	package_list=$( find build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
-    else
-	package_list=$package_to_lint
-    fi
+  if [[ -z $package_to_lint ]]; then
+    package_list=$( find build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
+  else
+    package_list=$package_to_lint
+  fi
 
-    for pkgdir in $package_list; do
-        pkgname=$( echo $pkgdir | sed -r 's!.*/(.*)!\1!' )
-        ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/$pkgname
-    done
+  for pkgdir in $package_list; do
+    pkgname=$( echo $pkgdir | sed -r 's!.*/(.*)!\1!' )
+    ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/$pkgname
+  done
 fi
 
 

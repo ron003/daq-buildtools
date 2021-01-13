@@ -55,29 +55,29 @@ script won't try to source it
 EOF
 fi
 
-DAQ_SCRIPT_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/scripts')
-DAQ_TEST_SCRIPT_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
-DAQ_PYTHON_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/python')
+DUNEDAQ_SCRIPT_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/scripts')
+DUNEDAQ_TEST_SCRIPT_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
+DUNEDAQ_PYTHON_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/python')
 # For when configuration files will be introduces
-# DAQ_SHARE_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -exec dirname \{\} \;)
-DAQ_SHARE_PATHS=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/schema' -exec dirname \{\} \;)
+# DUNEDAQ_SHARE_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -exec dirname \{\} \;)
+DUNEDAQ_SHARE_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/schema' -exec dirname \{\} \;)
 
-DAQ_APPS_PATHS=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
-DAQ_LIB_PATHS=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')
-DAQ_PLUGS_PATHS=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '/*plugins')
-DAQ_TEST_APPS_PATHS=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/apps')
-DAQ_TEST_PLUGS_PATHS=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/plugins')
+DUNEDAQ_APPS_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
+DUNEDAQ_LIB_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')
+DUNEDAQ_PLUGS_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '/*plugins')
+DUNEDAQ_TEST_APPS_PATH=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/apps')
+DUNEDAQ_TEST_PLUGS_PATH=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/plugins')
 
-add_many_paths PATH ${DAQ_APPS_PATHS} ${DAQ_SCRIPT_PATHS} ${DAQ_TEST_APPS_PATHS} ${DAQ_TEST_SCRIPT_PATHS}
-add_many_paths PYTHONPATH ${DAQ_PYTHON_PATHS}
-add_many_paths LD_LIBRARY_PATH ${DAQ_LIB_PATHS}
-add_many_paths CET_PLUGIN_PATH ${DAQ_PLUGS_PATHS} ${DAQ_TEST_PLUGS_PATHS}
-add_many_paths DAQ_SHARE_PATH ${DAQ_SHARE_PATHS}
+add_many_paths PATH ${DUNEDAQ_APPS_PATH} ${DUNEDAQ_SCRIPT_PATH} ${DUNEDAQ_TEST_APPS_PATH} ${DUNEDAQ_TEST_SCRIPT_PATH}
+add_many_paths PYTHONPATH ${DUNEDAQ_PYTHON_PATH}
+add_many_paths LD_LIBRARY_PATH ${DUNEDAQ_LIB_PATH}
+add_many_paths CET_PLUGIN_PATH ${DUNEDAQ_PLUGS_PATH} ${DUNEDAQ_TEST_PLUGS_PATH}
+add_many_paths DUNEDAQ_SHARE_PATH ${DUNEDAQ_SHARE_PATH}
 
-unset DAQ_SCRIPT_PATHS DAQ_TEST_SCRIPT_PATHS DAQ_PYTHON_PATHS DAQ_SHARE_PATHS
-unset DAQ_APPS_PATHS DAQ_LIB_PATHS DAQ_PLUGS_PATHS DAQ_TEST_APPS_PATHS DAQ_TEST_PLUGS_PATHS
+unset DUNEDAQ_SCRIPT_PATH DUNEDAQ_TEST_SCRIPT_PATH DUNEDAQ_PYTHON_PATH DUNEDAQ_SHARE_PATH
+unset DUNEDAQ_APPS_PATH DUNEDAQ_LIB_PATH DUNEDAQ_PLUGS_PATH DUNEDAQ_TEST_APPS_PATH DUNEDAQ_TEST_PLUGS_PATH
 
-export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DAQ_SHARE_PATH
+export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
 echo
