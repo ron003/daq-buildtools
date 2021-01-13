@@ -6,7 +6,6 @@ source ${HERE}/dbt-setup-tools.sh
 
 DBT_AREA_ROOT=$(find_work_area)
 
-SRC_DIR="${DBT_AREA_ROOT}/sourcecode"
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
     
@@ -55,12 +54,12 @@ script won't try to source it
 EOF
 fi
 
-DUNEDAQ_SCRIPT_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/scripts')
-DUNEDAQ_TEST_SCRIPT_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
-DUNEDAQ_PYTHON_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/python')
+DUNEDAQ_SCRIPT_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/scripts')
+DUNEDAQ_TEST_SCRIPT_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
+DUNEDAQ_PYTHON_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/python')
 # For when configuration files will be introduces
-# DUNEDAQ_SHARE_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -exec dirname \{\} \;)
-DUNEDAQ_SHARE_PATH=$(find -L $SRC_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/schema' -exec dirname \{\} \;)
+# DUNEDAQ_SHARE_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -exec dirname \{\} \;)
+DUNEDAQ_SHARE_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/schema' -exec dirname \{\} \;)
 
 DUNEDAQ_APPS_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
 DUNEDAQ_LIB_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')
