@@ -55,7 +55,7 @@ EOF
 fi
 
 DUNEDAQ_SCRIPT_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/scripts')
-DUNEDAQ_TEST_SCRIPT_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
+DUNEDAQ_TEST_SCRIPT_PATH=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
 DUNEDAQ_PYTHON_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/python')
 # For when configuration files will be introduces
 # DUNEDAQ_SHARE_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -exec dirname \{\} \;)
