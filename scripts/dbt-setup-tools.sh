@@ -11,17 +11,20 @@ COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
 COL_NULL="\e[0m"
 
-source ${HERE}/setup_constants.sh
+source ${HERE}/dbt-setup-constants.sh
 
 #------------------------------------------------------------------------------
 function setup_ups_product_areas() {
   
   if [ -z "${dune_products_dirs}" ]; then
-    echo "UPS product directories variable (dune_products_dirs) undefined";
+    echo "UPS product directories variable (dune_products_dirs) undefined; no products areas will be set up" >&2
   fi
 
   for proddir in ${dune_products_dirs[@]}; do
       source ${proddir}/setup
+      if ! [[ $? -eq 0 ]]; then
+	  echo "Warning: unable to set up products area \"${proddir}\"" >&2
+      fi
   done
 
 }
@@ -41,7 +44,7 @@ function setup_ups_products() {
   for prod in "${dune_products[@]}"; do
       prodArr=(${prod})
 
-      setup_cmd="setup ${prodArr[0]} ${prodArr[1]}"
+      setup_cmd="setup ${prodArr[0]//-/_} ${prodArr[1]}"
       if [[ ${#prodArr[@]} -eq 3 ]]; then
           setup_cmd="${setup_cmd} -q ${prodArr[2]}"
       fi
@@ -70,6 +73,17 @@ function find_work_area() {
   done
 
   echo $(dirname ${WA_PATH})
+}
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+function list_releases() {
+    # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
+    FOUND_RELEASES=($(PATH=/usr/bin find ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -execdir pwd \;))
+    for rel in "${FOUND_RELEASES[@]}"; do
+        echo " - $(basename ${rel})"
+    done 
 }
 #------------------------------------------------------------------------------
 
@@ -112,3 +126,32 @@ function add_many_paths() {
 }
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+function error_preface() {
+
+  for dbt_file in "${BASH_SOURCE[@]}"; do
+    if ! [[ "${BASH_SOURCE[0]}" =~ "$dbt_file" ]]; then
+	    break
+	   fi
+  done
+
+  dbt_file=$( basename $dbt_file )
+
+  timenow="date \"+%D %T\""
+  echo -n "ERROR: [`eval $timenow`] [${dbt_file}]:" >&2
+}
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+function error() {
+
+    error_preface
+    echo -e " ${COL_RED} ${1} ${COL_NULL} " >&2
+
+    if [[ -x ${BASH_SOURCE[-1]} ]]; then
+        exit 100
+    fi
+}
+#------------------------------------------------------------------------------
+
+  
