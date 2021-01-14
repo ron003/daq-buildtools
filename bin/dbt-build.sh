@@ -18,6 +18,7 @@ package_to_test=
 clean_build=false 
 debug_build=false
 verbose=false
+cmake_trace=false
 perform_install=false
 lint=false
 package_to_lint=
@@ -42,6 +43,7 @@ while ((i_arg < $#)); do
     echo " --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided"
     echo " --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build"
     echo " --verbose means that you want verbose output from the compiler"
+    echo " --cmake-trace enable cmake tracing"
 
     echo
     echo "All arguments are optional. With no arguments, CMake will typically just run "
@@ -67,6 +69,8 @@ while ((i_arg < $#)); do
     fi
   elif [[ "$arg" == "--verbose" ]]; then
     verbose=true
+  elif [[ "$arg" == "--cmake-trace" ]]; then
+    cmake_trace=true
   elif [[ "$arg" == "--pkgname" ]]; then
     error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
   elif [[ "$arg" == "--install" ]]; then
@@ -124,6 +128,11 @@ if [[ -n $( which unbuffer ) ]]; then
 else
   UB_CMAKE="cmake"
 fi
+
+if $cmake_trace; then
+  UB_CMAKE="${UB_CMAKE} --trace"
+fi
+
 
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
@@ -206,11 +215,15 @@ starttime_build_s=$( date +%s )
 
 build_options=""
 if $verbose; then
-  build_options=" --verbose"
+  build_options="${build_options} --verbose"
+fi
+
+if ! $cmake_trace; then
+  build_options="${build_options} $nprocs_argument"
 fi
 
 # Will use $cmd if needed for error message
-cmd="${UB_CMAKE} --build . $build_options -- $nprocs_argument"
+cmd="${UB_CMAKE} --build . $build_options"
 
 ${cmd} |& sed -e 's/\r/\n/g' |& tee -a $build_log
 
