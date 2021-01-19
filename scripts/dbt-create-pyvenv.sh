@@ -45,8 +45,8 @@ if [ -z "$SETUP_PYTHON" ]; then
 
     setup_ups_product_areas
 
-    setup python ${dune_python_version}
-    test $? -eq 0 || error "The \"setup python ${dune_python_version}\" call failed. Exiting..." 
+    setup -B python ${dune_python_version}
+    test $? -eq 0 || error "The \"setup -B python ${dune_python_version}\" call failed. Exiting..." 
 
 else
     echo -e "INFO [`eval $timenow`]: Python UPS product $PYTHON_VERSION has been set up."
