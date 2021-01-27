@@ -19,7 +19,7 @@ clean_build=false
 debug_build=false
 verbose=false
 cmake_trace=false
-single_proc=false
+declare -i n_jobs=0
 perform_install=false
 lint=false
 package_to_lint=
@@ -59,21 +59,24 @@ while ((i_arg < $#)); do
   elif [[ "$arg" == "--unittest" ]]; then
     run_tests=true
     if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
-	package_to_test=$nextarg
-	i_arg=$((i_arg + 1))
+        package_to_test=$nextarg
+        i_arg=$((i_arg + 1))
     fi
   elif [[ "$arg" == "--lint" ]]; then
     lint=true
     if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
-	package_to_lint=$nextarg
-	i_arg=$((i_arg + 1))
+        package_to_lint=$nextarg
+        i_arg=$((i_arg + 1))
     fi
   elif [[ "$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "$arg" == "--cmake-trace" ]]; then
     cmake_trace=true
-  elif [[ "$arg" == "--single-proc" ]]; then
-    single_proc=true
+  elif [[ "$arg" == "--jobs" ]]; then
+    if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
+        n_jobs=$nextarg
+        i_arg=$((i_arg + 1))
+    fi
   elif [[ "$arg" == "--pkgname" ]]; then
     error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
   elif [[ "$arg" == "--install" ]]; then
@@ -126,11 +129,7 @@ fi
 
 build_log=$LOGDIR/build_attempt_$( date | sed -r 's/[: ]+/_/g' ).log
 
-if [[ -n $( which unbuffer ) ]]; then
-  UB_CMAKE="unbuffer cmake"
-else
-  UB_CMAKE="cmake"
-fi
+CMAKE="cmake"
 
 if $cmake_trace; then
   UB_CMAKE="${UB_CMAKE} --trace"
@@ -155,10 +154,10 @@ if ! [ -e CMakeCache.txt ]; then
   starttime_cfggen_s=$( date +%s )
 
 # Will use $cmd if needed for error message
-cmd="${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${DBT_DEBUG} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
+cmd="${CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${DBT_DEBUG} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
-# ${cmd} |& sed -e 's/\r/\n/g'|& tee $build_log
-${cmd} |& tee $build_log
+echo "Executing '$cmd'"
+script -qefc "${cmd} |& sed -e 's/\r/\n/g' " $build_log
 
   retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
@@ -204,7 +203,7 @@ fi # !-e CMakeCache.txt
 nprocs=$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
 nprocs_argument=""
 
-if ! $single_proc; then 
+if (( $n_jobs <= 0)); then 
   if [[ -n $nprocs && $nprocs =~ ^[0-9]+$ ]]; then
     echo "This script believes you have $nprocs processors available on this system, and will use as many of them as it can"
     nprocs_argument=" -j $nprocs"
@@ -212,7 +211,7 @@ if ! $single_proc; then
     echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
   fi
 else
-  nprocs_argument=" -j 1"
+  nprocs_argument=" -j ${n_jobs}"
 fi
 
 
@@ -230,11 +229,9 @@ if ! $cmake_trace ; then
 fi
 
 # Will use $cmd if needed for error message
-cmd="${UB_CMAKE} --build . $build_options"
-echo $cmd
-# ${cmd} |& sed -u -e 's/\r/\n/' |& tee -a $build_log
-${cmd} |& sed -u -e 's|\r|\n|g' |& tee -a $build_log
-# ${cmd} |& tee -a $build_log
+cmd="${CMAKE} --build . $build_options"
+echo "Executing '$cmd'"
+script -qefc "${cmd} |& sed -e 's/\r/\n/g'" $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
@@ -331,7 +328,7 @@ if $run_tests ; then
   if [[ -z $package_to_test ]]; then
     package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
   else
-	  package_list=$package_to_test
+          package_list=$package_to_test
   fi
 
   for pkgname in $package_list ; do
