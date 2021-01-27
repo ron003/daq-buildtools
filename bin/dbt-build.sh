@@ -19,6 +19,7 @@ clean_build=false
 debug_build=false
 verbose=false
 cmake_trace=false
+single_proc=false
 perform_install=false
 lint=false
 package_to_lint=
@@ -71,6 +72,8 @@ while ((i_arg < $#)); do
     verbose=true
   elif [[ "$arg" == "--cmake-trace" ]]; then
     cmake_trace=true
+  elif [[ "$arg" == "--single-proc" ]]; then
+    single_proc=true
   elif [[ "$arg" == "--pkgname" ]]; then
     error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
   elif [[ "$arg" == "--install" ]]; then
@@ -154,7 +157,8 @@ if ! [ -e CMakeCache.txt ]; then
 # Will use $cmd if needed for error message
 cmd="${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${DBT_DEBUG} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
-${cmd} |& sed -e 's/\r/\n/g'|& tee $build_log
+# ${cmd} |& sed -e 's/\r/\n/g'|& tee $build_log
+${cmd} |& tee $build_log
 
   retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
@@ -199,14 +203,17 @@ fi # !-e CMakeCache.txt
 
 nprocs=$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
 nprocs_argument=""
- 
-if [[ -n $nprocs && $nprocs =~ ^[0-9]+$ ]]; then
-  echo "This script believes you have $nprocs processors available on this system, and will use as many of them as it can"
-  nprocs_argument=" -j $nprocs"
-else
-  echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
-fi
 
+if ! $single_proc; then 
+  if [[ -n $nprocs && $nprocs =~ ^[0-9]+$ ]]; then
+    echo "This script believes you have $nprocs processors available on this system, and will use as many of them as it can"
+    nprocs_argument=" -j $nprocs"
+  else
+    echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
+  fi
+else
+  nprocs_argument=" -j 1"
+fi
 
 
 
@@ -218,14 +225,16 @@ if $verbose; then
   build_options="${build_options} --verbose"
 fi
 
-if ! $cmake_trace; then
+if ! $cmake_trace ; then
   build_options="${build_options} $nprocs_argument"
 fi
 
 # Will use $cmd if needed for error message
 cmd="${UB_CMAKE} --build . $build_options"
-
-${cmd} |& sed -e 's/\r/\n/g' |& tee -a $build_log
+echo $cmd
+# ${cmd} |& sed -u -e 's/\r/\n/' |& tee -a $build_log
+${cmd} |& sed -u -e 's|\r|\n|g' |& tee -a $build_log
+# ${cmd} |& tee -a $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )

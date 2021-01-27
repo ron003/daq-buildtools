@@ -234,6 +234,10 @@ superproject_cmakeliststxt=${DBT_ROOT}/configs/CMakeLists.txt
 cp ${superproject_cmakeliststxt#$SRCDIR/} $SRCDIR
 test $? -eq 0 || error "There was a problem copying \"$superproject_cmakeliststxt\" to $SRCDIR. Exiting..."
 
+superproject_graphvizcmake=${DBT_ROOT}/configs/CMakeGraphVizOptions.cmake
+cp ${superproject_graphvizcmake#$SRCDIR/} $SRCDIR
+test $? -eq 0 || error "There was a problem copying \"$superproject_graphvizcmake\" to $SRCDIR. Exiting..."
+
 cp ${RELEASE_PATH}/${DAQ_BUILDORDER_PKGLIST} $SRCDIR
 test $? -eq 0 || error "There was a problem copying \"$superproject_buildorder\" to $SRCDIR. Exiting..."
 
