@@ -1,4 +1,6 @@
-#!/bin/env bash
+#!/usr/bin/env bash
+set -o errexit -o nounset -o pipefail
+IFS=$'\n\t\v'
 
 function print_usage() {
                 cat << EOU
@@ -79,7 +81,7 @@ RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 
 test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
 
-if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+if [[ -n ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
 
 It appears you're trying to run this script from an environment
