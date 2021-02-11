@@ -1,8 +1,3 @@
-#!/usr/bin/env bash
-set -o pipefail
-set -o nounset
-set +o errexit # we expect this file to be `source`d, prevent exiting user shell
-
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
@@ -68,3 +63,6 @@ fi
 export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
 echo
+
+
+
