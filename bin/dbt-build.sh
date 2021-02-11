@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-set -o errexit -o nounset -o pipefail
-IFS=$'\n\t\v'
+#!/bin/bash
 
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
@@ -8,7 +6,7 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
 
 BASEDIR=$(find_work_area)
-test -n ${BASEDIR:-} || error "DBT Work area directory not found. Exiting..." 
+test -n $BASEDIR || error "DBT Work area directory not found. Exiting..." 
 
 BUILDDIR=${BASEDIR}/build
 LOGDIR=${BASEDIR}/log
@@ -59,13 +57,13 @@ while ((i_arg < $#)); do
     debug_build=true
   elif [[ "$arg" == "--unittest" ]]; then
     run_tests=true
-    if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
+    if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
 	package_to_test=$nextarg
 	i_arg=$((i_arg + 1))
     fi
   elif [[ "$arg" == "--lint" ]]; then
     lint=true
-    if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
+    if [[ -n $nextarg && "$nextarg" =~ ^[^\-] ]]; then
 	package_to_lint=$nextarg
 	i_arg=$((i_arg + 1))
     fi
@@ -83,7 +81,7 @@ while ((i_arg < $#)); do
 
 done
 
-if [[ -z ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
+if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
  
 error "$( cat<<EOF
 
@@ -94,14 +92,14 @@ EOF
 )"
 fi
 
-if ${debug_build:-} ; then
+if $debug_build ; then
     export DBT_DEBUG=true
 fi
 
-test -d ${BUILDDIR:-} || error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
+test -d $BUILDDIR || error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
 cd $BUILDDIR
 
-if ${clean_build:-}; then 
+if $clean_build; then 
   
    # Want to be damn sure of we're in the right directory, rm -rf * is no joke...
 
@@ -131,7 +129,7 @@ else
   UB_CMAKE="cmake"
 fi
 
-if ${cmake_trace:-}; then
+if $cmake_trace; then
   UB_CMAKE="${UB_CMAKE} --trace"
 fi
 
