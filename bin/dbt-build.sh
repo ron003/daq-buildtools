@@ -317,6 +317,8 @@ if $run_tests ; then
 
   cd $BUILDDIR
 
+  source ${DBT_ROOT}/scripts/dbt-setup-runtime-environment.sh
+
   if [[ -z $package_to_test ]]; then
     package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
   else
