@@ -1,4 +1,6 @@
-#!/bin/env bash
+#!/usr/bin/env bash
+
+set -o errexit -o nounset -o pipefail
 
 function print_usage() {
                 cat << EOU
@@ -79,7 +81,7 @@ RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 
 test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
 
-if [[ -n $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
+if [[ -n ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
 
 It appears you're trying to run this script from an environment
@@ -141,12 +143,13 @@ if $EDITS_CHECK ; then
     code_desc=""
 
     # 2. Is it a tag?
-    the_tag=$(git describe --tags --exact-match HEAD 2> /dev/null )
+    the_tag= $( { git describe --tags --exact-match HEAD 2> /dev/null || true; } )
+
     if [[ $? -eq 0 ]]; then
         echo "Looking for updates of ${the_tag}"
         # 2.1. Yes, let's get the remote ref
         remote_ref=$(git ls-remote --tags $(git remote) tags ${the_tag} | cut -f1 )
-	code_desc="${the_tag} tag "
+	    code_desc="${the_tag} tag "
     else
         # 2.2. No, it's a branch.
         # Get the name of the upstream branch (if any)
