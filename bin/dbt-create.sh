@@ -24,7 +24,7 @@ EOU
 
 
 EMPTY_DIR_CHECK=true
-EDITS_CHECK=true
+EDITS_CHECK=false
 RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases"
 BASEDIR=$PWD
 SHOW_RELEASE_LIST=false
@@ -54,8 +54,8 @@ while true; do
         (-r|--release-path)
             RELEASE_BASEPATH=$2
             shift 2;;
-        (-e|--disable-edit-check)
-            EDITS_CHECK=false
+        (-e|--edit-check)
+            EDITS_CHECK=true
             shift;;
         (-h|--help)
             print_usage
