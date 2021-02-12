@@ -196,6 +196,8 @@ Exiting...
 
 EOF
     )"
+
+  exit 40
   fi
 
 else
@@ -311,8 +313,7 @@ if $perform_install ; then
     echo "Installation complete."
     echo "This implies your code successfully compiled before installation; you can either scroll up or run \"more $build_log\" to see build results"
   else
-      error "Installation failed. There was a problem running \"$cmd\". Exiting.."
-
+    error "Installation failed. There was a problem running \"$cmd\". Exiting.."
   fi
  
 fi
