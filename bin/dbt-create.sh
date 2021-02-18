@@ -26,7 +26,6 @@ EOU
 
 
 EMPTY_DIR_CHECK=true
-EDITS_CHECK=false
 RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases"
 BASEDIR=$PWD
 SHOW_RELEASE_LIST=false
@@ -56,9 +55,6 @@ while true; do
         (-r|--release-path)
             RELEASE_BASEPATH=$2
             shift 2;;
-        (-e|--edit-check)
-            EDITS_CHECK=true
-            shift;;
         (-h|--help)
             print_usage
             exit 0;;
@@ -130,102 +126,6 @@ EOF
     sleep 5
 
 fi
-
-
-if $EDITS_CHECK ; then
-
-    echo "Comparing local daq-buildtools code with code in the central repository..."
-
-    cd ${DBT_ROOT}
-
-    # 1. Get the local repo git ref
-    local_ref=$(git rev-parse HEAD)
-    code_desc=""
-
-    # 2. Is it a tag?
-    the_tag= $( { git describe --tags --exact-match HEAD 2> /dev/null || true; } )
-
-    if [[ $? -eq 0 ]]; then
-        echo "Looking for updates of ${the_tag}"
-        # 2.1. Yes, let's get the remote ref
-        remote_ref=$(git ls-remote --tags $(git remote) tags ${the_tag} | cut -f1 )
-	    code_desc="${the_tag} tag "
-    else
-        # 2.2. No, it's a branch.
-        # Get the name of the upstream branch (if any)
-        upstr_branch=$(git rev-parse --abbrev-ref @{u} 2> /dev/null )
-        if [[ $? -eq 0 ]]; then
-            echo "Looking for updates of branch ${upstr_branch}"
-            # 3. Get the remote ref for the upstream branch
-            remote_ref=$(git ls-remote ${upstr_branch/\// } 2> /dev/null | cut -f1)
-        else
-            remote_ref="<undefined>"
-        fi
-	code_desc="${upstr_branch/origin\//} branch "
-    fi
-
-    if [[ "$remote_ref" != "<undefined>" && "$local_ref" != "$remote_ref" && -n $( git diff $local_ref $remote_ref ) ]]; then
-
-      meaningful_head_differences=true
-
-
-    cat<<EOF >&2                                                                                                             
-Error: The local ${code_desc}daq-buildtools you're trying to use
-(${DBT_ROOT}) contains code which doesn't match up with the
-corresponding ${code_desc}in the daq-buildtool's central repository.
-
-Local hash: $local_ref
-Remote hash: $remote_ref
-
-EOF
-
-    fi
-
-    local_edits=$( git diff --exit-code ${BASH_SOURCE} )
-
-    if [[ -n $local_edits ]]; then
-
-	error_preface
-	echo >&2
-	cat<<EOF >&2                                                                                                             
-The version of daq-buildtools you're trying to run contains local edits.
-
-EOF
-
-    fi
-
-if [[ -n $local_edits || -n $meaningful_head_differences ]]; then
-
-    cat<<EOF >&2                                                                                                             
-This may mean that this script makes obsolete assumptions, etc., which 
-could compromise your working environment. 
-
-Please ensure that there's no difference in the ${code_desc}git diff
-between your local repo and the central repo, and then run this script
-again.
-
-EOF
-
-    exit 40
-
-    fi
-
-    cd $BASEDIR
-
-else 
-
-cat<<EOF >&2
-
-WARNING: The feature whereby this script checks itself to see if it's
-different than its version at the head of the central repo's develop
-branch has been switched off. User assumes the risk that the script
-may make out-of-date assumptions.
-
-EOF
-
-sleep 5
-
-fi # if $EDITS_CHECK
 
 mkdir -p $BUILDDIR
 mkdir -p $LOGDIR
