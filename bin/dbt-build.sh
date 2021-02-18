@@ -1,5 +1,7 @@
 #!/bin/bash
-set -o errexit -o nounset -o pipefail
+# set -o errexit 
+set -o nounset 
+# set -o pipefail
 
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
@@ -161,8 +163,9 @@ if ! [ -e CMakeCache.txt ]; then
   cmd="${CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${debug_build} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
   echo "Executing '$cmd'"
-  script -qefc "${cmd} |& sed -e 's/\r/\n/g' " $build_log
-
+  # Extra "set -o pipefail;" statement to push a cmake error out of the pipe
+  # Yes, it's black magic
+  script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
   retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
   endtime_cfggen_s=$( date +%s )
@@ -207,9 +210,9 @@ else
 fi # !-e CMakeCache.txt
 
 if ${cmake_graphviz}; then
-  echo $PWD
   cmd="${CMAKE} --graphviz=graphviz/targets.dot ."
   ${cmd}
+  exit $?
 fi
 
 nprocs=$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
@@ -241,7 +244,9 @@ fi
 # Will use $cmd if needed for error message
 cmd="${CMAKE} --build . $build_options"
 echo "Executing '$cmd'"
-script -qefc "${cmd} |& sed -e 's/\r/\n/g'" $build_log
+# Extra "set -o pipefail;" statement to push a cmake error out of the pipe
+# Yes, it's black magic
+script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g'" $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
@@ -272,7 +277,7 @@ EOF
   exit 40
 fi
 
-num_estimated_warnings=$( { grep "warning: " ${build_log} || true; } | wc -l )
+num_estimated_warnings=$( grep "warning: " ${build_log} | wc -l )
 
 echo
 

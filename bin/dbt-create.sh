@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -o errexit -o nounset -o pipefail
+# set -o errexit
+set -o nounset
+# set -o pipefail
 
 function print_usage() {
                 cat << EOU
