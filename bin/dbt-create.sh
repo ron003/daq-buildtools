@@ -45,7 +45,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'dhlr:' -l 'dir,help,list,release-base-path:' -- "$@") || exit
+options=$(getopt -o 'd:hlr:' -l 'dir:,help,list,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
