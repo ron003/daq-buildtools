@@ -184,28 +184,3 @@ And what you want to first is type `"init"`. The surrounding quotes are needed, 
 ```
 To stop this, send the "stop" command. Ctrl-c will exit you out of these applications. 
 
-<details><summary>daq_application Command Line Arguments</summary>
-
-Use `daq_application --help` to see all of the possible options:
-```sh
-bash$ daq_application --help
-daq_application known arguments (additional arguments will be stored and passed on):
-  -c [ --commandFacility ] arg CommandFacility URI
-  -h [ --help ]                produce help message
-```
-
-</details>
-
-<details><summary>Some additional information</summary>
-
-### TRACE Messages
-
-To enable the sending of TRACE messages to a memory buffer, you can set one of several TRACE environmental variables _before_ running `appfwk/apps/simple_test_app`.  One example is to use a command like `export TRACE_NAME=TRACE`.  (For more details, please see the [TRACE package documentation](https://cdcvs.fnal.gov/redmine/projects/trace/wiki/Wiki). For example, the [Circular Memory Buffer](https://cdcvs.fnal.gov/redmine/projects/trace/wiki/Circular_Memory_Buffer) section in the TRACE Quick Start talks about the env vars that you can use to enable tracing.)
-
-To view the TRACE messages in the memory buffer, you can use the following additional steps:
-
-* [if not done already] `export SPACK_ROOT=<your spack root> ; source $SPACK_ROOT/setup-env.sh`
-* [if not done already] `spack load trace`
-* `trace_cntl show` or `trace_cntl show | trace_delta -ct 1` (The latter displays the timestamps in human-readable format.  Note that the messages are listed in reverse chronological order in both cases.)
-
-</details>
