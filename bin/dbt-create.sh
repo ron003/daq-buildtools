@@ -29,7 +29,7 @@ EOU
 
 EMPTY_DIR_CHECK=true
 RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases"
-BASEDIR=$PWD
+# TARGETDIR=""
 SHOW_RELEASE_LIST=false
 
 # Define usage function here
@@ -45,7 +45,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hlr:' -l 'help,list,release-base-path:' -- "$@") || exit
+options=$(getopt -o 'dhlr:' -l 'dir,help,list,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -56,6 +56,9 @@ while true; do
             shift;;
         (-r|--release-path)
             RELEASE_BASEPATH=$2
+            shift 2;;
+        (-d|--dir)
+            TARGETDIR=$2
             shift 2;;
         (-h|--help)
             print_usage
@@ -76,6 +79,7 @@ fi
 
 test ${#ARGS[@]} -eq 1 || error "Wrong number of arguments. Try '$( basename $0 ) -h' for more information." 
 
+
 RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 
@@ -92,12 +96,24 @@ EOF
 )"
 fi
 
+if [ -z ${TARGETDIR:-} ] ; then
+    TARGETDIR=${RELEASE}
+fi
+
 starttime_d=$( date )
 starttime_s=$( date +%s )
 
-BUILDDIR=$BASEDIR/build
-LOGDIR=$BASEDIR/log
-SRCDIR=$BASEDIR/sourcecode
+if [ ! -d "${TARGETDIR}" ] ; then
+    mkdir -p ${TARGETDIR}
+fi
+
+TARGETDIR=$(cd $TARGETDIR && pwd)
+
+cd ${TARGETDIR}
+
+BUILDDIR=${TARGETDIR}/build
+LOGDIR=${TARGETDIR}/log
+SRCDIR=${TARGETDIR}/sourcecode
 
 export USER=${USER:-$(whoami)}
 export HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -106,11 +122,11 @@ if [[ -z $USER || -z $HOSTNAME ]]; then
     error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
 fi
 
-if $EMPTY_DIR_CHECK && [[ -n $( ls -a1 | grep -E -v "^\.\.?$" ) ]]; then
+if $EMPTY_DIR_CHECK && [[ -n $( ls -a1 $TARGETDIR | grep -E -v "^\.\.?$" ) ]]; then
 
 error "$( cat <<EOF
 
-There appear to be files in $BASEDIR besides this script 
+There appear to be files in $TARGETDIR besides this script 
 (run "ls -a1" to see this); this script should only be run in a clean
 directory. Exiting...
 
@@ -149,7 +165,7 @@ cp ${RELEASE_PATH}/${DAQ_BUILDORDER_PKGLIST} $SRCDIR
 test $? -eq 0 || error "There was a problem copying \"$superproject_buildorder\" to $SRCDIR. Exiting..."
 
 # Create the daq area signature file
-cp ${RELEASE_PATH}/${UPS_PKGLIST} $BASEDIR/${DBT_AREA_FILE}
+cp ${RELEASE_PATH}/${UPS_PKGLIST} $TARGETDIR/${DBT_AREA_FILE}
 test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
 
