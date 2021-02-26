@@ -48,10 +48,17 @@ then
   return 11
 fi
 
+all_setup_return=""
+setup_ups_products dune_devtools
+all_setup_return="${setup_ups_returns} ${all_setup_return}"
+setup_ups_products dune_systems
+all_setup_return="${setup_ups_returns} ${all_setup_return}"
+setup_ups_products dune_externals
+all_setup_return="${setup_ups_returns} ${all_setup_return}"
+setup_ups_products dune_daqpackages
+all_setup_return="${setup_ups_returns} ${all_setup_return}"
 
-setup_ups_products
-
-export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
+echo "'${all_setup_return}'"
 
 if ! [[ "$setup_returns" =~ [1-9] ]]; then
   echo "All setup calls on the packages returned 0, indicative of success"
@@ -59,6 +66,8 @@ else
   error "At least one of the required packages this script attempted to set up didn't set up correctly. Returning..." 
   return 1
 fi
+
+export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
 
 export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
