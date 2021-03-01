@@ -34,14 +34,17 @@ function setup_ups_product_areas() {
 #------------------------------------------------------------------------------
 function setup_ups_products() {
 
-  if [ -z "${dune_products}" ]; then
-    echo "UPS products variable (dune_products_dirs) undefined";
+  if [ -z "${1}" ]; then
+    echo "Usage: setup_ups_products <product variable>";
   fi
+
+  product_set_name=${1}
+  product_set="${product_set_name}[@]"
 
   # And another function here?
   setup_returns=""
 
-  for prod in "${dune_products[@]}"; do
+  for prod in "${!product_set}"; do
       prodArr=(${prod})
 
       setup_cmd="setup -B ${prodArr[0]//-/_} ${prodArr[1]}"
@@ -52,6 +55,8 @@ function setup_ups_products() {
       ${setup_cmd}
       setup_returns=$setup_returns"$? "
   done
+
+  echo "setup_returns ${setup_returns}"
 }
 #------------------------------------------------------------------------------
 
