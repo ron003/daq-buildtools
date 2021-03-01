@@ -48,19 +48,17 @@ then
   return 11
 fi
 
-all_setup_return=""
+all_setup_returns=""
 setup_ups_products dune_devtools
-all_setup_return="${setup_ups_returns} ${all_setup_return}"
+all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
 setup_ups_products dune_systems
-all_setup_return="${setup_ups_returns} ${all_setup_return}"
+all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
 setup_ups_products dune_externals
-all_setup_return="${setup_ups_returns} ${all_setup_return}"
+all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
 setup_ups_products dune_daqpackages
-all_setup_return="${setup_ups_returns} ${all_setup_return}"
+all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
 
-echo "'${all_setup_return}'"
-
-if ! [[ "$setup_returns" =~ [1-9] ]]; then
+if ! [[ "$all_setup_returns" =~ [1-9] ]]; then
   echo "All setup calls on the packages returned 0, indicative of success"
 else
   error "At least one of the required packages this script attempted to set up didn't set up correctly. Returning..." 

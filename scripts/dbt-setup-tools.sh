@@ -38,11 +38,17 @@ function setup_ups_products() {
     echo "Usage: setup_ups_products <product variable>";
   fi
 
+  if [ -z "${!1}" ]; then
+    echo "product list '${1}' doesn't exist";
+    return 5
+  fi
+
+
   product_set_name=${1}
   product_set="${product_set_name}[@]"
 
   # And another function here?
-  setup_returns=""
+  setup_ups_returns=""
 
   for prod in "${!product_set}"; do
       prodArr=(${prod})
@@ -53,10 +59,10 @@ function setup_ups_products() {
       fi
       echo $setup_cmd
       ${setup_cmd}
-      setup_returns=$setup_returns"$? "
+      setup_ups_returns=$setup_ups_returns"$? "
   done
 
-  echo "setup_returns ${setup_returns}"
+  # Adding code here make setup return disappear. Mhhh...
 }
 #------------------------------------------------------------------------------
 
