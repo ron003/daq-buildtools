@@ -35,11 +35,11 @@ function setup_ups_product_areas() {
 function setup_ups_products() {
 
   if [ -z "${1}" ]; then
-    echo "Usage: setup_ups_products <product variable>";
+    echo "Usage: setup_ups_products <product list name>";
   fi
 
   if [ -z "${!1}" ]; then
-    echo "product list '${1}' doesn't exist";
+    echo "Product list '${1}' doesn't exist";
     return 5
   fi
 
