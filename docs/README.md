@@ -6,4 +6,4 @@ _JCF, Nov-20-2020: for full instructions on how to use daq-buildtools, please ta
 
 ## Documentaation
 
-[Getting started: Compiling and Running](docs/Compiling-and-running.md)
+[Getting started: Compiling and Running](Compiling-and-running.md)
