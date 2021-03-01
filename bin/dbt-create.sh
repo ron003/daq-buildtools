@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # set -o errexit
-set -o nounset
+# set -o nounset
 # set -o pipefail
 
 function print_usage() {
@@ -45,7 +45,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hlr:e' -l 'help,list,release-base-path:,disable-edit-check' -- "$@") || exit
+options=$(getopt -o 'hlr:' -l 'help,list,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -61,7 +61,9 @@ while true; do
             print_usage
             exit 0;;
         (--)  shift; break;;
-        (*)   exit 1;;           # error
+        (*) 
+            echo "ERROR $@"  
+            exit 1;;           # error
     esac
 done
 
