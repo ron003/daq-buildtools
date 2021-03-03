@@ -11,7 +11,7 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    $( basename $0 ) <dunedaq-release>  -r/--release-path <path to release area>
+    $( basename $0 ) -r/--release-path <path to release area> <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
@@ -45,7 +45,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'd:hlr:' -l 'dir:,help,list,release-base-path:' -- "$@") || exit
+options=$(getopt -o 'hlr:' -l ',help,list,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -56,9 +56,6 @@ while true; do
             shift;;
         (-r|--release-path)
             RELEASE_BASEPATH=$2
-            shift 2;;
-        (-d|--dir)
-            TARGETDIR=$2
             shift 2;;
         (-h|--help)
             print_usage
@@ -77,11 +74,12 @@ if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     exit 0;
 fi
 
-test ${#ARGS[@]} -eq 1 || error "Wrong number of arguments. Try '$( basename $0 ) -h' for more information." 
+test ${#ARGS[@]} -eq 2 || error "Wrong number of arguments. Try '$( basename $0 ) -h' for more information." 
 
 
 RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
+TARGETDIR=${ARGS[1]}
 
 test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
 
@@ -94,10 +92,6 @@ from a clean shell. Exiting...
 
 EOF
 )"
-fi
-
-if [ -z ${TARGETDIR:-} ] ; then
-    TARGETDIR=${RELEASE}
 fi
 
 starttime_d=$( date )
