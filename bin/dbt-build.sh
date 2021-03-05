@@ -146,6 +146,79 @@ if $cmake_trace; then
   CMAKE="${CMAKE} --trace"
 fi
 
+# Are these the requirements for the cmake command???:
+# 1. Use Ninja generator by default for speed
+# 2. Allow for colored output
+#    - currently Ninja does not have a way to force color when not tty
+# 3. No single line progress
+#    - Ninja currently has no option for multi-line when tty -- filter
+#      required
+#    - "perfect" 1-2-3-4... happens when piped, but color is lost
+#      1-1-1-2-2-2-2-2-3-3-4...
+#      during single (with cr); filter could make perfect
+# 4. No buffering - print lines (e.g progress) near real time (i.e ASAP)
+#    - Ninja "single line" is a single line unless the filter
+#      \r as a "record separator". Normally the filter would want to
+#      consume it all until the \n.
+# 5. save to log file
+#    NOTE: less can handle color in the log file using the -R option.
+# 6. dbt-build.sh should not "eat" successive lines pasted; dont require big pipeline
+# 7. pty script readily available
+# Note: using "script" is fundamentally flawed as output can not be filtered
+#       outside the "command argument" -- adding filtering inside defeats
+#       the purpose.
+#
+# A python script which does not wait for \n to process.
+py_filter_simple='import sys
+out=""; lastRT="\r"
+xx=sys.stdin.read(1)
+while xx:
+    if   xx in "\n\r":
+        if not (out=="" and lastRT=="\r"):
+            sys.stdout.write(out+"\n"); sys.stdout.flush()
+        lastRT=xx; out=""
+    else: out+=xx
+    xx=sys.stdin.read(1)'
+py_filter='import sys,re
+class Re:
+    def __init__(self, reg_ex,flags=0): self.compiled=re.compile(reg_ex,flags)
+    def search(self,arg1): # "match" is anchored, "search" is not.
+        self.match_obj = self.compiled.search( arg1 ); return self.match_obj
+re_progress = Re(r"^\[\d+/\d+]")
+out=""; lastRT="\r"; lastProgress=""
+xx=sys.stdin.read(1)
+while xx:
+    if   xx in "\n\r":
+        if not (out=="" and lastRT=="\r"):
+            if re_progress.search(out):
+                thisProgress = re_progress.match_obj.group(0)
+                if thisProgress != lastProgress:
+                    sys.stdout.write(out+"\n"); sys.stdout.flush()
+                lastProgress = thisProgress
+            else: sys.stdout.write(out+"\n"); sys.stdout.flush()
+        lastRT=xx; out=""
+    else: out+=xx
+    xx=sys.stdin.read(1)'
+
+awk_filter='BEGIN{RS="[\n\r]";lastRT="\r"}
+{if(!($0==""&&lastRT=="\r")){printf "%s%c",$0,"\n";fflush()}lastRT=RT}'
+
+py_pty='import sys,os,signal
+stdin,stdout,stderr=0,1,2
+ptm,pts=os.openpty();pid=os.fork()
+if pid == 0:
+    os.dup2(pts, stdout)
+    #os.execvp(sys.argv[1], sys.argv[1:])
+    sts = os.system(sys.argv[1]); sys.exit(sts>>8)
+os.close(pts)
+signal.signal(signal.SIGINT, signal.SIG_IGN)
+while True:
+    try:            chunk = os.read(ptm, 4096)
+    except OSError: break
+    try:                    os.write(stdout, chunk)
+    except BrokenPipeError: os.kill(pid, signal.SIGTERM); break
+wait_pid, status = os.waitpid(pid, 0); exit(status >> 8)'
+
 
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
@@ -170,7 +243,10 @@ if ! [ -e CMakeCache.txt ]; then
   echo "Executing '$cmd'"
   # Extra "set -o pipefail;" statement to push a cmake error out of the pipe
   # Yes, it's black magic
-  script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
+  #script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
+  #socat - EXEC:"${cmd}",pty |& python -c "$py_filter" |& tee $build_log
+  #socat - EXEC:"${cmd}",pty |& awk "$awk_filter" |& tee $build_log
+  socat - SYSTEM:"set -o pipefail; ${cmd} |& cat",pty 2>/dev/null | tee $build_log # same as script (no color, good "progress") except does
   retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
   endtime_cfggen_s=$( date +%s )
@@ -251,7 +327,15 @@ cmd="${CMAKE} --build . $build_options"
 echo "Executing '$cmd'"
 # Extra "set -o pipefail;" statement to push a cmake error out of the pipe
 # Yes, it's black magic
-script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g'" $build_log
+#script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g'" $build_log
+#script -qefc "set -o pipefail; ${cmd} |& cat" $build_log
+#script -qefc "set -o pipefail; ${cmd}" $build_log
+#socat - EXEC:"${cmd}",pty |& awk "$awk_filter" |& tee $build_log
+#socat - EXEC:"${cmd}",pty |& python -c "$py_filter" |& tee $build_log
+#socat - SYSTEM:"set -o pipefail; ${cmd} |& cat",pty 2>/dev/null | tee $build_log # same as script (no color, good "progress") except does not eat pasted lines
+#socat - EXEC:"${cmd}",pty |& tee $build_log
+#socat - EXEC:"${cmd}",pty,setsid,ctty |& tee $build_log
+python -c "$py_pty" "${cmd}" |& python -c "$py_filter" |& tee $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
