@@ -246,7 +246,8 @@ if ! [ -e CMakeCache.txt ]; then
   #script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
   #socat - EXEC:"${cmd}",pty |& python -c "$py_filter" |& tee $build_log
   #socat - EXEC:"${cmd}",pty |& awk "$awk_filter" |& tee $build_log
-  socat - SYSTEM:"set -o pipefail; ${cmd} |& cat",pty 2>/dev/null | tee $build_log # same as script (no color, good "progress") except does
+  #socat - SYSTEM:"set -o pipefail; ${cmd} |& cat",pty 2>/dev/null | tee $build_log # same as script (no color, good "progress") except does
+  python -c "$py_pty" "${cmd}" |& python -c "$py_filter" |& tee $build_log
   retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
   endtime_cfggen_s=$( date +%s )
